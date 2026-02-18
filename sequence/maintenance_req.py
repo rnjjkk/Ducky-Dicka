@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import uvicorn
 from datetime import datetime
+from enum import Enum
 
 class User:
     """
