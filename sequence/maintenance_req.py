@@ -74,56 +74,61 @@ class Dorm:
     """
     def __init__(self, name):
         self.__name = name
-        self.__building_list = []
-        self.__applicant_list = []
-        self.__resident_list = []
-        self.__operation_staff_list = []
-        self.__maintenance_technician_list = []
-        self.__building_manager_list = []
-        self.__system_admin_list = []
+        self.__buildings = []
+        self.__applicants = []
+        self.__residents = []
+        self.__operation_staffs = []
+        self.__technicians = []
+        self.__building_managers = []
+        self.__system_admins = []
 
     @property
     def maintenance_technician_list(self):
-        return self.__maintenance_technician_list
+        return self.__technicians
 
     def add_resident(self, resident):
-        self.__resident_list.append(resident)
+        self.__residents.append(resident)
 
     def add_operation_staff(self, os):
-        self.__operation_staff_list.append(os)
+        self.__operation_staffs.append(os)
 
     def add_technician(self, tc):
-        self.__maintenance_technician_list.append(tc)
+        self.__technicians.append(tc)
 
     def search_resident_by_id(self, user_id):
-        for resident in self.__resident_list:
+        for resident in self.__residents:
             if int(resident.id[-4:]) == int(user_id):
                 return resident
         return None
 
     def search_available_os(self):
-        for os in self.__operation_staff_list:
+        for os in self.__operation_staffs:
             if os.status == "ACTIVE":
                 return os
         return None
 
     def search_match_tc(self, skl):
-        for tc in self.__maintenance_technician_list:
+        for tc in self.__technicians:
             for skill in tc.skills:
                 if skill == skl and tc.status:
                     return tc
         return None
 
-    def request_maintenance(self, reporter, os, techni_list, room_id, issue_category):
-        os.status = "WORKING"
-        ticket = os.create_maintenance_ticket(reporter, room_id, issue_category)
-        tc = os.find_available_technician(techni_list)
-        if tc is None:
-            raise ValueError("no technician available")
-        os.assign_technician(tc, ticket)
-        os.status = "ACTIVE"
-        tc.status = "ACTIVE"
-        return os.approve_maintenance(ticket)
+    def request_maintenance(self, resident_id, room_id, issue_category):
+        resident = self.search_resident_by_id(resident_id)
+        if resident is None:
+            return {"error": "resident not found!"}
+        
+        staff = self.search_available_os()
+        if staff is None:
+            return {"error": "no available staff!"}
+        
+        return staff.start_maintenance(
+            resident, 
+            self.__technicians, 
+            room_id, 
+            issue_category
+        )
 
 class Resident(User):
     """
@@ -148,11 +153,6 @@ class Resident(User):
     def add_maintenance_ticket(self, ticket):
         self.__maintenance_ticket.append(ticket)
 
-    # def request_maintenance(self, room_id, issue_category):
-    #     os = dorm.search_available_os()
-    #     ticket = os.create_maintenance_ticket(self, room_id, issue_category)
-    #     self.add_maintenance_ticket(ticket)
-
 class Operating_Staff(Staff):
     ID = 1
     
@@ -161,25 +161,41 @@ class Operating_Staff(Staff):
 
         Operating_Staff.ID += 1
 
-    def create_maintenance_ticket(self, reporter, room_id, issue_category):
-        ticket = Maintenance_Ticket(reporter.id, room_id, issue_category)
-        return ticket
+    def start_maintenance(self, reporter, technicians, room_id, issue_category):
+        self.__status = "WORKING"
+        
+        technician = self.find_available_technician(technicians)
+        if technician is None:
+            self.__status = "ACTIVE"
+            return {"error": "no available technician"}
+        
+        ticket = self.create_maintenance_ticket(reporter, room_id, issue_category, technician.id)
+        technician.assign_ticket(ticket)
+        
+        ticket.approve_maintenance(self, "APPROVED")
+        
+        reporter.add_maintenance_ticket(ticket)
 
-    def find_available_technician(self, techni_list):
-        for tc in techni_list:
+        return {
+            "reporter": f"{ticket.reporter}",
+            "room": f"{ticket.room_id}",
+            "technician": f"{ticket.responsible_technician}",
+            "status": f"{ticket.status}"
+        }
+
+    def find_available_technician(self, technicians):
+        for tc in technicians:
             if tc.status == "ACTIVE":
                 return tc
         return None
 
-    def assign_technician(self, tc, ticket):
-        tc.status = "WORKING"
-        tc.start_maintenance(ticket)
-        tc.update_maintenance_status(ticket)
-        return "FINISH_MAINTENANCE"
-
-    def approve_maintenance(self, ticket):
-        ticket.status = "APPROVED"
-        return "DONE_MAINTENANCE"
+    def create_maintenance_ticket(self, reporter, room_id, issue_category, technician):
+        ticket = Maintenance_Ticket(reporter.id, 
+                                    room_id, 
+                                    issue_category, 
+                                    responsible_technician=technician
+        )
+        return ticket
 
 class Maintenance_Ticket:
     ID = 1
@@ -189,15 +205,29 @@ class Maintenance_Ticket:
         self.__reporter = reporter
         self.__room_id = room_id
         self.__issue_category = issue_category
-        self.__severity = None
-        self.__impact = None
         self.__report_time = datetime.now()
         self.__responsible_technician = responsible_technician
-        self.__spare_parts = None
+        self.__approve_staff = None
         self.__evidence_before_after = None
         self.__status = "IDLE"
 
         Maintenance_Ticket.ID += 1
+
+    @property
+    def reporter(self):
+        return self.__reporter
+
+    @reporter.setter
+    def reporter(self, reporter):
+        self.__reporter = reporter
+
+    @property
+    def room_id(self):
+        return self.__room_id
+
+    @property
+    def responsible_technician(self):
+        return self.__responsible_technician
 
     @property
     def status(self):
@@ -205,6 +235,13 @@ class Maintenance_Ticket:
 
     @status.setter
     def status(self, status):
+        self.__status = status
+
+    def update_maintenance_status(self, status):
+        self.__status = status
+
+    def approve_maintenance(self, staff, status):
+        self.__approve_staff = staff.id
         self.__status = status
 
 class Maintenance_Technician:
@@ -220,6 +257,10 @@ class Maintenance_Technician:
         Maintenance_Technician.ID += 1
 
     @property
+    def id(self):
+        return self.__id
+
+    @property
     def skills(self):
         return self.__skills
 
@@ -231,19 +272,13 @@ class Maintenance_Technician:
     def status(self, new_status):
         self.__status = new_status
 
-    def start_maintenance(self, ticket):
-        ticket.status = "STARTED"
-        return "MAINTENANCE_STARTED"
+    def assign_ticket(self, ticket):
+        self.__status = "WORKING"
+        self.__current_mt = ticket
 
-    # def record_photo():
-    #     pass
-
-    def update_maintenance_status(self, ticket):
-        ticket.status = "FINISH"
-        return "FINISH_MAINTENANCE"
-
-    # def end_maintenance():
-    #     pass
+        ticket.update_maintenance_status("FINISH")
+        self.__status = "ACTIVE"
+        return "done"
 
 """========================================================================================================================"""
 
@@ -255,10 +290,10 @@ dorm.add_resident(john)
 
 # print(f"\n{kenny.id}\n")
 
-tom = Operating_Staff("tom", "tom@gmail.com", "1234567890")
+tom = Operating_Staff("tom", "tom@gmail.com", "1234567890", status="ACTIVE")
 dorm.add_operation_staff(tom)
 
-tech = Maintenance_Technician("tech", "tech@gmail.com", "1234567890")
+tech = Maintenance_Technician("tech", "tech@gmail.com", "1234567890",status="ACTIVE")
 dorm.add_technician(tech)
 
 # resident = None
@@ -285,30 +320,18 @@ dorm.add_technician(tech)
 
 """========================================================================================================================"""
 
+"""
+1
+RM-Standard-A01-08-0001
+PLUMBING
+"""
+
 app = FastAPI()
 
-@app.get("/")
-async def initial():
-    return {"response": "running"}
-
-# @app.get("/request-maintenance")
 @app.post("/request-maintenance")
-async def request_maintenance(user_id, room_id, issue_category):
-    resi = dorm.search_resident_by_id(user_id)
-    if resi is None:
-        return {"res": f"resident not found"}
-
-    os = dorm.search_available_os()
-    if os is None:
-        return {"res": f"no available staff"}
-    tech_list = dorm.maintenance_technician_list
-
-    response = None 
-    try:
-        response = dorm.request_maintenance(resi, os, tech_list, room_id, issue_category)
-    except ValueError as e:
-        return {"res": f"{e}"}
-    return {"res": f"{response}"}
+async def request_maintenance(resident_id, room_id, issue_category):
+    res = dorm.request_maintenance(resident_id, room_id, issue_category)
+    return res
 
 if __name__ == "__main__":
     uvicorn.run("maintenance_req:app", host="127.0.0.1",port=8000, log_level="info", reload=True)
