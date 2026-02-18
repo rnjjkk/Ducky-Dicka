@@ -1,0 +1,76 @@
+---
+config:
+  theme: neo-dark
+---
+sequenceDiagram
+    autonumber
+    participant R as Resident (Applicant)
+    participant D as Dorm (System)
+    participant U as User (System)
+    participant B as Building
+    participant Rm as Room
+
+
+    Note over R,D: [Step 1] ส่งคำขอจองห้อง
+    R->>D: requestBooking(user_id, buildingID, roomID, targetMoveInDate)
+    activate D
+    loop every user in system
+        D->>U: get_user(user_id)
+        activate U
+        U-->>D: return userObj
+        deactivate U
+    end
+
+    alt Not found user_id
+        D-->>R: error("Not found user_id")
+    else found user_id
+        Note over D: [Step 2-3] ตรวจสอบ Account & Time Policy
+        D->>D: validateUserStatus(userObj)
+        
+        alt Account is Suspended 
+            D-->>R: error("Account restricted")
+        else Validation Passed
+            D->>D: check_office_hours(08.00-17.00)
+            
+            alt Office hours not available
+                D-->>R: error("Office hours not available")
+            else Office hours available
+                Note over D,B: [Step 4] สั่งให้ตึกไปตรวจสอบและล็อกห้อง
+                D->>B: findAndHoldRoom(roomID)
+                activate B
+                
+                loop every room in building
+                    B->>Rm: checkAvailability(roomID)
+                    activate Rm
+                    Rm-->>B: status
+                    deactivate Rm
+                end
+
+                alt Room is Not Available/Maintenance 
+                    B-->>D: error("Room unavailable")
+                    D-->>R: notifyBookingFailed("Room is busy")
+                else Room is Available
+                    Note over B,Rm: [Step 5] เปลี่ยนสถานะห้องเป็น Reserved
+                    B->>Rm: updateStatus("Reserved")
+                    activate Rm
+                    B->>Rm: setHoldExpiration(48_HOURS) 
+                    Rm-->>B: return success
+                    deactivate Rm
+                    
+                    B-->>D: roomObject
+                    deactivate B
+                    
+                    Note over D: [Step 6] ระบบสร้างร่างสัญญา (Draft)
+                    create participant C as Contract
+                D->>C: createContract(userObj, roomObj)
+
+                activate C
+                C-->>D: return contractObject 
+                deactivate C
+
+                D-->>R: notifySuccess(leaseID)
+            end
+        end
+    end
+end
+deactivate D
