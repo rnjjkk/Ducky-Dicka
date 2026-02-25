@@ -82,6 +82,7 @@ class OperationStaff(Staff):
 
     def add_invoice(self,resident,invoice):
         resident.invoice_list.append(invoice)
+        return invoice
         
 class Invoice:
     def __init__(self,invoice_id,resident_info,room_cost,electricity_cost,water_cost,parking_slot_cost,share_facility_cost,maintenance_cost):
@@ -161,9 +162,10 @@ class Resident(User):
         super().__init__(name, id, email, phone_number)
         self.__move_in_date = date.today()
         self.__invoice_list = []
+        self.__booking_list = []
         self.__booking_share_facility_list = [] # List to store Booking objects
         self.__status = ResidentStatus.Active.name
-        # ควรเก็บเลขห้องไว้ในตัว Resident ด้วย เป็น dependency เพราะว่าถ้าเกิดว่า Resident โดน strike ครบก็จะไม่สามารถเป็นเจ้าของห้องได้อีก
+        
 
     # getter artibute Resident
     @property
@@ -339,7 +341,7 @@ class Dorm: # Controller
         operation_staff.add_invoice(resident,invoice)
 
         # 5. Success
-        return self.showcreateInvoiceSuccess()
+        return self.showcreateInvoiceSuccess(invoice)
 
 
     # --- Response Helpers ---
@@ -359,8 +361,8 @@ class Dorm: # Controller
         return {"ok": False, "fn": "showBookingFail", "reason": reason}
     
     # create invoice success respond
-    def showcreateInvoiceSuccess(self):
-        return {"ok": True,"message":"Create Invoice Success"}
+    def showcreateInvoiceSuccess(self,invoice):
+        return {"ok": True,"message":"Create Invoice Success","invoice":invoice}
 
     # create invoice fail respond
     def showcreateInvoiceFail(self,reason):
