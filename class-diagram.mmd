@@ -1,0 +1,408 @@
+---
+config:
+    layout: elk
+---
+%%{init: {'theme': 'forest', 'classDiagram': {'curve': 'linear', 'padding': 20}}}%%
+classDiagram
+direction
+    class AccountStatus {
+        <<enumeration>>
+        Applicant
+        Active
+        Suspended
+        Closed
+    }
+
+    class RoomStatus {
+        <<enumeration>>
+        Available
+        Reserved
+        Occupied
+        Turnover_Cleaning
+    }
+
+    class BookingStatus {
+        <<enumeration>>
+        Drafted
+        Pending_sign
+        Active
+        Ending_soon
+        Terminated
+        Expired
+    }
+
+    class ContractStatus {
+        <<enumeration>>
+        Drafted
+        Pending_sign
+        Active
+        Ending_soon
+        Terminated
+        Exipred
+    }
+
+    class FacilityStatus {
+        <<enumeration>>
+        Available
+        Reserved
+        In_Use
+        Maintenance
+        Disable
+    }
+
+    class InvoiceStatus {
+        <<enumeration>>
+        Issued
+        Paid
+        Overdue
+        Disputed
+        Void
+    }
+
+    class MaintenanceStatus {
+        <<enumeration>>
+        Submit
+        Assigned
+        In_Progess
+        Waiting_Parts
+        Complete
+        Closed
+        Reject
+    }
+
+    class Dorm {
+        - name
+        - buildings
+        - residents
+        - staffs
+
+        + add_resident()
+        + search_resident_by_id()
+        + search_room_by_id()
+    }
+
+    class User {
+        - id
+        - name
+        - email
+        - phone_number
+        - strike
+        - date_create
+    }
+
+    class Resident {
+        - move_in_date
+        - room_bookings
+        - facility_bookings
+        - discounts
+        - invoices
+        - receipts
+        - status
+    }
+
+    class Booking {
+        - id
+        - detail
+        - contract
+        - status
+    }
+
+    class Contract {
+        - id
+        - room
+        - rental_cost
+        - rental_time
+        - cancel_rent_condition
+        - security_cost
+        - penalty_clauses
+        - applicant_sign
+        - landlord_sign
+        - parking_slot_limit
+        - status
+    }
+
+    class Discount {
+        - amount
+        - type
+    }
+
+    class Student_Discount {
+        + check_status()
+        + calculate_discount()
+    }
+
+    class Early_Payment_Discount {
+        + check_paydate()
+        + calculate_discount()
+    }
+
+    class Early_Payment_Discount {
+        + check_paydate()
+        + calculate_discount()
+    }
+
+    class Long_Term_Discount {
+        + check_date()
+        + calculate_discount()
+    }
+
+    class Invoice {
+        - resident
+        - id
+        - status
+        - room_cost
+        - electricity_cost
+        - water_cost
+        - parking_slot_cost
+        - share_facility_cost
+        - maintenance_cost
+        - discount_cost
+        - amount_before_discount
+        - net_amount
+        - reference_code_from_payment_gateway
+        - refund
+        - fine
+
+    }
+
+    class Receipt {
+        - id
+        - date
+        - payment
+    }
+
+    class Payment {
+        - id
+        - amount
+        - date
+        - invoices
+        - payment_method
+        - status
+    }
+
+    class Payment_Method {
+        - supported_methods
+        - fee_rate
+    }
+
+    class Bank_Account {
+        - bank_id
+        - reference_id
+    }
+
+    class Card {
+        - card_id
+        - cardholder_name
+        - expitation_date
+        - CVV_CVC
+    }
+
+    class Staff {
+        id
+        name
+        building_responsibility
+        status
+        date_create
+    }
+
+    class Building {
+        - id
+        - floor
+        - washing_machines
+        - meeting_rooms
+        - lockers
+        - parking_slots
+    }
+
+    class Parking_Slot {
+        - slot_id
+        - status
+        - fee
+    }
+
+    class Motorcycle_Parking {
+        - type
+        - check_type
+    }
+
+    class Car_Parking {
+        - slot_width
+        - height_limit
+        - length_limit
+    }
+
+    class Room {
+        <<abstract>>
+        - room_id
+        - building
+        - floor
+        - status
+        - maintenance_ticket
+    }
+
+    class Studio_Room {
+        - room_size = 20 m^2
+        - room_cost = 6500
+    }
+
+    class Standard_Room {
+        - room_size = 26 m^2
+        - room_cost = 8200
+    }
+
+    class One_Bedroom_Room {
+        - room_size = 35 m^2
+        - room_cost = 10500
+    }
+
+    class Share_Facility {
+        - facility_id
+        - status
+        - fee
+    }
+
+    class Washing_Machine {
+        - fee
+        - size
+        - bookings
+    }
+
+    class Meeting_Room {
+        - building
+        - floor
+        - type
+        - room_size
+        - time_limit
+        - bookings
+    }
+
+    class Locker {
+        - room_id
+    }
+
+    class Booking_Facility {
+        - id
+        - detail
+        - status
+    }
+
+    class Technician {
+        - id
+        - skills
+        - schedule
+        - current_ticket
+        - status
+    }
+
+    class Maintenance_Ticket {
+        - ticket_id
+        - reporter
+        - room
+        - issue_category
+        - report_time
+        - responsible_technician
+        - spart_part
+        - evidence
+        - status
+    }
+
+    class Record {
+        <<abstract>>
+        - time
+    }
+
+    class Booking_Record {
+        - type
+        - id
+        - resident_id
+        - staff_id
+        - room_id
+        - status
+    }
+
+    class Staff_Record {
+        - Booking_Responsible
+    }
+
+    class Parking_Slot_Record {
+        - resident_id
+        - parking_time
+        - vehicle_registration
+    }
+
+    class Room_Record {
+        - room_id
+        - room_status
+        - date
+        - contract 
+        - resident_id
+        - maintenance_ticket
+        - status
+    }
+
+    class Ticket_Record {
+        - cause
+        - ticket_id
+        - resident_id
+        - date_start
+        - date_end
+        - total_expense
+        - result
+    }
+
+    Dorm o-- Resident
+    Dorm o-- Building
+    Dorm o-- Staff
+
+    Resident --|> User
+    Resident o-- Booking
+    Resident o-- Discount
+    Resident o-- Invoice
+    Resident o-- Receipt
+    Resident o-- Booking_Facility
+
+    Booking --> Contract
+
+    Discount <|-- Student_Discount
+    Discount <|-- Early_Payment_Discount
+    Discount <|-- Long_Term_Discount
+
+    Payment o-- Invoice
+    Payment <-- Receipt
+    Payment --> Payment_Method
+
+    Payment_Method <|-- Bank_Account
+    Payment_Method <|-- Card
+
+    Building o-- Parking_Slot
+    Building o-- Room
+    Building o-- Share_Facility
+
+    Parking_Slot <|-- Motorcycle_Parking
+    Parking_Slot <|-- Car_Parking
+
+    Room <|-- Studio_Room
+    Room <|-- Standard_Room
+    Room <|-- One_Bedroom_Room
+
+    Share_Facility <|-- Locker
+    Share_Facility <|-- Meeting_Room
+    Share_Facility <|-- Washing_Machine
+
+    Maintenance_Ticket --o Room
+    Maintenance_Ticket --> Resident
+    Maintenance_Ticket <-- Technician
+
+    Record <|-- Booking_Record
+    Record <|-- Staff_Record
+    Record <|-- Parking_Slot_Record
+    Record <|-- Room_Record
+    Record <|-- Share_Facility_Record
+    Record <|-- Ticket_Record
+
+    Booking_Record --o Booking
+    Staff_Record --o Staff
+    Parking_Slot_Record --o Parking_Slot
+    Room_Record --o Room
+    Share_Facility_Record --o Share_Facility
+    Ticket_Record --o Maintenance_Ticket

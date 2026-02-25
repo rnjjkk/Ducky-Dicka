@@ -1,0 +1,84 @@
+sequenceDiagram
+    actor resAc as Resident_Actor
+    participant d as Dorm
+    participant res as Resident
+    participant b as Booking
+    participant c as Contract
+    participant r as Room
+
+    resAc ->> +d: change_lease_contract(residentId, currentLeaseContractId, targetRoomId, moveDate)
+    loop resident in Dorm.residents
+        d ->> +res: get_resident_id()
+        res -->> -d: return resident_id 
+
+        alt id == residentId
+            res -->> d: return resident
+        else id != residentId
+            res -->> d: continue loop
+        end
+
+    end
+    opt resident is None
+        d -->> resAc: return resident not found 
+    end
+    d ->> +res: search_contract_by_id()
+    loop booking in Resident.bookings
+        res ->> +b: get_contract()
+        b -->> -res: return contract 
+
+        res ->> +c: get_contract_id()
+        c -->> -res: return contract_id
+
+        alt contract_id == currentLeaseBookingId
+            c -->> res: return contract
+        else contract_id != currentLeaseBookingId
+            c -->> res: continue loop
+        end
+    end
+    res -->> -d: return contract
+
+    opt contrat is None
+        d -->> resAc: return contract not found 
+    end
+    d ->> +c: get_contract_status()
+    c -->> -d: return contract_status
+    opt contract_status == "EXPIRED"
+        d -->> resAc: return expired contract
+    end
+
+    loop room in Dorm.rooms
+        d ->> +r: get_room_id()
+        r -->> -d: return room_id
+        alt room_id == targetRoomId
+            r -->> d: return target_room
+        else room_id != targetRoomId
+            r -->> d: continue loop
+        end
+    end
+    opt room is None
+        d -->> resAc: return room not found
+    end
+
+    d ->> +r: get_room_status()
+    r -->> -d: return room_status
+    opt room_status != "AVAILABLE"
+        d -->> resAc: target room not available
+    end
+
+    d ->> +res: get_invoices()
+    res -->> -d: return invoice_list
+
+    opt len(invoice_list) > 0
+        d -->> resAc: return reject
+    end
+
+    d ->> +c: calculate_upgrade_amount(targetRoom.COST, moveDate)
+    create participant i as Invoice
+    c ->> +i: create_invoice(room_cost=amount)
+    i -->> -c: return invoice
+    c -->> -d: return invoice
+
+    d ->> +res: add_invoice(invoice)
+    res -->> -d: return added invoice
+
+    d -->> -resAc: return done change contract
