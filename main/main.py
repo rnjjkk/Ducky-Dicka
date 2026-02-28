@@ -1,4 +1,4 @@
-from dorm import Dorm
+from models.dorm import Dorm
 from fastmcp import FastMCP
 
 if __name__ == "__main__":
