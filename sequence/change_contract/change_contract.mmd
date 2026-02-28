@@ -1,3 +1,4 @@
+%%{init: {'theme': 'forest', 'classDiagram': {'curve': 'linear', 'padding': 20}}}%%
 sequenceDiagram
     actor resAc as Resident_Actor
     participant d as Dorm
@@ -77,6 +78,9 @@ sequenceDiagram
     c ->> +i: create_invoice(room_cost=amount)
     i -->> -c: return invoice
     c -->> -d: return invoice
+
+    d ->> +c: set_room(target_room) 
+    c -->> -d: return success
 
     d ->> +res: add_invoice(invoice)
     res -->> -d: return added invoice
