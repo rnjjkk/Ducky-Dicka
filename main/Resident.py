@@ -19,7 +19,7 @@ class Resident:
     ID = 1
     
     def __init__(self, name: str, age: str=None, phone_number: str=None, status: str="ACTIVE"):
-        self.id = Resident.ID
+        self.__id = Resident.ID
         self.__name = name
         self.__age = age
         self.__phone_number = phone_number
@@ -43,7 +43,7 @@ class Resident:
 
     @property
     def fid(self):
-        return f"RS-{self.__date_create.year}-{self.id:04d}"
+        return f"RS-{self.__date_create.year}-{self.__id:04d}"
 
 
 res1 = Resident("Ken", 25, "123456789", "ACTIVE")
