@@ -3,39 +3,55 @@ sequenceDiagram
     actor resAc as Resident_Actor
     participant d as Dorm
     participant res as Resident
-    participant room as Room 
+    participant b as Building
+    participant room as Room
 
-    resAc ->> +d:request_cleaning_room(resident_id,room_id)
+    resAc ->> d:request_cleaning_room(resident_id,room_id)
     d ->> d:search_resident_by_id(resident_id)
-    loop
+    loop for resident in resident_list
         d ->> +res:get_resident_id()
-        res ->> -d:return resident_id
+        res ->> d:return resident_id
 
         alt found resident
-            res->> d:return resident instance
+            res -->> d:return resident instance
         else not found resident
-            res ->> d:loop find until found resident
+            res -->> d:loop find until found resident
         end
     end
 
     opt not found resident
-        d ->> resAc:not found resident
+        d -->> resAc:not found resident
     end
 
-    d ->> d:search_room_by_id(room_id)
+    d ->> d:search_building()
 
-    loop
-        d ->> +room:get_room_id()
-        room ->> -d:return room_id
+    loop for building in building_list
+        d ->> b:get_building()
+        b ->> d:return building instance
 
-        alt found room
-            room ->> d:return room instance
-        else not found room
-            room ->>d:loop until found room
+        loop for room in building.room_list
+        
+            alt room.id == room_id
+                room -->> d:return room instance and building instance
+            else room.id != room_id
+                room -->>d:loop until found room
+            end
         end
     end
 
     opt not found room
         d ->> resAc:not found room
     end
+
+    d ->> res:request_cleaning_room(resident_id,building,room,report_time,respondsible_cleaner)
+    create participant ticket_req_c_r as Cleaning_Ticket
+    res ->> ticket_req_c_r:create_cleaning_ticket(resident_id,building,room,report_time,respondsible_cleaner)
+    ticket_req_c_r -->> res:return ticket 
+    res ->> b:add ticket to building
+    b -->> res:return request success
+    res -->> d:return request success
+    d -->> resAc:return request success
+
+    
+
     
