@@ -13,6 +13,13 @@ direction
         Closed
     }
 
+    class RoomType {
+        <<enumeration>>
+        StudioRoom
+        StandardRoom
+        OneBedroomRoom
+    }
+
     class RoomStatus {
         <<enumeration>>
         Available
@@ -21,15 +28,15 @@ direction
         Turnover_Cleaning
     }
 
-    class BookingStatus {
-        <<enumeration>>
-        Drafted
-        Pending_sign
-        Active
-        Ending_soon
-        Terminated
-        Expired
-    }
+    %% class BookingStatus {
+    %%     <<enumeration>>
+    %%     Drafted
+    %%     Pending_sign
+    %%     Active
+    %%     Ending_soon
+    %%     Terminated
+    %%     Expired
+    %% }
 
     class ContractStatus {
         <<enumeration>>
@@ -70,118 +77,142 @@ direction
         Reject
     }
 
+
+
     class Dorm {
         - name
         - buildings
         - residents
-        - staffs
+        - employees
+        - technicians
+        - cleaner
 
+        + add_building()
         + add_resident()
+        + add_employee()
+        + add_technician()
+        + add_cleaner()
+
         + search_resident_by_id()
         + search_room_by_id()
     }
 
-    class User {
+    %% class User {
+    %%     - id
+    %%     - name
+    %%     - email
+    %%     - phone_number
+    %%     - strike
+    %%     - date_create
+    %% }
+
+    class Resident {
         - id
         - name
         - email
+        - age
         - phone_number
         - strike
         - date_create
-    }
-
-    class Resident {
         - move_in_date
         - room_bookings
         - facility_bookings
+        - contracts
         - discounts
         - invoices
         - receipts
         - status
     }
 
-    class Booking {
+    class Room_Booking {
         - id
+        - room
         - detail
-        - contract
-        - status
+        %% - contract
+        %% - status
     }
 
     class Contract {
         - id
         - room
-        - rental_cost
-        - rental_time
         - cancel_rent_condition
-        - security_cost
-        - penalty_clauses
-        - applicant_sign
-        - landlord_sign
-        - parking_slot_limit
+        - move_in_date
         - status
+        - rental_time
+        - monthly_rent
+        - date_create
+        %% - rental_cost
+        %% - security_cost
+        %% - penalty_clauses
+        %% - applicant_sign
+        %% - landlord_sign
+        %% - parking_slot_limit
     }
 
-    class Discount {
+    class Member {
         - amount
         - type
     }
 
-    class Student_Discount {
+    class Standard_Member {
         + check_status()
         + calculate_discount()
     }
 
-    class Early_Payment_Discount {
+    class Plus_Member {
         + check_paydate()
         + calculate_discount()
     }
 
-    class Early_Payment_Discount {
+    class Pro_Member {
         + check_paydate()
         + calculate_discount()
     }
 
-    class Long_Term_Discount {
-        + check_date()
-        + calculate_discount()
-    }
+    %% class Long_Term_Discount {
+    %%     + check_date()
+    %%     + calculate_discount()
+    %% }
 
     class Invoice {
-        - resident
         - id
-        - status
-        - room_cost
-        - electricity_cost
-        - water_cost
-        - parking_slot_cost
-        - share_facility_cost
-        - maintenance_cost
-        - discount_cost
-        - amount_before_discount
+        - type
+        - room_id
         - net_amount
-        - reference_code_from_payment_gateway
-        - refund
-        - fine
+        - status
+        %% - resident
+        %% - room_cost
+        %% - electricity_cost
+        %% - water_cost
+        %% - parking_slot_cost
+        %% - share_facility_cost
+        %% - maintenance_cost
+        %% - discount_cost
+        %% - amount_before_discount
+        %% - reference_code_from_payment_gateway
+        %% - refund
+        %% - fine
 
     }
 
-    class Receipt {
-        - id
-        - date
-        - payment
-    }
+    %% class Receipt {
+    %%     - id
+    %%     - date
+    %%     - payment
+    %% }
 
     class Payment {
         - id
         - amount
-        - date
+        - pay_date
         - invoices
-        - payment_method
+        - payment_gateway
         - status
     }
 
-    class Payment_Method {
-        - supported_methods
+    class Payment_Gateway {
+        - id
+        - type_method
         - fee_rate
     }
 
@@ -197,42 +228,42 @@ direction
         - CVV_CVC
     }
 
-    class Staff {
+    class Employee {
         id
         name
-        building_responsibility
-        status
+        %% building_responsibility
+        %% status
         date_create
     }
 
     class Building {
         - id
         - floor
+        - rooms
         - washing_machines
         - meeting_rooms
         - lockers
         - parking_slots
     }
 
-    class Parking_Slot {
-        - slot_id
-        - status
-        - fee
-    }
+    %% class Parking_Slot {
+    %%     - slot_id
+    %%     - status
+    %%     - fee
+    %% }
 
-    class Motorcycle_Parking {
-        - type
-        - check_type
-    }
+    %% class Motorcycle_Parking {
+    %%     - type
+    %%     - check_type
+    %% }
 
-    class Car_Parking {
-        - slot_width
-        - height_limit
-        - length_limit
-    }
+    %% class Car_Parking {
+    %%     - slot_width
+    %%     - height_limit
+    %%     - length_limit
+    %% }
 
     class Room {
-        <<abstract>>
         - room_id
         - building
         - floor
@@ -240,20 +271,20 @@ direction
         - maintenance_ticket
     }
 
-    class Studio_Room {
-        - room_size = 20 m^2
-        - room_cost = 6500
-    }
+    %% class Studio_Room {
+    %%     - room_size = 20 m^2
+    %%     - room_cost = 6500
+    %% }
 
-    class Standard_Room {
-        - room_size = 26 m^2
-        - room_cost = 8200
-    }
+    %% class Standard_Room {
+    %%     - room_size = 26 m^2
+    %%     - room_cost = 8200
+    %% }
 
-    class One_Bedroom_Room {
-        - room_size = 35 m^2
-        - room_cost = 10500
-    }
+    %% class One_Bedroom_Room {
+    %%     - room_size = 35 m^2
+    %%     - room_cost = 10500
+    %% }
 
     class Share_Facility {
         - facility_id
