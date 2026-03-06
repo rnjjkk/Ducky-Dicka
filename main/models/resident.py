@@ -1,6 +1,9 @@
 import datetime
 import sqlite3
 
+class AccountStatus:
+    pass
+
 # conn = sqlite3.connect(r"C:\Users\James\Desktop\Ducky-Dicka\main\residents.db")
 # cursor = conn.cursor()
 
