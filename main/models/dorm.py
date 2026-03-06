@@ -19,3 +19,6 @@ class Dorm:
                 if room.id == id:
                     return room
         return None
+
+    def request_maintenance(self, resident_id, room_id, issue_category):
+        pass
