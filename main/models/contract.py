@@ -21,3 +21,5 @@ class Contract:
         self.__status: ContractStatus = status
         self.__rental_time = None
         self.__monthly_rent = None
+        
+        Contract.ID += 1
