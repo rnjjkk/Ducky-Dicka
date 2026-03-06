@@ -4,8 +4,17 @@ class Dorm:
         self.__buildings: list = []
         self.__residents: list = []
         self.__employees: list = []
-        self.__technician: list = []
+        self.__technicians: list = []
         self.__cleaner: list = []
+
+    def add_resident(self, resident):
+        self.__residents.append(resident)
+
+    def add_operation_staff(self, employee):
+        self.__employees.append(employee)
+
+    def add_technician(self, technician):
+        self.__technicians.append(technician)
 
     def search_resident_by_id(self, id):
         for resident in self.__residents:
