@@ -11,5 +11,11 @@ class Dorm:
         for resident in self.__residents:
             if resident.id == id:
                 return resident
+        return None
 
+    def search_room_by_id(self, id):
+        for building in self.__buildings:
+            for room in building:
+                if room.id == id:
+                    return room
         return None
