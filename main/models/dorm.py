@@ -35,5 +35,25 @@ class Dorm:
                 return employee
         return None
 
+    def search_capability_technician(self, capability):
+        for technician in self.__technicians:
+            for skill in technician.skills:
+                if skill == capability and technician.status:
+                    return technician
+        return None
+
     def request_maintenance(self, resident_id, room_id, issue_category):
-        pass
+        resident = self.search_resident_by_id(resident_id)
+        if resident is None:
+            return {"error": "resident not found!"}
+
+        employee = self.search_available_employee()
+        if employee is None:
+            return {"error": "no available staff!"}
+        
+        return employee.start_maintenance(
+            resident, 
+            self.__technicians, 
+            room_id, 
+            issue_category
+        )
