@@ -29,5 +29,11 @@ class Dorm:
                     return room
         return None
 
+    def search_available_employee(self):
+        for employee in self.__employees:
+            if employee.status == "AVAILABLE":
+                return employee
+        return None
+
     def request_maintenance(self, resident_id, room_id, issue_category):
         pass
