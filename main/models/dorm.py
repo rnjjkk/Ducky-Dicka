@@ -35,12 +35,12 @@ class Dorm:
                 return employee
         return None
 
-    def search_capability_technician(self, capability):
-        for technician in self.__technicians:
-            for skill in technician.skills:
-                if skill == capability and technician.status == "AVAILABLE":
-                    return technician
-        return None
+    # def search_capability_technician(self, capability):
+    #     for technician in self.__technicians:
+    #         for skill in technician.skills:
+    #             if skill == capability and technician.status == "AVAILABLE":
+    #                 return technician
+    #     return None
 
     def request_maintenance(self, resident_id, room_id, issue_category):
         resident = self.search_resident_by_id(resident_id)
