@@ -6,3 +6,10 @@ class Dorm:
         self.__employees: list = []
         self.__technician: list = []
         self.__cleaner: list = []
+
+    def search_resident_by_id(self, id):
+        for resident in self.__residents:
+            if resident.id == id:
+                return resident
+
+        return None
