@@ -1,8 +1,11 @@
 import datetime
 import sqlite3
+from enum import Enum
 
-class AccountStatus:
-    pass
+class AccountStatus(Enum):
+    ACTIVE = "ACTIVE"
+    SUSPEND = "SUSPEND"
+    CLOSED = "CLOSED"
 
 # conn = sqlite3.connect(r"C:\Users\James\Desktop\Ducky-Dicka\main\residents.db")
 # cursor = conn.cursor()
