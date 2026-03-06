@@ -38,7 +38,7 @@ class Dorm:
     def search_capability_technician(self, capability):
         for technician in self.__technicians:
             for skill in technician.skills:
-                if skill == capability and technician.status:
+                if skill == capability and technician.status == "AVAILABLE":
                     return technician
         return None
 
