@@ -31,9 +31,24 @@ async def change_lease_contract(request: ChangeContractRequest):
                                       request.moveDate
                                       )
 
+class RequestMaintenance(BaseModel):
+    residentId: str
+    roomId: str
+    issueCategory: str
+
+"""
+{
+  "residentId": "1",
+  "roomId": "1",
+  "issueCategory": "PLUMBING"
+}
+"""
+
 @app.post("/request-maintenance")
-async def request_maintenance(resident_id, room_id, issue_category):
-    res = dorm.request_maintenance(resident_id, room_id, issue_category)
+async def request_maintenance(request: RequestMaintenance):
+    res = dorm.request_maintenance(request.residentId, 
+                                   request.roomId, 
+                                   request.issueCategory)
     return res
 
 
