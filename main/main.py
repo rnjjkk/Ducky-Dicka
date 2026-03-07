@@ -2,6 +2,7 @@ from models.dorm import Dorm
 from fastmcp import FastMCP
 from fastapi import FastAPI
 import uvicorn
+from pydantic import BaseModel
 
 dorm = Dorm("Ducka")
 
