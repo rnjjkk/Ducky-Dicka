@@ -1,10 +1,14 @@
-from models.dorm import Dorm
 from fastmcp import FastMCP
 from fastapi import FastAPI
 import uvicorn
 from pydantic import BaseModel
 
+from models.dorm import Dorm
+from models.resident import *
+
 dorm = Dorm("Ducka")
+
+res1 = Resident("kenny", 19, "1234567890", status="ACTIVE")
 
 app = FastAPI()
 
@@ -26,7 +30,8 @@ class ChangeContractRequest(BaseModel):
 @app.post("/change-contract")
 async def change_lease_contract(request: ChangeContractRequest):
     return dorm.change_lease_contract(request.residentId,
-                                      request.currentLeaseContractId,
+                                      request.
+                                      currentLeaseContractId,
                                       request.targetRoomId,
                                       request.moveDate
                                       )
