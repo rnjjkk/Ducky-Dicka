@@ -1,9 +1,11 @@
 from models.dorm import Dorm
 from fastmcp import FastMCP
+from fastapi import FastAPI
+import uvicorn
 
 dorm = Dorm("Ducka")
 
-app = FastMCP()
+app = FastAPI()
 
 @app.post("/request-maintenance")
 async def request_maintenance(resident_id, room_id, issue_category):
@@ -12,9 +14,4 @@ async def request_maintenance(resident_id, room_id, issue_category):
 
 
 if __name__ == "__main__":
-    print("test")
-    print("Hello World")
-    print("Tonson")
-
-    ducka = Dorm("ducka")
-    print(ducka)
+    uvicorn.run("main:app", host="127.0.0.1",port=8000, log_level="info", reload=True)
