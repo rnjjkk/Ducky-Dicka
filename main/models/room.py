@@ -42,6 +42,7 @@ class Room:
         self.__water_cost = water_cost
         self.__rental = rental
 
+
     @property
     def fid(self):
         return f"RM-{self.__building.id}-{self.__floor:02d}-{self.__room_id[-4:]}"
@@ -89,6 +90,10 @@ class Room:
     @property
     def rental(self):
         return self.__rental
+        
+    def add_maintenance_ticket(self, ticket):
+        """Attach a maintenance ticket to this room."""
+        self.__maintenance_tickets.append(ticket)
 
     def update_meter(self, meter_elect: float, meter_water: float):
         """Update meter readings and record the values in room log."""
