@@ -1,4 +1,11 @@
 from datetime import datetime
+from enum import Enum
+
+class IssueCategory(str, Enum):
+    PLUMBING = "PLUMBING"
+    ELECTRICAL = "ELECTRICAL"
+    AC = "AC"
+    # add more as needed
 
 
 class Staff:
