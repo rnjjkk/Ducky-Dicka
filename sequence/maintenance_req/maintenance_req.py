@@ -64,6 +64,18 @@ class Staff:
     def status(self, new_status):
         self.__status = new_status
 
+class Room:
+    def __init__(self, room_id):
+        self.__id = room_id
+        self.__maintenance_tickets = []
+
+    @property
+    def id(self):
+        return self.__id
+
+    def add_maintenance_ticket(self, ticket):
+        self.__maintenance_tickets.append(ticket)
+
 class Dorm:
     """
     ### Attributes
@@ -75,6 +87,7 @@ class Dorm:
     def __init__(self, name):
         self.__name = name
         self.__buildings = []
+        self.__rooms = []
         self.__applicants = []
         self.__residents = []
         self.__operation_staffs = []
@@ -94,6 +107,15 @@ class Dorm:
 
     def add_technician(self, tc):
         self.__technicians.append(tc)
+
+    def add_room(self, room):
+        self.__rooms.append(room)
+
+    def search_room_by_id(self, room_id):
+        for room in self.__rooms:
+            if room.id == room_id:
+                return room
+        return None
 
     def search_resident_by_id(self, user_id):
         for resident in self.__residents:
@@ -118,6 +140,10 @@ class Dorm:
         resident = self.search_resident_by_id(resident_id)
         if resident is None:
             return {"error": "resident not found!"}
+
+        room = self.search_room_by_id(room_id)
+        if room is None:
+            return {"error": "room not found!"}
         
         staff = self.search_available_os()
         if staff is None:
@@ -126,7 +152,7 @@ class Dorm:
         return staff.start_maintenance(
             resident, 
             self.__technicians, 
-            room_id, 
+            room, 
             issue_category
         )
 
@@ -161,7 +187,7 @@ class Operating_Staff(Staff):
 
         Operating_Staff.ID += 1
 
-    def start_maintenance(self, reporter, technicians, room_id, issue_category):
+    def start_maintenance(self, reporter, technicians, room, issue_category):
         self.__status = "WORKING"
         
         technician = self.find_available_technician(technicians)
@@ -169,12 +195,13 @@ class Operating_Staff(Staff):
             self.__status = "ACTIVE"
             return {"error": "no available technician"}
         
-        ticket = self.create_maintenance_ticket(reporter, room_id, issue_category, technician.id)
+        ticket = self.create_maintenance_ticket(reporter, room.id, issue_category, technician.id)
         technician.assign_ticket(ticket)
         
         ticket.approve_maintenance(self, "APPROVED")
         
-        reporter.add_maintenance_ticket(ticket)
+        # Attach ticket to the room instead of only to the resident
+        room.add_maintenance_ticket(ticket)
 
         return {
             "reporter": f"{ticket.reporter}",
@@ -292,6 +319,9 @@ dorm.add_resident(john)
 
 tom = Operating_Staff("tom", "tom@gmail.com", "1234567890", status="ACTIVE")
 dorm.add_operation_staff(tom)
+
+room1 = Room("RM-STUDIO-A01-01-0001")
+dorm.add_room(room1)
 
 tech = Maintenance_Technician("tech", "tech@gmail.com", "1234567890",status="ACTIVE")
 dorm.add_technician(tech)
