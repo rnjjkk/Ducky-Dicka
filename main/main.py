@@ -45,9 +45,9 @@ def create_employee_mock_data():
 
 def create_technician_mock_data():
     return [
-        Technician(["PLUMBING"]),
-        Technician(["ELECTRICAL"]),
-        Technician(["AC"]),
+        Technician(name="Tech A", phone_number="0800000001", compabilities=["PLUMBING"]),
+        Technician(name="Tech B", phone_number="0800000002", compabilities=["ELECTRICAL"]),
+        Technician(name="Tech C", phone_number="0800000003", compabilities=["AC"]),
     ]
 
 mock_employees = create_employee_mock_data()
