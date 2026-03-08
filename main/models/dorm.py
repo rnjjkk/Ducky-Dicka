@@ -19,16 +19,16 @@ class Dorm:
     def add_building(self, building):
         self.__buildings.append(building)
 
-    def search_resident_by_id(self, id):
+    def search_resident_by_id(self, resident_id):
         for resident in self.__residents:
-            if resident.id == id:
+            if int(resident.id) == int(resident_id):
                 return resident
         return None
 
-    def search_room_by_id(self, id):
+    def search_room_by_id(self, room_id):
         for building in self.__buildings:
             for room in building.rooms:
-                if room.id == id:
+                if room.id == room_id:
                     return room
         return None
 
