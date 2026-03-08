@@ -1,9 +1,11 @@
+%%{init: {"theme": "forest"}}%%
 sequenceDiagram
     autonumber
 
     actor Resident_Actor
     participant Dorm
     participant Resident
+    participant Room
     participant Operating_Staff
     participant Technician
     %% REMOVED: participant Maintenance_Ticket (This was causing the error)
@@ -25,6 +27,27 @@ sequenceDiagram
 
     opt resident not found
         Dorm -->> Resident_Actor: return not found
+    end
+
+    Dorm ->> Dorm: search_room_by_id(room_id)
+    loop building in dorm.buildings
+        Dorm ->> +Building: get_building_rooms()
+        Building -->> -Dorm: return rooms
+
+        loop room in rooms
+            Dorm ->> +Room: get_room_id()
+            Room -->> -Dorm: return id
+
+            alt id == room_id
+                Room -->> Dorm: return room_instance
+            else id != room_id
+                Room -->> Dorm: continue loop
+            end
+        end
+    end
+
+    opt room not found
+        Dorm -->> Resident_Actor: return no room found
     end
 
     Dorm ->> Dorm: search_available_staff()
