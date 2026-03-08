@@ -47,6 +47,10 @@ class Dorm:
         if resident is None:
             return {"error": "resident not found!"}
 
+        room = self.search_room_by_id(room_id)
+        if room is None:
+            return {"error": "room not found!"}
+
         employee = self.search_available_employee()
         if employee is None:
             return {"error": "no available staff!"}
