@@ -1,5 +1,5 @@
 from datetime import datetime
-from maintenance_ticket import MaintenanceTicket, MaintenanceStatus
+from .maintenance_ticket import *
 
 class Employee:
     ID = 1
