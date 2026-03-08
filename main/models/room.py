@@ -43,7 +43,11 @@ class Room:
         self.__rental = rental
 
     @property
-    def room_id(self):
+    def fid(self):
+        return f"RM-{self.__building.id}-{self.__floor:02d}-{self.__room_id[-4:]}"
+
+    @property
+    def id(self):
         return self.__room_id
 
     @property
