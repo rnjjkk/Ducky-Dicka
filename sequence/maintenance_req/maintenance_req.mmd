@@ -78,6 +78,9 @@ sequenceDiagram
     activate Maintenance_Ticket
     Maintenance_Ticket -->> Operating_Staff: return ticket
     deactivate Maintenance_Ticket
+
+    Operating_Staff ->> Room: add_maintenance_ticket(ticket)
+    Room -->> Operating_Staff: return ok
     
     Operating_Staff ->> Operating_Staff: find_available_technician(techni_list)
     
