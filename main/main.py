@@ -7,6 +7,8 @@ from models.dorm import *
 from models.employee import *
 from models.staff import *
 from models.resident import *
+from models.room import Room, RoomType, RoomStatus
+from models.building import Building
 
 def create_resident_mock_data(count: int = 3):
     """Generate a list of mock Resident objects."""
@@ -39,8 +41,41 @@ def create_employee_mock_data():
         Employee("Alice"),
         Employee("Bob"),
     ]
-    
+
+def create_room_mock_data():
+    return [
+        Room(
+            room_id="RM-STUDIO-A01-01-0001",
+            building="A01",
+            floor=1,
+            room_type=RoomType.StudioRoom,
+            status=RoomStatus.Available,
+            rental=6500,
+        ),
+        Room(
+            room_id="RM-STANDARD-A01-02-0001",
+            building="A01",
+            floor=2,
+            room_type=RoomType.StandardRoom,
+            status=RoomStatus.Available,
+            rental=8200,
+        ),
+    ]
+
+
+def create_building_mock_data(rooms):
+    building = Building(floor="A01")
+    for room in rooms:
+        building.add_room(room)
+    return building
+
+
 dorm = Dorm("Ducka")
+
+# Mock room/building data (needed for room lookup during maintenance requests)
+mock_rooms = create_room_mock_data()
+mock_building = create_building_mock_data(mock_rooms)
+dorm.add_building(mock_building)
 
 mock_residents = create_resident_mock_data(3)
 for r in mock_residents:
