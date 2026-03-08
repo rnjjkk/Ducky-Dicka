@@ -1,7 +1,7 @@
 from fastmcp import FastMCP
 from fastapi import FastAPI
 import uvicorn
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from models.dorm import *
 from models.employee import *
@@ -126,7 +126,17 @@ class RequestMaintenance(BaseModel):
   "roomId": "1",
   "issueCategory": "PLUMBING"
 }
+{
+  "residentId": "1",
+  "roomId": "RM-STUDIO-A01-01-0001",
+  "issueCategory": "PLUMBING"
+}
 """
+
+class RequestMaintenance(BaseModel):
+    residentId: str = Field(..., description="Resident unique ID")
+    roomId: str = Field(..., description="Room ID (e.g., RM-STUDIO-A01-01-0001)")
+    issueCategory: IssueCategory
 
 @app.post("/request-maintenance")
 async def request_maintenance(request: RequestMaintenance):
