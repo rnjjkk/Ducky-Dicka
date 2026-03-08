@@ -60,7 +60,7 @@ class Dorm:
         
         return employee.start_maintenance(
             resident, 
-            self.__technicians, 
-            room_id, 
+            self.__technicians,
+            room,
             issue_category
         )
