@@ -24,7 +24,7 @@ class Employee:
     def status(self):
         return self.__status
 
-    def start_maintenance(self, reporter, technicians, room_id, issue_category):
+    def start_maintenance(self, reporter, technicians, room, issue_category):
         self.__status = "WORKING"
         
         technician = self.find_available_technician(technicians)
@@ -32,12 +32,13 @@ class Employee:
             self.__status = "AVAILABLE"
             return {"error": "no available technician"}
         
-        ticket = self.create_maintenance_ticket(reporter, room_id, issue_category, technician.id)
+        ticket = self.create_maintenance_ticket(reporter, room.id, issue_category, technician.id)
         technician.assign_ticket(ticket)
         
         ticket.approve_maintenance(self, "APPROVED")
         
-        reporter.add_maintenance_ticket(ticket)
+        # Attach the ticket to the room (not only to the resident)
+        room.add_maintenance_ticket(ticket)
 
         return {
             "reporter": f"{ticket.reporter}",
