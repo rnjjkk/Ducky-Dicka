@@ -12,6 +12,7 @@ from models.building import Building
 
 def create_resident_mock_data(count: int = 3):
     """Generate a list of mock Resident objects."""
+    Resident.ID = 1  # Reset ID counter for consistent testing
 
     names = ["Kenny", "John", "Alice", "Mary", "Bob"]
     residents = []
@@ -133,9 +134,9 @@ class RequestMaintenance(BaseModel):
 """
 
 class RequestMaintenance(BaseModel):
-    residentId: str = Field(..., description="Resident unique ID")
-    roomId: str = Field(..., description="Room ID (e.g., RM-STUDIO-A01-01-0001)")
-    issueCategory: IssueCategory
+    residentId: str = Field(..., example="1")
+    roomId: str = Field(..., example="RM-STUDIO-A01-01-0001")
+    issueCategory: IssueCategory = Field(..., example=IssueCategory.PLUMBING)
 
 @app.post("/request-maintenance")
 async def request_maintenance(request: RequestMaintenance):
