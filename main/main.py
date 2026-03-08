@@ -25,16 +25,12 @@ def create_resident_mock_data(count: int = 3):
 
     return residents
 
-
 dorm = Dorm("Ducka")
 
 # Mock residents (used for development/testing)
 mock_residents = create_resident_mock_data(3)
 for r in mock_residents:
     dorm.add_resident(r)
-
-# Example single resident (if needed elsewhere)
-res1 = mock_residents[0]
 
 app = FastAPI()
 
@@ -77,10 +73,9 @@ class RequestMaintenance(BaseModel):
 
 @app.post("/request-maintenance")
 async def request_maintenance(request: RequestMaintenance):
-    res = dorm.request_maintenance(request.residentId, 
+    return dorm.request_maintenance(request.residentId, 
                                    request.roomId, 
                                    request.issueCategory)
-    return res
 
 
 if __name__ == "__main__":
