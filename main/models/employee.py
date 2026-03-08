@@ -8,13 +8,21 @@ class Employee:
         self.__id = Employee.ID
         self.__date_create = datetime.now()
         self.__name = name
-        # self.__status = None
+        self.__status = 'AVAILABLE'
 
         Employee.ID += 1
 
     @property
     def fid(self):
         return f"EM-{self.__date_create.year}-{self.__id:04d}"
+
+    @property
+    def id(self):
+        return self.__id
+    
+    @property
+    def status(self):
+        return self.__status
 
     def start_maintenance(self, reporter, technicians, room_id, issue_category):
         self.__status = "WORKING"
