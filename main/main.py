@@ -27,28 +27,24 @@ def create_resident_mock_data(count: int = 3):
 
     return residents
 
-dorm = Dorm("Ducka")
-
-# Mock residents (used for development/testing)
-mock_residents = create_resident_mock_data(3)
-for r in mock_residents:
-    dorm.add_resident(r)
-
-# Mock operation staff (employees) and technicians
-# These are used by the maintenance request flow.
-def create_employee_mock_data():
-    return [
-        Employee("Alice"),
-        Employee("Bob"),
-    ]
-
-
 def create_technician_mock_data():
     return [
         Technician(name="Tech A", phone_number="0800000001", compabilities=["PLUMBING"]),
         Technician(name="Tech B", phone_number="0800000002", compabilities=["ELECTRICAL"]),
         Technician(name="Tech C", phone_number="0800000003", compabilities=["AC"]),
     ]
+
+def create_employee_mock_data():
+    return [
+        Employee("Alice"),
+        Employee("Bob"),
+    ]
+    
+dorm = Dorm("Ducka")
+
+mock_residents = create_resident_mock_data(3)
+for r in mock_residents:
+    dorm.add_resident(r)
 
 mock_employees = create_employee_mock_data()
 for e in mock_employees:
