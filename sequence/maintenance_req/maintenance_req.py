@@ -330,7 +330,9 @@ app = FastAPI()
 
 @app.post("/request-maintenance")
 async def request_maintenance(resident_id, room_id, issue_category):
-    res = dorm.request_maintenance(resident_id, room_id, issue_category)
+    res = dorm.request_maintenance(resident_id, 
+                                   room_id, 
+                                   issue_category)
     return res
 
 if __name__ == "__main__":
