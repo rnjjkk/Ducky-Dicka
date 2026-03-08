@@ -21,7 +21,7 @@ class MaintenanceTicket:
 
     @property
     def fid(self):
-        return f"MT-{self.__report_time.strftime("%Y%m%d")}-building-{MaintenanceTicket.ID:04d}"
+        return f'MT-{self.__report_time.strftime("%Y%m%d")}-building-{MaintenanceTicket.ID:04d}'
 
     @property
     def reporter(self):
