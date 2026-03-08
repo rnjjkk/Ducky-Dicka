@@ -3,7 +3,9 @@ from fastapi import FastAPI
 import uvicorn
 from pydantic import BaseModel
 
-from models.dorm import Dorm
+from models.dorm import *
+from models.employee import *
+from models.staff import *
 from models.resident import *
 
 def create_resident_mock_data(count: int = 3):
@@ -31,6 +33,30 @@ dorm = Dorm("Ducka")
 mock_residents = create_resident_mock_data(3)
 for r in mock_residents:
     dorm.add_resident(r)
+
+# Mock operation staff (employees) and technicians
+# These are used by the maintenance request flow.
+def create_employee_mock_data():
+    return [
+        Employee("Alice"),
+        Employee("Bob"),
+    ]
+
+
+def create_technician_mock_data():
+    return [
+        Technician(["PLUMBING"]),
+        Technician(["ELECTRICAL"]),
+        Technician(["AC"]),
+    ]
+
+mock_employees = create_employee_mock_data()
+for e in mock_employees:
+    dorm.add_operation_staff(e)
+
+mock_technicians = create_technician_mock_data()
+for t in mock_technicians:
+    dorm.add_technician(t)
 
 app = FastAPI()
 
@@ -76,7 +102,6 @@ async def request_maintenance(request: RequestMaintenance):
     return dorm.request_maintenance(request.residentId, 
                                    request.roomId, 
                                    request.issueCategory)
-
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1",port=8000, log_level="info", reload=True)
