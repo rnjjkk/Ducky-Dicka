@@ -6,9 +6,35 @@ from pydantic import BaseModel
 from models.dorm import Dorm
 from models.resident import *
 
+def create_resident_mock_data(count: int = 3):
+    """Generate a list of mock Resident objects."""
+
+    names = ["Kenny", "John", "Alice", "Mary", "Bob"]
+    residents = []
+
+    for i in range(min(count, len(names))):
+        name = names[i]
+        residents.append(
+            Resident(
+                name,
+                18 + i,
+                f"080000000{i}",
+                status=AccountStatus.ACTIVE.value,
+            )
+        )
+
+    return residents
+
+
 dorm = Dorm("Ducka")
 
-res1 = Resident("kenny", 19, "1234567890", status="ACTIVE")
+# Mock residents (used for development/testing)
+mock_residents = create_resident_mock_data(3)
+for r in mock_residents:
+    dorm.add_resident(r)
+
+# Example single resident (if needed elsewhere)
+res1 = mock_residents[0]
 
 app = FastAPI()
 
