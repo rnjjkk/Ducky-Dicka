@@ -62,7 +62,6 @@ def create_room_mock_data():
         ),
     ]
 
-
 def create_building_mock_data(rooms):
     building = Building(floor="A01")
     for room in rooms:
