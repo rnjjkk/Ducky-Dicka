@@ -8,3 +8,10 @@ class Building:
         self.__washing_machines = []
         self.__meeting_rooms = []
         self.__lockers = []
+
+        Building.ID += 1
+
+    @property
+    def add_room(self, room):
+        self.__rooms.append(room)
+        return self.__rooms
