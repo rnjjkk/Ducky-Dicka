@@ -8,6 +8,7 @@ from models.employee import *
 from models.staff import *
 from models.resident import *
 from models.room import Room, RoomType, RoomStatus
+from models.contract import Contract, ContractStatus
 from models.building import Building
 
 def create_resident_mock_data(count: int = 3):
@@ -70,6 +71,18 @@ def create_building_mock_data(rooms):
     return building
 
 
+def create_contract_mock_data(resident, room, status: ContractStatus = ContractStatus.ACTIVE):
+    """Create a simple lease contract pointing to a room and attach it to a resident."""
+
+    contract = Contract(status=status)
+    contract.room = room
+    # Mark the room as occupied when it's under contract.
+    room.status = RoomStatus.Occupied
+    resident.add_contract(contract)
+    return contract
+
+""""==============================================================================="""
+
 dorm = Dorm("Ducka")
 
 # Mock room/building data (needed for room lookup during maintenance requests)
@@ -80,6 +93,10 @@ dorm.add_building(mock_building)
 mock_residents = create_resident_mock_data(3)
 for r in mock_residents:
     dorm.add_resident(r)
+
+# Attach a mock lease contract to the first resident so that /change-contract can be exercised.
+if mock_residents and mock_rooms:
+    create_contract_mock_data(mock_residents[0], mock_rooms[0], status=ContractStatus.ACTIVE)
 
 mock_employees = create_employee_mock_data()
 for e in mock_employees:
