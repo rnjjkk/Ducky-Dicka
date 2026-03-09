@@ -64,3 +64,9 @@ class Resident:
 
     def add_invoice(self, invoice):
         self.__inovices.append(invoice)
+
+    def search_contract_by_id(self, contractId):
+        for contract in self.__contracts:
+            if int(contract.id[-4:]) == int(contractId):
+                return contract
+        return None
