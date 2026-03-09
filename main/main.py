@@ -92,10 +92,10 @@ for t in mock_technicians:
 app = FastAPI()
 
 class ChangeContractRequest(BaseModel):
-    residentId: str
-    currentLeaseContractId: str
-    targetRoomId: str
-    moveDate: str
+    residentId: str = Field(..., example="1")
+    currentLeaseContractId: str = Field(..., example="1")
+    targetRoomId: str = Field(..., example="RM-STUDIO-A01-02-0001")
+    moveDate: str = Field(..., example="2026-2-27")
 
 """
 {
