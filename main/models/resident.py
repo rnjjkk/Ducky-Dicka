@@ -59,15 +59,19 @@ class Resident:
     def status(self):
         return self.__status
 
+    @property
+    def contracts(self):
+        return self.__contracts
+
+    @property
+    def invoices(self):
+        return self.__invoices
+
     def add_contract(self, contract):
         self.__contracts.append(contract)
 
     def add_invoice(self, invoice):
         self.__invoices.append(invoice)
-
-    @property
-    def invoices(self):
-        return self.__invoices
 
     def search_contract_by_id(self, contractId):
         for contract in self.__contracts:
