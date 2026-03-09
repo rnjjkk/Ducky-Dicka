@@ -1,8 +1,11 @@
 import datetime
-import sqlite3
+# import sqlite3
+from enum import Enum
 
-class AccountStatus:
-    pass
+class AccountStatus(Enum):
+    ACTIVE = "ACTIVE"
+    SUSPEND = "SUSPEND"
+    CLOSED = "CLOSED"
 
 # conn = sqlite3.connect(r"C:\Users\James\Desktop\Ducky-Dicka\main\residents.db")
 # cursor = conn.cursor()
@@ -48,9 +51,10 @@ class Resident:
     def fid(self):
         return f"RS-{self.__date_create.year}-{self.__id:04d}"
 
+    @property
+    def id(self):
+        return self.__id
 
-res1 = Resident("Ken", 25, "123456789", "ACTIVE")
-print(res1.fid)   # e.g., 1
-
-res2 = Resident("Alice", 30, "987654321", "ACTIVE")
-print(res2.fid)   # e.g., 2
+    @property
+    def status(self):
+        return self.__status
