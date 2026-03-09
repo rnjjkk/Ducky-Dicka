@@ -71,6 +71,10 @@ class Room:
     def status(self):
         return self.__status
 
+    @status.setter
+    def status(self, new_status):
+        self.__status = new_status
+
     @property
     def room_log(self):
         return self.__room_log
@@ -90,7 +94,7 @@ class Room:
     @property
     def rental(self):
         return self.__rental
-        
+
     def add_maintenance_ticket(self, ticket):
         """Attach a maintenance ticket to this room."""
         self.__maintenance_tickets.append(ticket)
