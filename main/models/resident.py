@@ -58,3 +58,6 @@ class Resident:
     @property
     def status(self):
         return self.__status
+
+    def add_invoice(self, invoice):
+        self.__inovices.append(invoice)
