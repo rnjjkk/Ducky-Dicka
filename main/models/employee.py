@@ -36,6 +36,7 @@ class Employee:
         technician.assign_ticket(ticket)
         
         ticket.approve_maintenance(self, "APPROVED")
+        self.__status = "AVAILABLE"
         
         # Attach the ticket to the room (not only to the resident)
         room.add_maintenance_ticket(ticket)
