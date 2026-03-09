@@ -59,5 +59,8 @@ class Resident:
     def status(self):
         return self.__status
 
+    def add_contract(self, contract):
+        self.__contracts.append(contract)
+
     def add_invoice(self, invoice):
         self.__inovices.append(invoice)
