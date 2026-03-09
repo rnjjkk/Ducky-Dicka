@@ -1,4 +1,5 @@
 from .contract import *
+from .room import *
 
 class Dorm:
     def __init__(self, name: str):
