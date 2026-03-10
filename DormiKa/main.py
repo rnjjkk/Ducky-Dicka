@@ -161,20 +161,20 @@ async def change_contract(request: ChangeContractRequest):
 
 """
 {
-  "residentId": "RS-2026-0001",
-  "roomId": "1",
+  "residentId": "RS-0001",
+  "roomId": "RM-0002",
   "issueCategory": "PLUMBING"
 }
 {
-  "residentId": "RS-2026-0001",
-  "roomId": "RM-STUDIO-A01-01-0001",
+  "residentId": "RS-0001",
+  "roomId": "RM-0001",
   "issueCategory": "PLUMBING"
 }
 """
 
 class RequestMaintenance(BaseModel):
-    residentId: str = Field(..., example="1")
-    roomId: str = Field(..., example="RM-STUDIO-A01-01-0001")
+    residentId: str = Field(..., example="RS-0001")
+    roomId: str = Field(..., example="RM-0001")
     issueCategory: IssueCategory = Field(..., example=IssueCategory.PLUMBING)
 
 @app.post("/request-maintenance")
