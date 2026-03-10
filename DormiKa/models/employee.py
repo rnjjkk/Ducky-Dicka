@@ -1,6 +1,6 @@
 from datetime import datetime
-from .enum import AvailabilityStatus, InvoiceType, InvoiceStatus
-from .maintenance_ticket import MaintenanceTicket
+from .enum import *
+from .maintenance_ticket import *
 from .invoice import Invoice
 
 class Employee:
@@ -33,11 +33,8 @@ class Employee:
         
         ticket = self.create_maintenance_ticket(reporter, room.id, issue_category, technician.id)
         technician.assign_ticket(ticket)
-        
-        ticket.approve_maintenance(self, "APPROVED")
-        self.__status = "AVAILABLE"
-        
         room.add_maintenance_ticket(ticket)
+        ticket.status = MaintenanceStatus.IN_PROGRESS
 
         return {
             "reporter": f"{ticket.reporter}",
@@ -48,9 +45,9 @@ class Employee:
 
     def find_available_technician(self, technicians):
         for tc in technicians:
-            if tc.status == "AVAILABLE":
+            if tc.status == AvailabilityStatus.AVAILABLE:
                 return tc
-        self.__status = "AVAILABLE"
+        self.__status = AvailabilityStatus.AVAILABLE
         raise Exception("no available technician")
 
     def create_maintenance_ticket(self, reporter, room_id, issue_category, technician):
