@@ -79,7 +79,9 @@ def create_contract_mock_data(resident, room, status: ContractStatus = ContractS
     # Mark the room as occupied when it's under contract.
     room.status = RoomStatus.Occupied
     resident.add_contract(contract)
+    
     print(resident.contracts[0].id, "================================================================")
+    print(room.id)
     return contract
 
 """"==============================================================================="""
@@ -112,7 +114,7 @@ app = FastAPI()
 class ChangeContractRequest(BaseModel):
     residentId: str = Field(..., example="1")
     currentLeaseContractId: str = Field(..., example="1")
-    targetRoomId: str = Field(..., example="RM-STUDIO-A01-02-0001")
+    targetRoomId: str = Field(..., example="RM-STUDIO-A01-01-0001")
     moveDate: str = Field(..., example="2026-2-27")
 
 """
