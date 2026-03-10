@@ -26,7 +26,6 @@ class Room:
         floor: int,
         room_type: RoomType = RoomType.StandardRoom,
         basic_amenities: list | None = None,
-        status: RoomStatus = RoomStatus.Available,
         electric_cost: float = 0.0,
         water_cost: float = 0.0,
         rental: float = 0.0,
@@ -36,7 +35,7 @@ class Room:
         self.__floor = floor
         self.__type = room_type
         self.__basic_amenities = basic_amenities or []
-        self.__status = status
+        self.__status = RoomStatus.Available
         self.__room_log: list = []
         self.__maintenance_tickets: list = []
         self.__electric_cost = electric_cost
