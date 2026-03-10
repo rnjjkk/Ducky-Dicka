@@ -1,0 +1,66 @@
+%%{init: {'theme': 'default', 'themeVariables': {'activationBkgColor': '#d9ead3', 'activationBorderColor': '#6aa84f'}}}%%
+sequenceDiagram
+    actor User as Resident
+    participant D as Dorm
+    participant R as Resident
+    participant B as Building
+    participant SF as Share_Facility
+    participant BSF as Booking_Share_Facility
+
+    User ->>+ D: booking_share_facility(resident_id, share_facility_id, building_id, booking_time)
+
+    loop for rs in resident_list
+        D ->>+ R: getResidentID(resident_id)
+        R -->>- D: return resident instance
+    end
+
+    opt not found resident
+        D -->> User: return not found resident
+    end
+
+    loop for building in building_list
+        D ->>+ B: getBuildingID(building_id)
+        B -->>- D: return building instance
+    end
+
+    opt not found building
+        D -->> User: return not found building
+    end
+
+    loop for sf in building.share_facility_list
+        D ->>+ B: getShareFacilityID(share_facility_id)
+        B ->>+ SF: getShareFacilityID(share_facility_id)
+        SF -->>- B: return share_facility instance
+        B -->>- D: return share_facility instance
+    end
+
+    opt not found share_facility
+        D -->> User: return not found share_facility
+    end
+
+    loop for resident in dorm.resident_list
+        D ->>+ R: getBookingShareFacilityList()
+        R -->>- D: return booking_share_facility_list
+
+        loop for booking in booking_share_facility_list
+            D ->>+ BSF: checkBookingTime(share_facility_id, booking_time)
+            BSF -->>- D: return status
+        end
+    end
+
+    opt overlap found
+        D -->> User: return this share facility already booking
+    end
+
+    D ->>+ SF: createBooking(resident_id, share_facility_id, building_id, booking_time)
+    SF ->>+ BSF: create_Booking_Share_Facility(resident_id, share_facility_id, building_id, booking_time)
+    BSF -->>- SF: return booking_share_facility instance
+    SF -->>- D: return booking_share_facility instance
+
+    D ->>+ R: addBookingShareFacility(booking_share_facility)
+    R ->> R: add to booking_share_facility_list
+    R -->>- D: done
+
+    D -->> User: return booking share facility success
+
+    deactivate D
