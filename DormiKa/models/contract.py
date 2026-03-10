@@ -1,5 +1,5 @@
 import datetime
-from .enum import ContractStatus
+from .enum import ContractStatus, InvoiceType, InvoiceStatus
 from .invoice import Invoice
 import calendar
 
@@ -36,14 +36,10 @@ class Contract:
         days_in_month = calendar.monthrange(move_date.year, move_date.month)[1]
 
         days_left = days_in_month - move_date.day + 1
-        print(days_left)
         avg_new_room_cost = target_room_cost / days_in_month
-        print(avg_new_room_cost)
         new_room_cost = avg_new_room_cost * days_left
-        print(new_room_cost)
         
         old_room_cost = (self.__room.monthly_rent / days_in_month) * days_left
-        print(old_room_cost)
         cost_diff = new_room_cost - old_room_cost
 
-        return Invoice(round(cost_diff, 2))
+        return Invoice(InvoiceType.CONTRACT, self.__room.id, round(cost_diff, 2), InvoiceStatus.UNPAID)
