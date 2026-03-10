@@ -1,7 +1,8 @@
 from fastmcp import FastMCP
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import uvicorn
 from pydantic import BaseModel, Field
+from datetime import datetime, timedelta
 
 from models.dorm import *
 from models.employee import *
@@ -9,6 +10,7 @@ from models.staff import *
 from models.resident import *
 from models.room import Room, RoomType, RoomStatus
 from models.building import Building
+from models.contract import Contract, ContractStatus
 
 def create_resident_mock_data(count: int = 3):
     """Generate a list of mock Resident objects."""
@@ -43,11 +45,11 @@ def create_employee_mock_data():
         Employee("Bob"),
     ]
 
-def create_room_mock_data():
+def create_room_mock_data(building):
     return [
         Room(
             room_id="RM-STUDIO-A01-01-0001",
-            building="A01",
+            building=building,
             floor=1,
             room_type=RoomType.StudioRoom,
             status=RoomStatus.Available,
@@ -55,7 +57,7 @@ def create_room_mock_data():
         ),
         Room(
             room_id="RM-STANDARD-A01-02-0001",
-            building="A01",
+            building=building,
             floor=2,
             room_type=RoomType.StandardRoom,
             status=RoomStatus.Available,
@@ -63,8 +65,9 @@ def create_room_mock_data():
         ),
     ]
 
-def create_building_mock_data(rooms):
+def create_building_mock_data():
     building = Building(floor="A01")
+    rooms = create_room_mock_data(building)
     for room in rooms:
         building.add_room(room)
     return building
@@ -73,8 +76,7 @@ def create_building_mock_data(rooms):
 dorm = Dorm("Ducka")
 
 # Mock room/building data (needed for room lookup during maintenance requests)
-mock_rooms = create_room_mock_data()
-mock_building = create_building_mock_data(mock_rooms)
+mock_building = create_building_mock_data()
 dorm.add_building(mock_building)
 
 mock_residents = create_resident_mock_data(3)
@@ -114,6 +116,50 @@ async def change_lease_contract(request: ChangeContractRequest):
                                       request.targetRoomId,
                                       request.moveDate
                                       )
+
+class BookingRequest(BaseModel):
+    resident_id: str
+    room_id: str
+
+@app.post("/request-booking")
+async def request_booking(request: BookingRequest):
+    resident = dorm.search_resident_by_id(request.resident_id)
+    if resident is None:
+        raise HTTPException(status_code=404, detail="Resident not found")
+
+    if resident.status == AccountStatus.SUSPEND.value:
+        raise HTTPException(status_code=403, detail="Account restricted")
+
+    current_hour = datetime.now().hour
+    if not (8 <= current_hour <= 17):
+        raise HTTPException(status_code=400, detail="Office hours not available")
+
+    room = dorm.search_room_by_id(request.room_id)
+    if room is None:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    # auto-release holds if expired
+    if hasattr(room, "is_hold_expired"):
+        room.is_hold_expired()
+
+    if room.status != RoomStatus.Available:
+        raise HTTPException(status_code=400, detail="Room is busy or in maintenance")
+
+    held = getattr(room, "hold", None)
+    if held is None or not held(48):
+        raise HTTPException(status_code=400, detail="Unable to reserve room")
+
+    contract = Contract(status=ContractStatus.DRAFT)
+    contract.room = room
+    resident.add_contract(contract)
+
+    return {
+        "status": "success",
+        "lease_id": contract.id,
+        "room_id": room.id,
+        "room_status": room.status.value if hasattr(room.status, 'value') else str(room.status),
+        "message": "Booking successful, held for 48 hours."
+    }
 
 class RequestMaintenance(BaseModel):
     residentId: str
