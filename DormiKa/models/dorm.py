@@ -1,7 +1,6 @@
 from .contract import *
 from .room import *
 from .resident import *
-from unittest.mock import MagicMock
 class Dorm:
     def __init__(self, name: str):
         self.__name: str = name
@@ -212,17 +211,6 @@ class Dorm:
         s = f'display_receipt : success'
         self.show_success(s)
 
-
-def run_test(name, dorm):
-    print(f"\n{'='*50}")
-    print(f"TEST: {name}")
-    print(f"{'='*50}")
-    try:
-        result = request_cleaning_room(dorm, "RES001", "R101")
-        print(f"RESULT: {result}")
-    except Exception as e:
-        print(f"UNEXPECTED ERROR: {e}")
-
 # -------------------------------------------------------
 # function จริงที่ test
 # -------------------------------------------------------
@@ -250,83 +238,169 @@ def request_cleaning_room(self, resident_id, room_id):
     except Exception as e:
         return self.show_error({"error": str(e)})
 
+
 # -------------------------------------------------------
-# helper สร้าง mock พื้นฐาน
+# Stub classes แทน Mock library
 # -------------------------------------------------------
-def base_mock():
-    dorm = MagicMock()
+class StubCleaningTicket:
+    def __init__(self):
+        self.room_id = "R101"
+        self.id = "CT001"
+        self.report_time = "2024-01-01 10:00"
+        self.cost = 100
+        self.status = "pending"
 
-    resident = MagicMock()
-    resident.name = "John Doe"
+class StubRoomInContract:
+    def __init__(self):
+        self.id = "R101"
+        self.cleaning_tickets = []
 
-    room_input = MagicMock()
-    room_input.id = "R101"
+class StubResident:
+    def __init__(self, check_status=True, create_fail=False, add_fail=False):
+        self.name = "John Doe"
+        self._check_status = check_status
+        self._create_fail = create_fail
+        self._add_fail = add_fail
 
-    room_in_contract = MagicMock()
-    room_in_contract.cleaning_tickets = []
+    def check_status_cleaning_ticket(self, ticket_list):
+        return self._check_status
 
-    cleaning_ticket = MagicMock()
-    cleaning_ticket.room_id = "R101"
-    cleaning_ticket.id = "CT001"
-    cleaning_ticket.report_time = "2024-01-01 10:00"
-    cleaning_ticket.cost = 100
-    cleaning_ticket.status = "pending"
+    def create_cleaning_ticket(self, resident_id, room_id):
+        if self._create_fail:
+            raise Exception("Failed to create ticket")
+        return StubCleaningTicket()
 
-    dorm.search_resident_by_id.return_value = resident
-    dorm.search_room_by_id.return_value = room_input
-    dorm.search_room_by_contracts.return_value = room_in_contract
-    dorm.show_success.side_effect = lambda s: {"success": True, "data": s}
-    dorm.show_error.side_effect = lambda e: {"success": False, "data": e}
+    def add_cleaning_ticket(self, room, ticket):
+        if self._add_fail:
+            raise Exception("Failed to add ticket")
 
-    resident.check_status_cleaning_ticket.return_value = True
-    resident.create_cleaning_ticket.return_value = cleaning_ticket
+class StubDorm:
+    def __init__(self, resident=None, room_fail=False, contract_fail=False, resident_fail=False):
+        self._resident = resident or StubResident()
+        self._room_fail = room_fail
+        self._contract_fail = contract_fail
+        self._resident_fail = resident_fail
 
-    return dorm, resident, room_in_contract, cleaning_ticket
+    def search_resident_by_id(self, resident_id):
+        if self._resident_fail:
+            raise Exception("Resident not found")
+        return self._resident
+
+    def search_room_by_id(self, room_id):
+        if self._room_fail:
+            raise Exception("Room not found")
+        room = StubRoomInContract()
+        return room
+
+    def search_room_by_contracts(self, resident, room_id):
+        if self._contract_fail:
+            raise Exception("Room not in contract")
+        return StubRoomInContract()
+
+    def show_success(self, s):
+        return {"success": True, "data": s}
+
+    def show_error(self, e):
+        return {"success": False, "data": e}
+
+
+# -------------------------------------------------------
+# helper รัน test
+# -------------------------------------------------------
+passed = 0
+failed = 0
+
+def run_test(name, dorm, expect_success, expect_message=None):
+    global passed, failed
+    print(f"\n{'='*50}")
+    print(f"TEST: {name}")
+    result = request_cleaning_room(dorm, "RES001", "R101")
+    print(f"RESULT: {result}")
+
+    ok = result["success"] == expect_success
+    if expect_message:
+        ok = ok and expect_message in str(result["data"])
+
+    if ok:
+        print(">> PASSED")
+        passed += 1
+    else:
+        print(f">> FAILED (expected success={expect_success}, message='{expect_message}')")
+        failed += 1
+
 
 # -------------------------------------------------------
 # case 1: success
 # -------------------------------------------------------
-dorm, resident, room_in_contract, cleaning_ticket = base_mock()
-run_test("Case 1: Success", dorm)
+run_test(
+    "Case 1: Success",
+    StubDorm(),
+    expect_success=True
+)
 
 # -------------------------------------------------------
 # case 2: check_status return False
 # -------------------------------------------------------
-dorm, resident, room_in_contract, cleaning_ticket = base_mock()
-resident.check_status_cleaning_ticket.return_value = False
-run_test("Case 2: Already has ticket", dorm)
+run_test(
+    "Case 2: Already has ticket",
+    StubDorm(resident=StubResident(check_status=False)),
+    expect_success=False,
+    expect_message="already exists"
+)
 
 # -------------------------------------------------------
 # case 3: resident not found
 # -------------------------------------------------------
-dorm, resident, room_in_contract, cleaning_ticket = base_mock()
-dorm.search_resident_by_id.side_effect = Exception("Resident not found")
-run_test("Case 3: Resident not found", dorm)
+run_test(
+    "Case 3: Resident not found",
+    StubDorm(resident_fail=True),
+    expect_success=False,
+    expect_message="Resident not found"
+)
 
 # -------------------------------------------------------
 # case 4: room not found
 # -------------------------------------------------------
-dorm, resident, room_in_contract, cleaning_ticket = base_mock()
-dorm.search_room_by_id.side_effect = Exception("Room not found")
-run_test("Case 4: Room not found", dorm)
+run_test(
+    "Case 4: Room not found",
+    StubDorm(room_fail=True),
+    expect_success=False,
+    expect_message="Room not found"
+)
 
 # -------------------------------------------------------
 # case 5: room not in contract
 # -------------------------------------------------------
-dorm, resident, room_in_contract, cleaning_ticket = base_mock()
-dorm.search_room_by_contracts.side_effect = Exception("Room not in contract")
-run_test("Case 5: Room not in contract", dorm)
+run_test(
+    "Case 5: Room not in contract",
+    StubDorm(contract_fail=True),
+    expect_success=False,
+    expect_message="Room not in contract"
+)
 
 # -------------------------------------------------------
 # case 6: create_cleaning_ticket fails
 # -------------------------------------------------------
-dorm, resident, room_in_contract, cleaning_ticket = base_mock()
-resident.create_cleaning_ticket.side_effect = Exception("Failed to create ticket")
-run_test("Case 6: Create ticket fails", dorm)
+run_test(
+    "Case 6: Create ticket fails",
+    StubDorm(resident=StubResident(create_fail=True)),
+    expect_success=False,
+    expect_message="Failed to create ticket"
+)
 
 # -------------------------------------------------------
 # case 7: add_cleaning_ticket fails
 # -------------------------------------------------------
-dorm, resident, room_in_contract, cleaning_ticket = base_mock()
-resident.add_cleaning_ticket.side_effect = Exception("Failed to add ticket")
-run_test("Case 7: Add ticket fails", dorm)
+run_test(
+    "Case 7: Add ticket fails",
+    StubDorm(resident=StubResident(add_fail=True)),
+    expect_success=False,
+    expect_message="Failed to add ticket"
+)
+
+# -------------------------------------------------------
+# summary
+# -------------------------------------------------------
+print(f"\n{'='*50}")
+print(f"SUMMARY: {passed} passed, {failed} failed")
+print(f"{'='*50}")
