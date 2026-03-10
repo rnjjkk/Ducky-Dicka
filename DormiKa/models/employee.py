@@ -1,7 +1,8 @@
 from datetime import datetime
-from .enum import AvailabilityStatus, InvoiceType, InvoiceStatus
+from .enum import AvailabilityStatus, InvoiceType, InvoiceStatus, MemberPrice, MemberType
 from .maintenance_ticket import MaintenanceTicket
 from .invoice import Invoice
+from .member import Standard_Member, Plus_Member, Platinum_Member
 
 class Employee:
     ID = 1
@@ -68,5 +69,22 @@ class Employee:
         )
         return ticket
     
+
     def create_contract_invoice(self, monthly_rent, room_id):
-        return Invoice(InvoiceType.CONTRACT, room_id, monthly_rent, InvoiceStatus.UNPAID)
+        return Invoice(InvoiceType.CONTRACT, monthly_rent, InvoiceStatus.UNPAID, room_id)
+
+    def asign_member(self, resident, type):
+        member_type = MemberType(type.strip().upper())
+        match member_type:
+            case MemberType.STANDARD:
+                member = Standard_Member()
+            case MemberType.PLUS:
+                member = Plus_Member()
+            case MemberType.PLATINUM:
+                member = Platinum_Member()
+            case _:
+                raise ValueError("type_member : format error")
+        resident.set_member(member)
+        price = MemberPrice[member_type.name].value
+        return Invoice(InvoiceType.MEMBER, price, InvoiceStatus.UNPAID)
+        

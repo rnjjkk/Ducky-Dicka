@@ -42,6 +42,7 @@ class InvoiceType(Enum):
     MAINTENANCE    = "invoice_maintenance"
     CLEANER        = "invoice_cleaner"
     CHAIR_FACILITY = "invoice_chair_facility"
+    MEMBER         = "invoice_member"
 
 class InvoiceStatus(Enum):
     PAID = "paid"
@@ -55,3 +56,8 @@ class MemberType(Enum):
     STANDARD = "STANDARD"
     PLUS = "PLUS"
     PLATINUM = "PLATINUM"
+
+class MemberPrice(Enum):
+    STANDARD = 990
+    PLUS = 2790
+    PLATINUM = 9890
