@@ -7,7 +7,7 @@ sequenceDiagram
     participant Technician
     participant Maintenance_Ticket
 
-    Technician_Actor ->> +Dorm: complete_maintenance_workflow(technicianId, notes)
+    Technician_Actor ->> +Dorm: start_maintenance_workflow(technicianId, notes)
 
     loop tc in dorm.technicians
         Dorm ->> +Technician: get_id()
@@ -46,8 +46,6 @@ sequenceDiagram
         Dorm -->> Technician_Actor: return "not capable of handling issue"
     end
 
-    Technician ->> Technician: cost = MaintenanceCost[issue_category].value
-
     Technician ->> Technician: set_status(UNAVAILABLE)
 
     Technician ->> +Maintenance_Ticket: begin_work(notes)
@@ -72,38 +70,6 @@ sequenceDiagram
 
     Maintenance_Ticket -->> -Technician: return done
 
-    Technician ->> +Maintenance_Ticket: finish_work(cost)
-    Maintenance_Ticket ->> Maintenance_Ticket: set_end_time(datetime.now())
-    Maintenance_Ticket ->> Maintenance_Ticket: set_cost(cost)
-    Maintenance_Ticket ->> Maintenance_Ticket: set_status(RESOLVED)
-    Maintenance_Ticket -->> -Technician: return done
-
-    Technician ->> Technician: set_status(AVAILABLE)
-
-    Technician -->> -Dorm: return completed_ticket
-
-    create participant Invoice
-    Dorm ->> Invoice: create_invoice(MAINTENANCE, room_id, ticket.cost)
-    activate Invoice
-    Invoice -->> Dorm: return invoice
-    deactivate Invoice
-
-    loop resident in dorm.residents
-        loop contract in resident.contracts
-            Dorm ->> Dorm: check contract.room.id == room_id and status == ACTIVE
-            alt match found
-                Dorm -->> Dorm: return resident
-            else no match
-                Dorm -->> Dorm: continue
-            end
-        end
-    end
-
-    opt resident not found
-        Dorm -->> Technician_Actor: return "no active resident for room"
-    end
-
-    Dorm ->> Dorm: resident.add_invoice(invoice)
-
+    Technician -->> -Dorm: return result
     Dorm -->> Technician_Actor: return result
     deactivate Dorm
