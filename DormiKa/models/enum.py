@@ -41,7 +41,7 @@ class InvoiceType(Enum):
     CONTRACT       = "invoice_contract"
     MAINTENANCE    = "invoice_maintenance"
     CLEANER        = "invoice_cleaner"
-    CHAIR_FACILITY = "invoice_chair_facility"
+    SHARE_FACILITY = "invoice_share_facility"
 
 class InvoiceStatus(Enum):
     PAID = "paid"
