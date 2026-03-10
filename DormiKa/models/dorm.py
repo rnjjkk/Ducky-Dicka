@@ -99,7 +99,7 @@ class Dorm:
     def system_contract_invoice(self, employee_ID_input):
         employee = self.search_employee_by_id(employee_ID_input)
         for resident in self.__residents:
-            for contract in resident.contract_list:
+            for contract in resident.contracts:
                 monthly_rent = contract.room.monthly_rent
                 room_id = contract.room.id
                 invoice = employee.create_contract_invoice(monthly_rent, room_id)
@@ -118,7 +118,7 @@ class Dorm:
     def payment_system(self, Resident_ID_input, paymentdata):
         resident = self.search_resident_by_id(Resident_ID_input)
         receipt = resident.payment(paymentdata)
-        receipt_id = receipt.ID
+        receipt_id = receipt.id
         s = f'payment_system : success\nreceipt : {receipt_id}'
         self.show_success(s)
 
@@ -143,8 +143,8 @@ class Dorm:
         if target_room is None:
             return {"response": "target room not found"}
 
-        if target_room.status != RoomStatus.Available:
-            print(target_room.status, RoomStatus.Available)
+        if target_room.status != RoomStatus.AVAILABLE:
+            print(target_room.status, RoomStatus.AVAILABLE)
             return {"response": "target room not available"}
 
         if len(resident.invoices) > 0:
@@ -152,9 +152,9 @@ class Dorm:
 
         invoice = current_contract.calculate_upgrade_amount(target_room.rental, moveDate)
         old_room = current_contract.room
-        old_room.status = RoomStatus.Available
+        old_room.status = RoomStatus.AVAILABLE
         current_contract.room = target_room
-        target_room.status = RoomStatus.Occupied
+        target_room.status = RoomStatus.OCCUPIED
 
         resident.add_invoice(invoice)
         return {
@@ -172,3 +172,11 @@ class Dorm:
                 "status": old_room.status.value,
             }
         }
+    
+    def display_invoice(self, resident_id_input):
+
+        resident = self.search_resident_by_id(resident_id_input)
+        for invoice in resident.invoices :
+            print(invoice.id)
+        s = f'display_invoice : success'
+        self.show_success(s)

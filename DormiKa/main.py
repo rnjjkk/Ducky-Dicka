@@ -56,22 +56,22 @@ def create_room_mock_data(building):
         Room(
             building=building,
             floor=1,
-            room_type=RoomType.StudioRoom,
-            status=RoomStatus.Available,
+            room_type=RoomType.STUDIO_ROOM,
+            status=RoomStatus.AVAILABLE,
             rental=6500,
         ),
         Room(
             building=building,
             floor=2,
-            room_type=RoomType.StandardRoom,
-            status=RoomStatus.Available,
+            room_type=RoomType.STANDARD_ROOM,
+            status=RoomStatus.AVAILABLE,
             rental=8200,
         ),
         Room(
             building=building,
             floor=3,
-            room_type=RoomType.OneBedRoomRoom,
-            status=RoomStatus.Available,
+            room_type=RoomType.ONE_BED_ROOM,
+            status=RoomStatus.AVAILABLE,
             rental=10500,
         ),
     ]
@@ -94,7 +94,7 @@ def create_contract_mock_data(resident, room, status: ContractStatus = ContractS
 
     contract = Contract(resident.id, room.id, status=status)
     # Mark the room as occupied when it's under contract.
-    room.status = RoomStatus.Occupied
+    room.status = RoomStatus.OCCUPIED
     resident.add_contract(contract)
     
     print(resident.contracts[0].id)
