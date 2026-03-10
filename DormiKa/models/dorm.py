@@ -174,9 +174,15 @@ class Dorm:
         }
     
     def display_invoice(self, resident_id_input):
-
         resident = self.search_resident_by_id(resident_id_input)
         for invoice in resident.invoices :
             print(invoice.id)
         s = f'display_invoice : success'
+        self.show_success(s)
+
+    def display_receipt(self, resident_id_input):
+        resident = self.search_resident_by_id(resident_id_input)
+        for receipt in resident.receipts:
+            print(receipt.id)
+        s = f'display_receipt : success'
         self.show_success(s)
