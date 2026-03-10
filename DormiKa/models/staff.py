@@ -1,5 +1,5 @@
 from datetime import datetime
-from .enum import AvailabilityStatus, MaintenanceCost
+from .enum import *
 from .maintenance_ticket import MaintenanceTicket
 
 class Staff:
@@ -129,10 +129,30 @@ class Technician(Staff):
                 f"(capabilities: {self.__capabilities})"
             )
 
-        cost = MaintenanceCost[ticket.issue_category].value
-
         self.status = AvailabilityStatus.UNAVAILABLE
         ticket.begin_work(notes)
+
+        return {
+            "technician_id": self.id,
+            "technician_name": self.name,
+            "ticket_id": ticket.id,
+            "room_id": ticket.room_id,
+            "issue_category": ticket.issue_category,
+            "status": ticket.status.value,
+            "start_time": str(ticket.start_time),
+            "notes": ticket.notes,
+        }
+
+    def finish_maintenance(self):
+        if self._current_task is None:
+            raise ValueError(f"Technician {self.id} has no assigned ticket")
+
+        ticket = self._current_task
+
+        if ticket.status != MaintenanceStatus.IN_PROGRESS:
+            raise ValueError(f"Ticket {ticket.id} is not in progress, cannot finish")
+
+        cost = MaintenanceCost[ticket.issue_category].value
         ticket.finish_work(cost)
 
         self.status = AvailabilityStatus.AVAILABLE
