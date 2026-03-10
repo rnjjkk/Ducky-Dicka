@@ -34,6 +34,9 @@ class Dorm:
                 if room.id == room_id:
                     return room
         return None
+    
+    def search_room_by_contract(self,room_id):
+        pass
 
     def search_available_employee(self):
         for employee in self.__employees:
