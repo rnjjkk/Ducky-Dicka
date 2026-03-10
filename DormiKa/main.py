@@ -46,6 +46,9 @@ def create_employee_mock_data():
     employees = [
         Employee("Alice"),
         Employee("Bob"),
+        Employee("Charlie"),
+        Employee("Diana"),
+        Employee("Eve"),
     ]
     for e in employees:
         print(f"Created Employee: {e.fid} ({e.id})")
