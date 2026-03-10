@@ -1,11 +1,17 @@
+from datetime import datetime
+
 class CleaningStatus:
     REQUESTED = "Requested"
     CLEANING = "Cleaning"
     FINISHED = "Finished"
 
 class CleaningTicket:
-    def __init__(self, ticket_id, room_id, resident_id, status):
-        self.ticket_id = ticket_id
-        self.room_id = room_id
-        self.resident_id = resident_id
-        self.status = status
+    ID = 1
+    def __init__(self,reporter_id,room_id):
+        self.__ticket_id = CleaningTicket.ID
+        self.__reporter_id = reporter_id
+        self.__room_id = room_id
+        self.__report_time = 0
+        self.__status = CleaningStatus.REQUESTED
+        CleaningTicket.ID += 1
+
