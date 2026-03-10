@@ -52,6 +52,8 @@ sequenceDiagram
         d ->> resAc:not found room
     end
 
+    d ->>d:search_room_by_contracts(resident,room_id)
+
     d ->> res:get contract_list from resident instance
     res -->> d:return contract_list
 
@@ -68,6 +70,10 @@ sequenceDiagram
     
     end
     
+    opt request wrong room
+    d ->> resAc:return request wrong room resident doesn't in contract
+    end
+
     d ->> res:request_cleaning_room(resident_id,room_id)
     res ->> room:get_cleaning_ticket_list()
     room -->> res:return cleaning_ticket_list

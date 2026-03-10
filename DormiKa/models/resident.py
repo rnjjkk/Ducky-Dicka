@@ -62,6 +62,10 @@ class Resident:
     @property
     def invoices(self):
         return self.__invoices
+
+    @property
+    def receipts(self):
+        return self.__receipts
 			
     def set_member(self, member):
         self.__member = member
@@ -89,7 +93,7 @@ class Resident:
         list_selected_invoice = []
         for invoice_id in list_invoice_id:
             for invoice in self.__invoices:
-                if invoice_id == invoice.ID:
+                if invoice_id == invoice.id:
                     count += 1
                     total_amount += invoice.amount
                     list_selected_invoice.append(invoice)

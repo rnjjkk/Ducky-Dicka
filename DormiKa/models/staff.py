@@ -1,4 +1,6 @@
 from datetime import datetime
+from .enum import AvailabilityStatus
+from .maintenance_ticket import MaintenanceTicket
 
 class Staff:
     def __init__(self, id: str, name: str, phone_number: str, status: str = "ACTIVE"):
@@ -93,7 +95,7 @@ class Technician(Staff):
         capabilities: list = None,
         schedule=None,
         current_task=None,
-        status: str = "AVAILABLE",
+        status = AvailabilityStatus.AVAILABLE,
     ):
         tech_id = f"TC-{Technician.ID:04d}"
         super().__init__(tech_id, name, phone_number, status=status)
