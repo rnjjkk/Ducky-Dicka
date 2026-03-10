@@ -138,11 +138,6 @@ async def change_lease_contract(request: ChangeContractRequest):
                                       request.moveDate
                                       )
 
-class RequestMaintenance(BaseModel):
-    residentId: str
-    roomId: str
-    issueCategory: str
-
 """
 {
   "residentId": "1",
