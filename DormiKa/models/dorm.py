@@ -82,7 +82,7 @@ class Dorm:
         if target_room is None:
             return {"response": "target room not found"}
 
-        if target_room.status != RoomStatus.AVAILABLE:
+        if target_room.status != RoomStatus.Available:
             return {"response": "target room not available"}
 
         if len(resident.invoices) > 0:
@@ -90,9 +90,9 @@ class Dorm:
 
         invoice = current_contract.calculate_upgrade_amount(target_room.ROOM_COST, moveDate)
         old_room = current_contract.room
-        old_room.status = RoomStatus.AVAILABLE
+        old_room.status = RoomStatus.Available
         current_contract.room = target_room
-        target_room.status = RoomStatus.OCCUPIED
+        target_room.status = RoomStatus.Occupied
 
         resident.add_invoice(invoice)
         return {"resident": resident,
