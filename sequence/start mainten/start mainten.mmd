@@ -1,55 +1,76 @@
-%%{init: {'theme': 'forest', 'classDiagram': {'curve': 'linear', 'padding': 20}}}%%
+%%{init: {"theme": "forest"}}%%
 sequenceDiagram
-    actor Client
-    participant API as FastAPI (main.py)
+    autonumber
+
+    actor Technician_Actor
     participant Dorm
     participant Technician
-    participant MaintenanceTicket
+    participant Maintenance_Ticket
 
-    Client->>API: POST /start-maintenance\n{technicianId, notes, evidenceBefore}
+    Technician_Actor ->> +Dorm: start_maintenance(technicianId, notes, evidenceBefore)
 
-    API->>Dorm: search_technician_by_id(technicianId)
-    loop search __technicians list
-        Dorm->>Dorm: check technician.id == technicianId
-    end
-    alt technician not found
-        Dorm-->>API: raise ValueError("Technician not found")
-        API-->>Client: 400 Bad Request
-    else technician found
-        Dorm-->>API: return Technician
-    end
+    loop tc in dorm.technicians
+        Dorm ->> +Technician: get_id()
+        Technician -->> -Dorm: return id
 
-    API->>Technician: start_maintenance(notes, evidenceBefore)
-
-    Technician->>Technician: check _current_task is not None
-    alt no task assigned
-        Technician-->>API: raise ValueError("No assigned ticket")
-        API-->>Client: 400 Bad Request
+        alt id == technicianId
+            Technician -->> Dorm: return technician
+        else id != technicianId
+            Technician -->> Dorm: continue
+        end
     end
 
-    Technician->>Technician: check issue_category in capabilities
-    alt capability mismatch
-        Technician-->>API: raise PermissionError("Not capable")
-        API-->>Client: 400 Bad Request
+    opt technician not found
+        Dorm -->> Technician_Actor: return "technician not found"
     end
 
-    Technician->>Technician: set status = UNAVAILABLE
+    Dorm ->> +Technician: start_maintenance(notes, evidenceBefore)
 
-    Technician->>MaintenanceTicket: begin_work(notes, evidenceBefore)
+    Technician ->> Technician: get_current_task()
 
-    MaintenanceTicket->>MaintenanceTicket: check status != IN_PROGRESS
-    MaintenanceTicket->>MaintenanceTicket: check status != RESOLVED
-    alt already started or resolved
-        MaintenanceTicket-->>Technician: raise ValueError
-        Technician-->>API: propagate error
-        API-->>Client: 400 Bad Request
+    opt current_task is None
+        Technician -->> Dorm: return "no assigned ticket"
+        Dorm -->> Technician_Actor: return "no assigned ticket"
     end
 
-    MaintenanceTicket->>MaintenanceTicket: set start_time = datetime.now()
-    MaintenanceTicket->>MaintenanceTicket: set notes, evidence_before
-    MaintenanceTicket->>MaintenanceTicket: set status = IN_PROGRESS
-    MaintenanceTicket-->>Technician: return (done)
+    loop cap in technician.capabilities
+        alt cap == ticket.issue_category
+            Technician -->> Technician: capability matched
+        else cap != ticket.issue_category
+            Technician -->> Technician: continue
+        end
+    end
 
-    Technician-->>API: return result dict\n{technician_id, ticket_id, room_id,\nissue_category, status, start_time,\nnotes, evidence_before}
+    opt issue_category not in capabilities
+        Technician -->> Dorm: return "not capable of handling issue"
+        Dorm -->> Technician_Actor: return "not capable of handling issue"
+    end
 
-    API-->>Client: 200 OK\n{result}
+    Technician ->> Technician: set_status(UNAVAILABLE)
+
+    Technician ->> +Maintenance_Ticket: begin_work(notes, evidenceBefore)
+
+    Maintenance_Ticket ->> Maintenance_Ticket: get_status()
+
+    opt status == IN_PROGRESS
+        Maintenance_Ticket -->> Technician: return "ticket already in progress"
+        Technician -->> Dorm: propagate error
+        Dorm -->> Technician_Actor: return error
+    end
+
+    opt status == RESOLVED
+        Maintenance_Ticket -->> Technician: return "ticket already resolved"
+        Technician -->> Dorm: propagate error
+        Dorm -->> Technician_Actor: return error
+    end
+
+    Maintenance_Ticket ->> Maintenance_Ticket: set_start_time(datetime.now())
+    Maintenance_Ticket ->> Maintenance_Ticket: set_notes(notes)
+    Maintenance_Ticket ->> Maintenance_Ticket: set_evidence_before(evidenceBefore)
+    Maintenance_Ticket ->> Maintenance_Ticket: set_status(IN_PROGRESS)
+
+    Maintenance_Ticket -->> -Technician: return done
+
+    Technician -->> -Dorm: return result
+    Dorm -->> Technician_Actor: return result
+    deactivate Dorm
