@@ -6,7 +6,7 @@ sequenceDiagram
     participant Dorm
     participant Resident
     participant Room
-    participant Operating_Staff
+    participant Employee
     participant Technician
     %% REMOVED: participant Maintenance_Ticket (This was causing the error)
 
@@ -53,13 +53,13 @@ sequenceDiagram
     Dorm ->> Dorm: search_available_staff()
     
     loop os in Dorm.ops
-        Dorm ->> +Operating_Staff: get_staff_status()
-        Operating_Staff -->> -Dorm: return status
+        Dorm ->> +Employee: get_staff_status()
+        Employee -->> -Dorm: return status
 
         alt status == "ACTIVE"
-            Operating_Staff -->> Dorm: return os_instance
+            Employee -->> Dorm: return os_instance
         else status != "ACTIVE"
-            Operating_Staff -->> Dorm: continue loop
+            Employee -->> Dorm: continue loop
         end
     end
 
@@ -68,39 +68,39 @@ sequenceDiagram
     end
 
     Dorm ->> Dorm: get_technician_list()
-    Dorm->> Operating_Staff: request_maintenance(reporter, staff, techni_list, room_id, issue_category)
-    activate Operating_Staff
+    Dorm->> Employee: request_maintenance(reporter, staff, techni_list, room_id, issue_category)
+    activate Employee
     
     %% This command dynamically creates the lifeline
     create participant Maintenance_Ticket
-    Operating_Staff->>Maintenance_Ticket: create_mt(reporter, room, issue_category, report_time)
+    Employee->>Maintenance_Ticket: create_mt(reporter, room, issue_category, report_time)
     
     activate Maintenance_Ticket
-    Maintenance_Ticket -->> Operating_Staff: return ticket
+    Maintenance_Ticket -->> Employee: return ticket
     deactivate Maintenance_Ticket
 
-    Operating_Staff ->> Room: add_maintenance_ticket(ticket)
-    Room -->> Operating_Staff: return ok
+    Employee ->> Room: add_maintenance_ticket(ticket)
+    Room -->> Employee: return ok
     
-    Operating_Staff ->> Operating_Staff: find_available_technician(techni_list)
+    Employee ->> Employee: find_available_technician(techni_list)
     
     loop tc in techni_list
-        Operating_Staff ->> +Technician: get_technician_status()
-        Technician -->> -Operating_Staff: return technician_status
+        Employee ->> +Technician: get_technician_status()
+        Technician -->> -Employee: return technician_status
 
         alt status == "ACTIVE"
-            Technician -->> Operating_Staff: return tc
+            Technician -->> Employee: return tc
         else
-            Technician -->> Operating_Staff: continue loop
+            Technician -->> Employee: continue loop
         end
     end
 
     opt no available techni
-        Operating_Staff -->> Dorm: return not found
+        Employee -->> Dorm: return not found
         Dorm -->> Resident_Actor: return no available technician
     end
 
-    Operating_Staff ->> Technician: assign_technician(technician, ticket)
+    Employee ->> Technician: assign_technician(technician, ticket)
     activate Technician
     Technician ->> Maintenance_Ticket: start_maintenance(ticket)
     activate Maintenance_Ticket
@@ -112,15 +112,15 @@ sequenceDiagram
     Maintenance_Ticket -->> Technician: return done
     deactivate Maintenance_Ticket
     
-    Technician -->> Operating_Staff: return done
+    Technician -->> Employee: return done
     deactivate Technician
     
-    Operating_Staff ->> Operating_Staff: approve_maintenance(ticket)
-    activate Operating_Staff
-    deactivate Operating_Staff
+    Employee ->> Employee: approve_maintenance(ticket)
+    activate Employee
+    deactivate Employee
     
-    Operating_Staff -->> Dorm: return done
-    deactivate Operating_Staff
+    Employee -->> Dorm: return done
+    deactivate Employee
     
     Dorm -->> Resident_Actor: return done
     deactivate Resident_Actor
