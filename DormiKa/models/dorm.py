@@ -98,3 +98,6 @@ class Dorm:
         return {"resident": resident,
                 "old-room": old_room,
                 }
+    
+    def request_cleaning_room(self,resident_id,room_id):
+        pass
