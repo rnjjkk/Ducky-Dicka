@@ -146,7 +146,7 @@ class Dorm:
         if len(resident.invoices) > 0:
             return {"response": "please settle existing invoices before changing contract"}
 
-        invoice = current_contract.calculate_upgrade_amount(target_room.rental, moveDate)
+        invoice = current_contract.calculate_upgrade_amount(target_room.monthly_rent, moveDate)
         old_room = current_contract.room
         old_room.status = RoomStatus.AVAILABLE
         current_contract.room = target_room
