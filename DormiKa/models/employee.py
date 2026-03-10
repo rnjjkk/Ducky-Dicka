@@ -29,14 +29,7 @@ class Employee:
     def start_maintenance(self, reporter, technicians, room, issue_category):
         self.__status = "WORKING"
         
-        try:
-            technician = self.find_available_technician(technicians)
-        except Exception as e:
-            return {"error": str(e)}
-        
-        if technician is None:
-            self.__status = "AVAILABLE"
-            return {"error": "no available technician"}
+        technician = self.find_available_technician(technicians)
         
         ticket = self.create_maintenance_ticket(reporter, room.id, issue_category, technician.id)
         technician.assign_ticket(ticket)
@@ -44,7 +37,6 @@ class Employee:
         ticket.approve_maintenance(self, "APPROVED")
         self.__status = "AVAILABLE"
         
-        # Attach the ticket to the room (not only to the resident)
         room.add_maintenance_ticket(ticket)
 
         return {
@@ -58,7 +50,8 @@ class Employee:
         for tc in technicians:
             if tc.status == "AVAILABLE":
                 return tc
-        return None
+        self.__status = "AVAILABLE"
+        raise Exception("no available technician")
 
     def create_maintenance_ticket(self, reporter, room_id, issue_category, technician):
         ticket = MaintenanceTicket(reporter.id, 
