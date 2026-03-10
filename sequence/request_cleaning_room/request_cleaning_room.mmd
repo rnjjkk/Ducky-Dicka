@@ -91,10 +91,10 @@ sequenceDiagram
     
     res ->> cleaning_ticket:create_cleaning_ticket(resident_id,room_id)
     cleaning_ticket -->> res:return ticket 
-    res ->> b:add ticket to building
-    b -->> res:return request success
+    res ->> room:add ticket to room(cleaning_ticket)
+    room -->> res:return add to room success
     res -->> d:return request success
-    d -->> resAc:return request success
+    d -->> resAc:return request cleaning room success
 
     
 
