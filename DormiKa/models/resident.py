@@ -62,6 +62,10 @@ class Resident:
     @property
     def invoices(self):
         return self.__invoices
+
+    @property
+    def receipts(self):
+        return self.__receipts
 			
     def set_member(self, member):
         self.__member = member
