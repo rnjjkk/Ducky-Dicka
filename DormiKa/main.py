@@ -55,7 +55,6 @@ def create_employee_mock_data():
 def create_room_mock_data(building):
     rooms = [
         Room(
-            room_id="RM-STUDIO-A01-01-0001",
             building=building,
             floor=1,
             room_type=RoomType.StudioRoom,
@@ -63,7 +62,6 @@ def create_room_mock_data(building):
             rental=6500,
         ),
         Room(
-            room_id="RM-STANDARD-A01-02-0001",
             building=building,
             floor=2,
             room_type=RoomType.StandardRoom,
