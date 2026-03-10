@@ -19,7 +19,7 @@ class Room:
         self.__floor = floor
         self.__type = room_type
         self.__basic_amenities = basic_amenities or []
-        self.__status = status
+        self.__status = RoomStatus.Available
         self.__room_log: list = []
         self.__maintenance_tickets: list = []
         self.__monthly_rent = self.define_monthly_rent(room_type)

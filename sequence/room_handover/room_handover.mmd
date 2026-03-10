@@ -1,0 +1,61 @@
+sequenceDiagram
+    autonumber
+    participant E as Employee
+    participant D as Dorm(System)
+    participant Ro as Room
+    participant R as Resident
+    participant C as Contract
+
+    Note over E,D:[Step1] ส่งมอบห้อง
+    E->>D: complete_handover(contract_id,fid)
+    activate D
+
+    loop for Resident in Resident_list
+        D->>R : getter : ID
+        activate R
+        R-->>D : return Resident_ID
+
+        alt Resident_ID_input = Resident_ID
+            Note over D, R : return Resident(Instance)
+        else Resident_ID_input != Resident_ID
+            Note over D, R : วนลูปต่อไปจนกว่าจะครบทุกตัว แล้ว return None 
+        end
+        deactivate R
+    end
+
+    opt Resident = None
+    D-->>E : Not match any ressident
+    end
+    
+    Note over D,R: [Step 2] ค้นหา Resident ที่ถือสัญญานี้
+    loop for each resident in resident_list
+        D->>R: has_contract(contract_id)
+        activate R
+        R-->>D: return boolean
+        deactivate R
+        Note right of D: ถ้าเจอ (True) จะหยุด Loop
+    end
+
+    alt if resident not found
+        D-->>E: return error("Contract ID not found")
+    else if resident found
+        %% เมื่อเจอ Resident แล้ว เราจึงขอ Object Contract มาทำงานต่อ
+        
+        Note over D,R:[Step2 หาสัญญาใน Resident(ไม่ต้องลูปหาเพราะapplicantมีสัญญาเดียวอยู่แล้ว)]
+        activate R
+        D->>R: get_active_contract()
+        R-->>D: return contractObj
+        deactivate R
+
+        activate C
+        D->>C: validate_contract_status_for_handover()
+        C-->>D: return contract_status(Active/Pending sign)
+        deactivate C
+        
+        Note right of D: สั่งงานผ่านความสัญญาที่ไปรับมา
+        D->>Ro: record_handover()
+        Ro->>Ro: update_status(Occupied)
+        Ro-->>D: return Success
+        D-->>E: return "Handover success"
+    end
+    deactivate D
