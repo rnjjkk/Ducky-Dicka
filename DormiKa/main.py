@@ -137,15 +137,15 @@ async def startup_event():
 
 class ChangeContractRequest(BaseModel):
     residentId: str = Field(..., example="RS-0001")
-    currentLeaseContractId: str = Field(..., example="LC-0003")
-    targetRoomId: str = Field(..., example="RM-0001")
+    currentLeaseContractId: str = Field(..., example="LC-0001")
+    targetRoomId: str = Field(..., example="RM-0003")
     moveDate: str = Field(..., example="2026-2-27")
 
 """
 {
   "residentId": "RS-0001",
-  "currentLeaseContractId": "LC-0003",
-  "targetRoomId": "RM-0001",
+  "currentLeaseContractId": "LC-0001",
+  "targetRoomId": "RM-0003",
   "moveDate": "2026-2-27"
 }
 """
