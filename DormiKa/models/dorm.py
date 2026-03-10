@@ -1,6 +1,8 @@
+from .enum import *
 from .contract import *
 from .room import *
 from .resident import *
+
 class Dorm:
     def __init__(self, name: str):
         self.__name: str = name
@@ -60,7 +62,7 @@ class Dorm:
 
     def search_available_employee(self):
         for employee in self.__employees:
-            if employee.status == "AVAILABLE":
+            if employee.status == AvailabilityStatus.AVAILABLE:
                 return employee
         raise ValueError("No employee are available at the moment")
     
@@ -78,16 +80,10 @@ class Dorm:
     
     def request_maintenance(self, resident_id, room_id, issue_category):
         resident = self.search_resident_by_id(resident_id)
-        if resident is None:
-            return {"error": "resident not found!"}
 
         room = self.search_room_by_id(room_id)
-        if room is None:
-            return {"error": "room not found!"}
 
         employee = self.search_available_employee()
-        if employee is None:
-            return {"error": "no available staff!"}
         
         return employee.start_maintenance(
             resident, 
@@ -99,7 +95,7 @@ class Dorm:
     def system_contract_invoice(self, employee_ID_input):
         employee = self.search_employee_by_id(employee_ID_input)
         for resident in self.__residents:
-            for contract in resident.contract_list:
+            for contract in resident.contracts:
                 monthly_rent = contract.room.monthly_rent
                 room_id = contract.room.id
                 invoice = employee.create_contract_invoice(monthly_rent, room_id)
@@ -118,7 +114,7 @@ class Dorm:
     def payment_system(self, Resident_ID_input, paymentdata):
         resident = self.search_resident_by_id(Resident_ID_input)
         receipt = resident.payment(paymentdata)
-        receipt_id = receipt.ID
+        receipt_id = receipt.id
         s = f'payment_system : success\nreceipt : {receipt_id}'
         self.show_success(s)
 
@@ -143,8 +139,8 @@ class Dorm:
         if target_room is None:
             return {"response": "target room not found"}
 
-        if target_room.status != RoomStatus.Available:
-            print(target_room.status, RoomStatus.Available)
+        if target_room.status != RoomStatus.AVAILABLE:
+            print(target_room.status, RoomStatus.AVAILABLE)
             return {"response": "target room not available"}
 
         if len(resident.invoices) > 0:
@@ -152,9 +148,9 @@ class Dorm:
 
         invoice = current_contract.calculate_upgrade_amount(target_room.rental, moveDate)
         old_room = current_contract.room
-        old_room.status = RoomStatus.Available
+        old_room.status = RoomStatus.AVAILABLE
         current_contract.room = target_room
-        target_room.status = RoomStatus.Occupied
+        target_room.status = RoomStatus.OCCUPIED
 
         resident.add_invoice(invoice)
         return {
@@ -172,3 +168,17 @@ class Dorm:
                 "status": old_room.status.value,
             }
         }
+    
+    def display_invoice(self, resident_id_input):
+        resident = self.search_resident_by_id(resident_id_input)
+        for invoice in resident.invoices :
+            print(invoice.id)
+        s = f'display_invoice : success'
+        self.show_success(s)
+
+    def display_receipt(self, resident_id_input):
+        resident = self.search_resident_by_id(resident_id_input)
+        for receipt in resident.receipts:
+            print(receipt.id)
+        s = f'display_receipt : success'
+        self.show_success(s)

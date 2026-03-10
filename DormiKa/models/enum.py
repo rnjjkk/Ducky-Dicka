@@ -15,22 +15,22 @@ class IssueCategory(str, Enum):
     # add more as needed
 
 class RoomType(Enum):
-    StudioRoom = "StudioRoom"
-    StandardRoom = "StandardRoom"
-    OneBedRoomRoom = "OneBedRoomRoom"
+    STUDIO_ROOM = "StudioRoom"
+    STANDARD_ROOM = "StandardRoom"
+    ONE_BED_ROOM = "OneBedRoomRoom"
 
 class RoomPrice(Enum):
-    StudioRoom = 6700
-    StandardRoom = 9100
-    OneBedRoomRoom = 10500
+    STUDIO_ROOM = 6700
+    STANDARD_ROOM = 9100
+    ONE_BED_ROOM = 10500
 
 class RoomStatus(Enum):
-    Available = "Available"
-    Reserved = "Reserved"
-    Occupied = "Occupied"
-    Turnover_Cleaning = "Turnover_Cleaning"
-    Maintenance = "Maintenance"
-    Disable = "Disable"
+    AVAILABLE = "Available"
+    RESERVED = "Reserved"
+    OCCUPIED = "Occupied"
+    TURNOVER_CLEANING = "Turnover_Cleaning"
+    MAINTENANCE = "Maintenance"
+    DISABLE = "Disable"
 
 class AccountStatus(Enum):
     ACTIVE = "ACTIVE"
@@ -71,3 +71,6 @@ class BookingStatus(Enum):
 class ShareFacilityPrice(Enum):
     MeetingRoom = 100
     WashingMachine = 50
+class MaintenanceStatus(Enum):
+    IN_PROGRESS = "IN_PROGRESS"
+    RESOLVED = "RESOLVED"

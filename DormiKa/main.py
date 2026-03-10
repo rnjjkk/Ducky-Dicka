@@ -46,6 +46,9 @@ def create_employee_mock_data():
     employees = [
         Employee("Alice"),
         Employee("Bob"),
+        Employee("Charlie"),
+        Employee("Diana"),
+        Employee("Eve"),
     ]
     for e in employees:
         print(f"Created Employee: {e.fid} ({e.id})")
@@ -56,22 +59,22 @@ def create_room_mock_data(building):
         Room(
             building=building,
             floor=1,
-            room_type=RoomType.StudioRoom,
-            status=RoomStatus.Available,
+            room_type=RoomType.STUDIO_ROOM,
+            status=RoomStatus.AVAILABLE,
             rental=6500,
         ),
         Room(
             building=building,
             floor=2,
-            room_type=RoomType.StandardRoom,
-            status=RoomStatus.Available,
+            room_type=RoomType.STANDARD_ROOM,
+            status=RoomStatus.AVAILABLE,
             rental=8200,
         ),
         Room(
             building=building,
             floor=3,
-            room_type=RoomType.OneBedRoomRoom,
-            status=RoomStatus.Available,
+            room_type=RoomType.ONE_BED_ROOM,
+            status=RoomStatus.AVAILABLE,
             rental=10500,
         ),
     ]
@@ -94,7 +97,7 @@ def create_contract_mock_data(resident, room, status: ContractStatus = ContractS
 
     contract = Contract(resident.id, room.id, status=status)
     # Mark the room as occupied when it's under contract.
-    room.status = RoomStatus.Occupied
+    room.status = RoomStatus.OCCUPIED
     resident.add_contract(contract)
     
     print(resident.contracts[0].id)
@@ -177,9 +180,11 @@ class RequestMaintenance(BaseModel):
 
 @app.post("/request-maintenance")
 async def request_maintenance(request: RequestMaintenance):
-    return dorm.request_maintenance(request.residentId, 
-                                   request.roomId, 
-                                   request.issueCategory)
+    try:
+        result = dorm.request_maintenance(request.residentId, request.roomId, request.issueCategory.value)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1",port=8000, log_level="info", reload=True)

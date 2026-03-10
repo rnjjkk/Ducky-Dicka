@@ -9,17 +9,17 @@ class Room:
         self,
         building: object,
         floor: int,
-        room_type: RoomType = RoomType.StandardRoom,
+        room_type: RoomType = RoomType.STANDARD_ROOM,
         basic_amenities: list | None = None,
-        status: RoomStatus = RoomStatus.Available,
-        rental: int = RoomPrice.StandardRoom,
+        status: RoomStatus = RoomStatus.AVAILABLE,
+        rental: int = RoomPrice.STANDARD_ROOM,
     ):
         self.__room_id = f"RM-{Room.ID:04d}"
         self.__building = building
         self.__floor = floor
         self.__type = room_type
         self.__basic_amenities = basic_amenities or []
-        self.__status = RoomStatus.Available
+        self.__status = RoomStatus.AVAILABLE
         self.__room_log: list = []
         self.__maintenance_tickets: list = []
         self.__monthly_rent = self.define_monthly_rent(room_type)
@@ -111,10 +111,10 @@ class Room:
 
         This is used during a booking workflow before a contract is confirmed.
         """
-        if self.__status != RoomStatus.Available:
+        if self.__status != RoomStatus.AVAILABLE:
             return False
 
-        self.__status = RoomStatus.Reserved
+        self.__status = RoomStatus.RESERVED
         self.__hold_expiry = datetime.now() + timedelta(hours=hours)
         return True
 
@@ -125,7 +125,7 @@ class Room:
 
         if datetime.now() >= self.__hold_expiry:
             self.__hold_expiry = None
-            self.__status = RoomStatus.Available
+            self.__status = RoomStatus.AVAILABLE
             return True
 
         return False

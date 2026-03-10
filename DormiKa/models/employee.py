@@ -1,6 +1,6 @@
 from datetime import datetime
-from .enum import AvailabilityStatus, InvoiceType, InvoiceStatus
-from .maintenance_ticket import MaintenanceTicket
+from .enum import *
+from .maintenance_ticket import *
 from .invoice import Invoice
 
 class Employee:
@@ -27,38 +27,28 @@ class Employee:
         return self.__status
 
     def start_maintenance(self, reporter, technicians, room, issue_category):
-        self.__status = "WORKING"
-        
-        try:
-            technician = self.find_available_technician(technicians)
-        except Exception as e:
-            return {"error": str(e)}
-        
-        if technician is None:
-            self.__status = "AVAILABLE"
-            return {"error": "no available technician"}
+        self.__status = AvailabilityStatus.UNAVAILABLE
+
+        technician = self.find_available_technician(technicians)
         
         ticket = self.create_maintenance_ticket(reporter, room.id, issue_category, technician.id)
         technician.assign_ticket(ticket)
-        
-        ticket.approve_maintenance(self, "APPROVED")
-        self.__status = "AVAILABLE"
-        
-        # Attach the ticket to the room (not only to the resident)
         room.add_maintenance_ticket(ticket)
+        ticket.status = MaintenanceStatus.IN_PROGRESS
 
         return {
             "reporter": f"{ticket.reporter}",
             "room": f"{ticket.room_id}",
             "technician": f"{ticket.responsible_technician}",
-            "status": f"{ticket.status}"
+            "status": f"{ticket.status.value}"
         }
 
     def find_available_technician(self, technicians):
         for tc in technicians:
-            if tc.status == "AVAILABLE":
+            if tc.status == AvailabilityStatus.AVAILABLE:
                 return tc
-        return None
+        self.__status = AvailabilityStatus.AVAILABLE
+        raise Exception("no available technician")
 
     def create_maintenance_ticket(self, reporter, room_id, issue_category, technician):
         ticket = MaintenanceTicket(reporter.id, 

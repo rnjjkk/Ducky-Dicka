@@ -11,5 +11,5 @@ class Receipt:
         self.__date_create = datetime.now()
 
     @property
-    def ID(self):
+    def id(self):
         return self.__id
