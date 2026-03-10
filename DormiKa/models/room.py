@@ -18,6 +18,8 @@ class RoomStatus(Enum):
 
 
 class Room:
+    ID = 1
+    
     def __init__(
         self,
         room_id: str,
@@ -30,7 +32,7 @@ class Room:
         water_cost: float = 0.0,
         rental: float = 0.0,
     ):
-        self.__room_id = room_id
+        self.__room_id = f"RM-{self.__building.id}-{Room.ID:04d}"
         self.__building = building
         self.__floor = floor
         self.__type = room_type
@@ -43,10 +45,11 @@ class Room:
         self.__rental = rental
         self.__hold_expiry = None  # used when a room is temporarily reserved/held
 
+        Room.ID += 1
 
     @property
-    def fid(self):
-        return f"RM-{self.__building.id}-{self.__floor:02d}-{self.__room_id[-4:]}"
+    def id(self):
+        return self.__room_id
 
     @property
     def id(self):
