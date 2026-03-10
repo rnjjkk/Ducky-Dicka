@@ -8,73 +8,67 @@ sequenceDiagram
 
     User->>D: booking_share_facility(resident_id, share_facility_id, building_id, booking_time)
     
+    %% 1. ค้นหา Resident
     D->>D: search_resident_by_id(resident_id)
-    
     loop for rs in resident_list
         D->>R: getResidentID(resident_id)
     end
     
-    %% เปลี่ยนจาก alt เป็น opt สำหรับกรณีที่ค้นหาเจอ (Happy Path)
-    opt found resident in resident_list
-        D->>D: search_share_facility_by_id(building_id, share_facility_id)
-        
-        loop for building in building_list
-            D->>B: getBuildingID(building_id)
-        end
-        
-        opt found building in building_list
-            
-            opt facility == Meeting_Room
-                loop for meeting_room in building.meeting_room_list
-                    D->>M: getMeeting_RoomID(meeting_room_id)
-                end
-                
-                opt found meeting_room in building.meeting_room_list
-                    D->>M: getbooking_share_facility_list()
-                    M-->>D: booking_share_facility
-                    
-                    loop for booking in booking_share_facility_list
-                        D->>BSF: check_booking_share_facility(booking_time)
-                        
-                        %% ตรวจสอบว่ามีคนจองเวลานี้แล้วหรือยัง
-                        opt found booking in booking_share_facility_list
-                            D-->>User: return booking unsuccessful (break loop)
-                        end
-                    end
-                    
-                    %% กรณีเวลาว่าง ไม่มีคนจอง
-                    opt not found every resident booking this share facility
-                        D->>M: create_booking_share_facility()
-                        M->>BSF: create_Booking_share_facility(resident_id, building_id, share_facility_id, booking_time)
-                        BSF-->>M: return Booking_share_facility(booking_share_facility)
-                        M->>M: add to booking_share_facility_list
-                        M-->>D: return booking_share_facility
-                        D-->>User: return booking successful
-                    end
-                end
-                
-                %% กรณีหา Meeting Room ไม่เจอ
-                opt not found meeting_room
-                    M-->>D: return not found meeting_room
-                    D-->>User: return not found meeting_room
-                end
-            end
-            
-            %% เผื่อกรณีเป็น facility อื่นๆ ตามในรูป
-            opt facility == Washing_Machine
-                %% (ไม่มี action ภายในบล็อกนี้ตามรูปภาพต้นฉบับ)
-            end
-        end
-        
-        %% กรณีหา Building ไม่เจอ
-        opt not found building
-            B-->>D: return not found building
-            D-->>User: return not found building
-        end
-    end
-    
-    %% กรณีหา Resident ไม่เจอ
+    %% เช็คกรณีหา Resident ไม่เจอ
     opt not found resident
         R-->>D: return not found resident
         D-->>User: return not found resident
+    end
+    
+    %% 2. ค้นหา Building
+    D->>D: search_share_facility_by_id(building_id, share_facility_id)
+    loop for building in building_list
+        D->>B: getBuildingID(building_id)
+    end
+    
+    %% เช็คกรณีหา Building ไม่เจอ
+    opt not found building
+        B-->>D: return not found building
+        D-->>User: return not found building
+    end
+
+    %% 3. ตรวจสอบ Facility ว่าเป็น Meeting Room หรือไม่
+    opt facility == Meeting_Room
+        loop for meeting_room in building.meeting_room_list
+            D->>M: getMeeting_RoomID(meeting_room_id)
+        end
+        
+        %% เช็คกรณีหา Meeting Room ไม่เจอ
+        opt not found meeting_room
+            M-->>D: return not found meeting_room
+            D-->>User: return not found meeting_room
+        end
+        
+        %% 4. ดึงข้อมูลและตรวจสอบการจอง (ถ้าหา Meeting Room เจอ)
+        D->>M: getbooking_share_facility_list()
+        M-->>D: booking_share_facility
+        
+        loop for booking in booking_share_facility_list
+            D->>BSF: check_booking_share_facility(booking_time)
+            
+            %% เช็คกรณีมีคนจองเวลาซ้อนทับแล้ว
+            opt found booking in booking_share_facility_list
+                D-->>User: return booking unsuccessful (break loop)
+            end
+        end
+        
+        %% 5. ทำการจอง (กรณีเวลาว่างและไม่ติดเงื่อนไขใดๆ ด้านบน)
+        opt not found every resident booking this share facility
+            D->>M: create_booking_share_facility()
+            M->>BSF: create_Booking_share_facility(resident_id, building_id, share_facility_id, booking_time)
+            BSF-->>M: return Booking_share_facility(booking_share_facility)
+            M->>M: add to booking_share_facility_list
+            M-->>D: return booking_share_facility
+            D-->>User: return booking successful
+        end
+    end
+    
+    %% เผื่อกรณี Facility เป็นประเภทอื่น
+    opt facility == Washing_Machine
+        %% การทำงานของ Washing Machine 
     end
