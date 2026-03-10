@@ -77,6 +77,7 @@ sequenceDiagram
     d ->> res:request_cleaning_room(resident_id,room_id)
     res ->> room:get_cleaning_ticket_list()
     room -->> res:return cleaning_ticket_list
+    res ->> cleaning_ticket:check_status_cleaning_ticket(cleaning_list)
     
     loop for cleaning_ticket in room.cleaning_ticket_list
 

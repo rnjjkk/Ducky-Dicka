@@ -74,6 +74,9 @@ class Dorm:
         # 3. search room by contracts (room in resident contract)
         room_in_contract = self.search_room_by_contracts(resident,room_input.id)
 
+        # 4. 
+        cleaning_ticket = room_in_contract.cleaning_tickets
+
 
     
     def request_maintenance(self, resident_id, room_id, issue_category):
