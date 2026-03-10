@@ -7,7 +7,7 @@ class MaintenanceTicket:
     ID = 1
 
     def __init__(self, reporter, room_id, issue_category, responsible_technician=None):
-        self.__id = f'MT-{self.__report_time.strftime("%Y%m%d")}-{MaintenanceTicket.ID:04d}'
+        self.__id = f'MT-{MaintenanceTicket.ID:04d}'
         self.__reporter = reporter
         self.__room_id = room_id
         self.__issue_category = issue_category

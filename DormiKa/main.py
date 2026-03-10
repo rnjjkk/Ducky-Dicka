@@ -68,9 +68,16 @@ def create_room_mock_data(building):
             status=RoomStatus.Available,
             rental=8200,
         ),
+        Room(
+            building=building,
+            floor=3,
+            room_type=RoomType.OneBedRoomRoom,
+            status=RoomStatus.Available,
+            rental=10500,
+        ),
     ]
     for r in rooms:
-        print(f"Created Room: {r.id} ({r.type.value})")
+        print(f"Created Room: {r.id} ({r.type.value}) {r.status.value})")
     return rooms
 
 def create_building_mock_data():
@@ -131,21 +138,21 @@ async def startup_event():
 class ChangeContractRequest(BaseModel):
     residentId: str = Field(..., example="RS-0001")
     currentLeaseContractId: str = Field(..., example="LC-0001")
-    targetRoomId: str = Field(..., example="RM-0001")
+    targetRoomId: str = Field(..., example="RM-0003")
     moveDate: str = Field(..., example="2026-2-27")
 
 """
 {
   "residentId": "RS-0001",
   "currentLeaseContractId": "LC-0001",
-  "targetRoomId": "RM-0001",
+  "targetRoomId": "RM-0003",
   "moveDate": "2026-2-27"
 }
 """
 
 @app.post("/change-contract")
-async def change_lease_contract(request: ChangeContractRequest):
-    return dorm.change_lease_contract(
+async def change_contract(request: ChangeContractRequest):
+    return dorm.change_contract(
         request.residentId,
         request.currentLeaseContractId,
         request.targetRoomId,
@@ -154,20 +161,20 @@ async def change_lease_contract(request: ChangeContractRequest):
 
 """
 {
-  "residentId": "RS-2026-0001",
-  "roomId": "1",
+  "residentId": "RS-0001",
+  "roomId": "RM-0002",
   "issueCategory": "PLUMBING"
 }
 {
-  "residentId": "RS-2026-0001",
-  "roomId": "RM-STUDIO-A01-01-0001",
+  "residentId": "RS-0001",
+  "roomId": "RM-0001",
   "issueCategory": "PLUMBING"
 }
 """
 
 class RequestMaintenance(BaseModel):
-    residentId: str = Field(..., example="1")
-    roomId: str = Field(..., example="RM-STUDIO-A01-01-0001")
+    residentId: str = Field(..., example="RS-0001")
+    roomId: str = Field(..., example="RM-0001")
     issueCategory: IssueCategory = Field(..., example=IssueCategory.PLUMBING)
 
 @app.post("/request-maintenance")

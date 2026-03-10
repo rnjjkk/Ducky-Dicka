@@ -10,6 +10,17 @@ class Dorm:
         self.__technicians: list = []
         self.__cleaner: list = []
 
+    def show_success(self, success):
+        print(success)
+        return success
+
+    def show_error(self, error):
+        print(error)
+        return error
+
+    def add_employee(self, employee):
+        self.__employees.append(employee)
+
     def add_resident(self, resident):
         self.__residents.append(resident)
 
@@ -22,29 +33,36 @@ class Dorm:
     def add_building(self, building):
         self.__buildings.append(building)
 
+    def search_employee_by_id(self, employee_id):
+        for employee in self.__employees :
+            if employee.id == employee_id:
+                return employee
+        raise PermissionError("Employee id : not found")
+    
     def search_resident_by_id(self, resident_id):
         for resident in self.__residents:
             if resident.id == resident_id:
                 return resident
-        return None
+        raise PermissionError("Resident id : not found")
 
     def search_room_by_id(self, room_id):
         for building in self.__buildings:
             for room in building.rooms:
                 if room.id == room_id:
                     return room
-        return None
+        raise PermissionError("Room id : not found")
     
     def search_room_by_contracts(self,resident,room_id):
         for res in resident.contracts:
             if res.room.room.id == room_id:
-                pass
+                return res.roome
+        raise ValueError("input wrong room_id")
 
     def search_available_employee(self):
         for employee in self.__employees:
             if employee.status == "AVAILABLE":
                 return employee
-        return None
+        raise ValueError("No employee are available at the moment")
 
     def request_maintenance(self, resident_id, room_id, issue_category):
         resident = self.search_resident_by_id(resident_id)
@@ -65,6 +83,32 @@ class Dorm:
             room,
             issue_category
         )
+
+    def system_contract_invoice(self, employee_ID_input):
+        employee = self.search_employee_by_id(employee_ID_input)
+        for resident in self.__residents:
+            for contract in resident.contract_list:
+                monthly_rent = contract.room.monthly_rent
+                room_id = contract.room.id
+                invoice = employee.create_contract_invoice(monthly_rent, room_id)
+                resident.add_invoice(invoice)
+        s = 'system_contract_invoice : success'
+        self.show_success(s)
+
+    def select_payment_method_and_invoices(self, Resident_ID_input, payment_method_input, invoice_ids):
+        resident = self.search_resident_by_id(Resident_ID_input)
+        payment = resident.set_payment(payment_method_input, invoice_ids)
+        format = payment.payment_method.payment_format()
+        net_amount = payment.net_amount
+        s = f'select_payment_method_and_invoices : success\nAmount to be paid : {net_amount}\n{format}'
+        self.show_success(s)
+
+    def payment_system(self, Resident_ID_input, paymentdata):
+        resident = self.search_resident_by_id(Resident_ID_input)
+        receipt = resident.payment(paymentdata)
+        receipt_id = receipt.ID
+        s = f'payment_system : success\nreceipt : {receipt_id}'
+        self.show_success(s)
 
     def change_contract(self, 
                             residentId,
@@ -88,32 +132,31 @@ class Dorm:
             return {"response": "target room not found"}
 
         if target_room.status != RoomStatus.Available:
+            print(target_room.status, RoomStatus.Available)
             return {"response": "target room not available"}
 
         if len(resident.invoices) > 0:
             return {"response": "please settle existing invoices before changing contract"}
 
-        invoice = current_contract.calculate_upgrade_amount(target_room.ROOM_COST, moveDate)
+        invoice = current_contract.calculate_upgrade_amount(target_room.rental, moveDate)
         old_room = current_contract.room
         old_room.status = RoomStatus.Available
         current_contract.room = target_room
         target_room.status = RoomStatus.Occupied
 
         resident.add_invoice(invoice)
-        return {"resident": resident,
-                "old-room": old_room,
-                }
-    
-    def request_cleaning_room(self,resident_id,room_id):
-        # resident input resident_id and search_resident_by_id to get resident instance
-        resident = self.search_resident_by_id(resident_id)
-
-        # resident input roomt_id and search_room_by_id to get room instance
-        room_input = self.search_room_by_id(room_id)
-
-        # get contract_list from resident
-        contract_list = resident.contracts
-
-        # search room in contracts
-        room_in_contract = self.search_room_by_id()
-
+        return {
+            "resident": {
+                "id": resident.id,
+                "status": resident.status,
+                "new_room": target_room.id,
+                "invoice": {
+                    "id": invoice.id,
+                    "amount": invoice.amount,
+                } if invoice else None,
+            },
+            "old-room": {
+                "id": old_room.id,
+                "status": old_room.status.value,
+            }
+        }
