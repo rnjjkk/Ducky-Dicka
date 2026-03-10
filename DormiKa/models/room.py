@@ -1,21 +1,6 @@
 from enum import Enum
 from datetime import datetime, timedelta
-
-
-class RoomType(Enum):
-    StudioRoom = "StudioRoom"
-    StandardRoom = "StandardRoom"
-    OneBedRoomRoom = "OneBedRoomRoom"
-
-
-class RoomStatus(Enum):
-    Available = "Available"
-    Reserved = "Reserved"
-    Occupied = "Occupied"
-    Turnover_Cleaning = "Turnover_Cleaning"
-    Maintenance = "Maintenance"
-    Disable = "Disable"
-
+from .enum import RoomStatus, RoomPrice, RoomType
 
 class Room:
     ID = 1
@@ -27,9 +12,7 @@ class Room:
         room_type: RoomType = RoomType.StandardRoom,
         basic_amenities: list | None = None,
         status: RoomStatus = RoomStatus.Available,
-        electric_cost: float = 0.0,
-        water_cost: float = 0.0,
-        rental: float = 0.0,
+        rental: int = RoomPrice.StandardRoom,
     ):
         self.__room_id = f"RM-{Room.ID:04d}"
         self.__building = building
@@ -39,12 +22,15 @@ class Room:
         self.__status = status
         self.__room_log: list = []
         self.__maintenance_tickets: list = []
-        self.__electric_cost = electric_cost
-        self.__water_cost = water_cost
-        self.__rental = rental
+        self.__monthly_rent = self.define_monthly_rent(room_type)
         self.__hold_expiry = None  # used when a room is temporarily reserved/held
+				
+				Room.ID += 1
 
-        Room.ID += 1
+    def define_monthly_rent(self, room_type):
+        for type in RoomType:
+            if room_type == type:
+                return RoomPrice[type.name].value
 
     @property
     def id(self):
@@ -83,6 +69,9 @@ class Room:
         return self.__maintenance_tickets
 
     @property
+    def monthly_rent(self):
+        return self.__monthly_rent
+        
     def electric_cost(self):
         return self.__electric_cost
 
