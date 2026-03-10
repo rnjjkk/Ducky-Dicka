@@ -79,6 +79,7 @@ def create_contract_mock_data(resident, room, status: ContractStatus = ContractS
     # Mark the room as occupied when it's under contract.
     room.status = RoomStatus.Occupied
     resident.add_contract(contract)
+    print(resident.contracts[0].id, "================================================================")
     return contract
 
 """"==============================================================================="""
@@ -131,11 +132,6 @@ async def change_lease_contract(request: ChangeContractRequest):
                                       request.targetRoomId,
                                       request.moveDate
                                       )
-
-class RequestMaintenance(BaseModel):
-    residentId: str
-    roomId: str
-    issueCategory: str
 
 """
 {
