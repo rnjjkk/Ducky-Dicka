@@ -4,20 +4,20 @@ config:
 ---
 %%{init: {'theme': 'forest', 'classDiagram': {'curve': 'linear', 'padding': 20}}}%%
 classDiagram
+
 direction
     class AccountStatus {
         <<enumeration>>
-        Applicant
-        Active
-        Suspended
-        Closed
+        ACTIVE
+        SUSPEND
+        CLOSED
     }
 
     class RoomType {
         <<enumeration>>
         StudioRoom
         StandardRoom
-        OneBedroomRoom
+        OneBedRoomRoom
     }
 
     class RoomStatus {
@@ -26,58 +26,35 @@ direction
         Reserved
         Occupied
         Turnover_Cleaning
-    }
-
-    %% class BookingStatus {
-    %%     <<enumeration>>
-    %%     Drafted
-    %%     Pending_sign
-    %%     Active
-    %%     Ending_soon
-    %%     Terminated
-    %%     Expired
-    %% }
-
-    class ContractStatus {
-        <<enumeration>>
-        Drafted
-        Pending_sign
-        Active
-        Ending_soon
-        Terminated
-        Exipred
-    }
-
-    class FacilityStatus {
-        <<enumeration>>
-        Available
-        Reserved
-        In_Use
         Maintenance
         Disable
     }
 
+    class ContractStatus {
+        <<enumeration>>
+        DRAFT
+        PENDING_SIGN
+        ACTIVE
+        ENDING_SOON
+        TERMINATED
+        EXPIRED
+    }
+
     class InvoiceStatus {
         <<enumeration>>
-        Issued
-        Paid
-        Overdue
-        Disputed
-        Void
+        ISSUED
+        PAID
+        OVERDUE
+        DISPUTED
+        VOID
     }
 
-    class MaintenanceStatus {
+    class IssueCategory {
         <<enumeration>>
-        Submit
-        Assigned
-        In_Progess
-        Waiting_Parts
-        Complete
-        Closed
-        Reject
+        PLUMBING
+        ELECTRICAL
+        AC
     }
-
-
 
     class Dorm {
         - name
@@ -85,7 +62,7 @@ direction
         - residents
         - employees
         - technicians
-        - cleaner
+        - cleaners
 
         + add_building()
         + add_resident()
@@ -95,26 +72,17 @@ direction
 
         + search_resident_by_id()
         + search_room_by_id()
+        + request_maintenance()
+        + change_lease_contract()
     }
-
-    %% class User {
-    %%     - id
-    %%     - name
-    %%     - email
-    %%     - phone_number
-    %%     - strike
-    %%     - date_create
-    %% }
 
     class Resident {
         - id
         - name
-        - email
         - age
         - phone_number
         - strike
         - date_create
-        - move_in_date
         - room_bookings
         - facility_bookings
         - contracts
@@ -122,118 +90,10 @@ direction
         - invoices
         - receipts
         - status
-    }
 
-    class Room_Booking {
-        - id
-        - room
-        - detail
-        %% - contract
-        %% - status
-    }
-
-    class Contract {
-        - id
-        - room
-        - cancel_rent_condition
-        - move_in_date
-        - status
-        - rental_time
-        - monthly_rent
-        - date_create
-        %% - rental_cost
-        %% - security_cost
-        %% - penalty_clauses
-        %% - applicant_sign
-        %% - landlord_sign
-        %% - parking_slot_limit
-    }
-
-    class Member {
-        - amount
-        - type
-    }
-
-    class Standard_Member {
-        + check_status()
-        + calculate_discount()
-    }
-
-    class Plus_Member {
-        + check_paydate()
-        + calculate_discount()
-    }
-
-    class Pro_Member {
-        + check_paydate()
-        + calculate_discount()
-    }
-
-    %% class Long_Term_Discount {
-    %%     + check_date()
-    %%     + calculate_discount()
-    %% }
-
-    class Invoice {
-        - id
-        - type
-        - room_id
-        - net_amount
-        - status
-        %% - resident
-        %% - room_cost
-        %% - electricity_cost
-        %% - water_cost
-        %% - parking_slot_cost
-        %% - share_facility_cost
-        %% - maintenance_cost
-        %% - discount_cost
-        %% - amount_before_discount
-        %% - reference_code_from_payment_gateway
-        %% - refund
-        %% - fine
-
-    }
-
-    %% class Receipt {
-    %%     - id
-    %%     - date
-    %%     - payment
-    %% }
-
-    class Payment {
-        - id
-        - amount
-        - pay_date
-        - invoices
-        - payment_gateway
-        - status
-    }
-
-    class Payment_Gateway {
-        - id
-        - type_method
-        - fee_rate
-    }
-
-    class Bank_Account {
-        - bank_id
-        - reference_id
-    }
-
-    class Card {
-        - card_id
-        - cardholder_name
-        - expitation_date
-        - CVV_CVC
-    }
-
-    class Employee {
-        id
-        name
-        %% building_responsibility
-        %% status
-        date_create
+        + add_contract()
+        + add_invoice()
+        + search_contract_by_id()
     }
 
     class Building {
@@ -243,197 +103,146 @@ direction
         - washing_machines
         - meeting_rooms
         - lockers
-        - parking_slots
+
+        + add_room()
     }
-
-    %% class Parking_Slot {
-    %%     - slot_id
-    %%     - status
-    %%     - fee
-    %% }
-
-    %% class Motorcycle_Parking {
-    %%     - type
-    %%     - check_type
-    %% }
-
-    %% class Car_Parking {
-    %%     - slot_width
-    %%     - height_limit
-    %%     - length_limit
-    %% }
 
     class Room {
         - room_id
         - building
         - floor
-        - status
-        - maintenance_ticket
-    }
-
-    %% class Studio_Room {
-    %%     - room_size = 20 m^2
-    %%     - room_cost = 6500
-    %% }
-
-    %% class Standard_Room {
-    %%     - room_size = 26 m^2
-    %%     - room_cost = 8200
-    %% }
-
-    %% class One_Bedroom_Room {
-    %%     - room_size = 35 m^2
-    %%     - room_cost = 10500
-    %% }
-
-    class Share_Facility {
-        - facility_id
-        - status
-        - fee
-    }
-
-    class Washing_Machine {
-        - fee
-        - size
-        - bookings
-    }
-
-    class Meeting_Room {
-        - building
-        - floor
         - type
-        - room_size
-        - time_limit
-        - bookings
-    }
-
-    class Locker {
-        - room_id
-    }
-
-    class Booking_Facility {
-        - id
-        - detail
+        - basic_amenities
         - status
+        - room_log
+        - maintenance_tickets
+        - electric_cost
+        - water_cost
+        - rental
+
+        + add_maintenance_ticket()
+        + update_meter()
+        + record_handover()
+    }
+
+    class Contract {
+        - id
+        - date_create
+        - room
+        - cancel_rent_condition
+        - move_in_date
+        - status
+        - rental_time
+        - monthly_rent
+
+        + calculate_upgrade_amount()
+    }
+
+    class Invoice {
+        - id
+        - type
+        - room_id
+        - amount
+        - status
+    }
+
+    class Payment {
+        - id
+        - amount
+        - payment_date
+        - invoices
+        - payment_gateway
+    }
+
+    class PaymentGateway {
+    }
+
+    class BankAccount {
+    }
+
+    class Card {
+    }
+
+    class Staff {
+        - id
+        - name
+        - phone_number
+        - status
+        - hire_date
+        - current_task
+
+        + update_status()
+        + assign_task()
+        + complete_task()
+    }
+
+    class Employee {
+        - id
+        - name
+        - date_create
+        - status
+
+        + start_maintenance()
+        + find_available_technician()
+        + create_maintenance_ticket()
     }
 
     class Technician {
         - id
-        - skills
+        - name
+        - phone_number
+        - compabilities
         - schedule
-        - current_ticket
+        - current_task
         - status
+
+        + start_maintenance()
+        + assign_ticket()
     }
 
-    class Maintenance_Ticket {
-        - ticket_id
+    class Cleaner {
+        - id
+        - name
+        - phone_number
+        - cleaning_supplies_list
+        - assigned_rooms
+        - status
+
+        + clean_room()
+    }
+
+    class MaintenanceTicket {
+        - id
         - reporter
-        - room
+        - room_id
         - issue_category
         - report_time
         - responsible_technician
-        - spart_part
-        - evidence
+        - approve_employee
+        - evidence_before_after
         - status
-    }
 
-    class Record {
-        <<abstract>>
-        - time
-    }
-
-    class Booking_Record {
-        - type
-        - id
-        - resident_id
-        - staff_id
-        - room_id
-        - status
-    }
-
-    class Staff_Record {
-        - Booking_Responsible
-    }
-
-    class Parking_Slot_Record {
-        - resident_id
-        - parking_time
-        - vehicle_registration
-    }
-
-    class Room_Record {
-        - room_id
-        - room_status
-        - date
-        - contract 
-        - resident_id
-        - maintenance_ticket
-        - status
-    }
-
-    class Ticket_Record {
-        - cause
-        - ticket_id
-        - resident_id
-        - date_start
-        - date_end
-        - total_expense
-        - result
+        + update_maintenance_status()
+        + approve_maintenance()
     }
 
     Dorm o-- Resident
     Dorm o-- Building
-    Dorm o-- Staff
+    Dorm o-- Employee
+    Dorm o-- Technician
+    Dorm o-- Cleaner
 
-    Resident --|> User
-    Resident o-- Booking
-    Resident o-- Discount
+    Resident o-- Contract
     Resident o-- Invoice
-    Resident o-- Receipt
-    Resident o-- Booking_Facility
 
-    Booking --> Contract
+    Building o-- Room
+    Room o-- MaintenanceTicket
 
-    Discount <|-- Student_Discount
-    Discount <|-- Early_Payment_Discount
-    Discount <|-- Long_Term_Discount
+    Contract --> Room
+    MaintenanceTicket --> Resident
+    MaintenanceTicket --> Technician
 
     Payment o-- Invoice
-    Payment <-- Receipt
-    Payment --> Payment_Method
-
-    Payment_Method <|-- Bank_Account
-    Payment_Method <|-- Card
-
-    Building o-- Parking_Slot
-    Building o-- Room
-    Building o-- Share_Facility
-
-    Parking_Slot <|-- Motorcycle_Parking
-    Parking_Slot <|-- Car_Parking
-
-    Room <|-- Studio_Room
-    Room <|-- Standard_Room
-    Room <|-- One_Bedroom_Room
-
-    Share_Facility <|-- Locker
-    Share_Facility <|-- Meeting_Room
-    Share_Facility <|-- Washing_Machine
-
-    Maintenance_Ticket --o Room
-    Maintenance_Ticket --> Resident
-    Maintenance_Ticket <-- Technician
-
-    Record <|-- Booking_Record
-    Record <|-- Staff_Record
-    Record <|-- Parking_Slot_Record
-    Record <|-- Room_Record
-    Record <|-- Share_Facility_Record
-    Record <|-- Ticket_Record
-
-    Booking_Record --o Booking
-    Staff_Record --o Staff
-    Parking_Slot_Record --o Parking_Slot
-    Room_Record --o Room
-    Share_Facility_Record --o Share_Facility
-    Ticket_Record --o Maintenance_Ticket
+    Payment --> PaymentGateway
+    PaymentGateway <|-- BankAccount
+    PaymentGateway <|-- Card
