@@ -26,7 +26,7 @@ class Resident:
     ID = 1
     
     def __init__(self, name: str, age: str=None, phone_number: str=None, status: str="ACTIVE"):
-        self.__id = Resident.ID
+        self.__id = f"RS-{self.__date_create.year}-{Resident.ID:04d}"
         self.__name = name
         self.__age = age
         self.__phone_number = phone_number
@@ -36,7 +36,7 @@ class Resident:
         self.__facility_bookings = []
         self.__contracts = []
         self.__discounts = []
-        self.__inovices = []
+        self.__invoices = []
         self.__receipts = []
         self.__status = status
 
@@ -49,24 +49,9 @@ class Resident:
         Resident.ID += 1
 
     @property
-    def fid(self):
-        return f"RS-{self.__date_create.year}-{self.__id:04d}"
-
-    @property
     def id(self):
         return self.__id
 
     @property
     def status(self):
         return self.__status
-
-    # Resident Method
-    def create_cleaning_ticket(self,room_id):
-        # room = 
-        ticket = CleaningTicket(room_id)
-        return ticket
-    
-    def add_cleaning_ticket(self,room,ticket):
-        if ticket:    
-            room.cleaning_ticket.append(ticket)
-            return True

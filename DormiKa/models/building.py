@@ -1,9 +1,9 @@
 class Building:
     ID = 1
     
-    def __init__(self, floor, zone="A"):
-        self.__id = f"{zone}{Building.ID}"
-        self.__floor = floor
+    def __init__(self, floor_count, zone):
+        self.__id = f"{zone}{Building.ID:02d}"
+        self.__floor_count = floor_count
         self.__rooms = []
         self.__washing_machines = []
         self.__meeting_rooms = []

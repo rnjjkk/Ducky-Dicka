@@ -1,5 +1,5 @@
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class RoomType(Enum):
@@ -18,10 +18,11 @@ class RoomStatus(Enum):
 
 
 class Room:
+    ID = 1
+    
     def __init__(
         self,
-        room_id: str,
-        building: str,
+        building: object,
         floor: int,
         room_type: RoomType = RoomType.StandardRoom,
         basic_amenities: list | None = None,
@@ -30,7 +31,7 @@ class Room:
         water_cost: float = 0.0,
         rental: float = 0.0,
     ):
-        self.__room_id = room_id
+        self.__room_id = f"RM-{building.id}-{Room.ID:04d}"
         self.__building = building
         self.__floor = floor
         self.__type = room_type
@@ -41,12 +42,8 @@ class Room:
         self.__electric_cost = electric_cost
         self.__water_cost = water_cost
         self.__rental = rental
-        self.__cleaning_ticket = []
 
-
-    @property
-    def fid(self):
-        return f"RM-{self.__building.id}-{self.__floor:02d}-{self.__room_id[-4:]}"
+        Room.ID += 1
 
     @property
     def id(self):
@@ -72,6 +69,10 @@ class Room:
     def status(self):
         return self.__status
 
+    @status.setter
+    def status(self, new_status):
+        self.__status = new_status
+
     @property
     def room_log(self):
         return self.__room_log
@@ -95,7 +96,7 @@ class Room:
     @property
     def rental(self):
         return self.__rental
-        
+
     def add_maintenance_ticket(self, ticket):
         """Attach a maintenance ticket to this room."""
         self.__maintenance_tickets.append(ticket)
@@ -119,3 +120,27 @@ class Room:
             "handover_water": meter_water,
         })
         return {"handover_electric": meter_elect, "handover_water": meter_water}
+
+    def hold(self, hours: int = 48) -> bool:
+        """Temporarily reserve the room for a short time.
+
+        This is used during a booking workflow before a contract is confirmed.
+        """
+        if self.__status != RoomStatus.Available:
+            return False
+
+        self.__status = RoomStatus.Reserved
+        self.__hold_expiry = datetime.now() + timedelta(hours=hours)
+        return True
+
+    def is_hold_expired(self) -> bool:
+        """Return True if the current hold has expired and reset status."""
+        if self.__hold_expiry is None:
+            return False
+
+        if datetime.now() >= self.__hold_expiry:
+            self.__hold_expiry = None
+            self.__status = RoomStatus.Available
+            return True
+
+        return False
