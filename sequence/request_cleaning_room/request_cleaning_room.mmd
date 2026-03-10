@@ -7,6 +7,7 @@ sequenceDiagram
     participant b as Building
     participant room as Room
     participant contract as Contract
+    participant cleaning_ticket as Cleaning_Ticket
 
     resAc ->> d:request_cleaning_room(resident_id,room_id)
 
@@ -71,20 +72,22 @@ sequenceDiagram
     res ->> room:get_cleaning_ticket_list()
     room -->> res:return cleaning_ticket_list
     
-    loop for cleaning_ticket in cleaning_ticket_list
+    loop for cleaning_ticket in room.cleaning_ticket_list
 
-        alt cleaning_ticket.status == "Finished"
-            cleaning_ticket -->> res:can create cleaning ticket
-        else cleaning_ticket.status != "Finished"
+        res ->> cleaning_ticket:get_cleaning_ticket_status()
+        cleaning_ticket -->> res:return cleaning_ticket_status
+
+        opt cleaning_ticket.status == "Requested" or cleaning_ticket.status == "Cleaning"
             cleaning_ticket -->> res:can't create cleaning ticket
         end
 
     end
     
-    opt room has cleaning ticket with status not finished
-        res -->> d:can't create cleaning ticket
-        d -->> resAc:can't create cleaning ticket
+    opt room status is "Requested" or "Cleaning"
+        res -->> d:this room already has cleaning ticket with status Requested or Cleaning
+        d -->> resAc:this room already has cleaning ticket with status Requested or Cleaning
     end
+    
     
     res ->> cleaning_ticket:create_cleaning_ticket(resident_id,room_id)
     cleaning_ticket -->> res:return ticket 
