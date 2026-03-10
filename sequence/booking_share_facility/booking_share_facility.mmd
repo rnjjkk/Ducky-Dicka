@@ -7,85 +7,68 @@ sequenceDiagram
     participant M as Meeting_Room
     participant BSF as Booking_Share_Facility
 
-    %% User เรียกใช้งาน Dorm และ "เปิดกล่องสีเขียวยาว" ของ Dorm
-    User->>D: booking_share_facility(resident_id, share_facility_id, building_id, booking_time)
-    activate D
-    
-    %% 1. ค้นหา Resident (เรียกตัวเองเส้นจะวนกลับมาที่กล่องเดิม)
-    D->>D: search_resident_by_id(resident_id)
+    User ->>+ D: booking_share_facility(resident_id, share_facility_id, building_id, booking_time)
+
+    %% 1. ค้นหา Resident
     loop for rs in resident_list
-        %% เรียก Resident 
-        D->>+R: getResidentID(resident_id)
-        R-->>-D: return resident instance
-    end
-    
-    %% เช็คกรณีหา Resident ไม่เจอ
-    opt not found resident
-        D-->>User: return not found resident
-    end
-    
-    %% 2. ค้นหา Building (เรียกตัวเอง)
-    D->>D: search_share_facility_by_id(building_id, share_facility_id)
-    loop for building in building_list
-        %% เรียก Building 
-        D->>+B: getBuildingID(building_id)
-        B-->>-D: return building instance
-    end
-    
-    %% เช็คกรณีหา Building ไม่เจอ
-    opt not found building
-        D-->>User: return not found building
+        D ->>+ R: getResidentID(resident_id)
+        R -->>- D: return resident instance
     end
 
-    %% 3. ตรวจสอบ Facility ว่าเป็น Meeting Room หรือไม่
+    opt not found resident
+        D -->> User: return not found resident
+    end
+
+    %% 2. ค้นหา Building
+    loop for building in building_list
+        D ->>+ B: getBuildingID(building_id)
+        B -->>- D: return building instance
+    end
+
+    opt not found building
+        D -->> User: return not found building
+    end
+
+    %% 3. ตรวจสอบ Facility == Meeting_Room
     opt facility == Meeting_Room
+
         loop for meeting_room in building.meeting_room_list
-            %% เรียก Meeting_Room
-            D->>+M: getMeeting_RoomID(meeting_room_id)
-            M-->>-D: return meeting_room instance
+            D ->>+ M: getMeeting_RoomID(meeting_room_id)
+            M -->>- D: return meeting_room instance
         end
-        
-        %% เช็คกรณีหา Meeting Room ไม่เจอ
+
         opt not found meeting_room
-            D-->>User: return not found meeting_room
+            D -->> User: return not found meeting_room
         end
-        
+
         %% 4. ดึงข้อมูลและตรวจสอบเวลาการจอง
-        D->>+M: getbooking_share_facility_list()
-        M-->>-D: booking_share_facility
-        
+        D ->>+ M: getbooking_share_facility_list()
+        M -->>- D: return booking_share_facility_list
+
         loop for booking in booking_share_facility_list
-            %% เรียก Booking_Share_Facility
-            D->>+BSF: check_booking_share_facility(booking_time)
-            BSF-->>-D: status
-            
-            %% เช็คกรณีมีคนจองเวลาซ้อนทับแล้ว
-            opt found booking in booking_share_facility_list
-                D-->>User: return booking unsuccessful (break loop)
+            D ->>+ BSF: check_booking_share_facility(booking_time)
+            BSF -->>- D: status
+
+            opt found overlapping booking
+                D -->> User: return booking unsuccessful
             end
         end
-        
+
         %% 5. ทำการจอง (กรณีเวลาว่าง)
-        opt not found every resident booking this share facility
-            D->>+M: create_booking_share_facility()
-            
-            %% Meeting Room เรียก Booking_Share_Facility
-            M->>+BSF: create_Booking_share_facility(resident_id, building_id, share_facility_id, booking_time)
-            BSF-->>-M: return Booking_share_facility(booking_share_facility)
-            
-            %% Meeting Room เรียกตัวเอง (Self-message)
-            M->>M: add to booking_share_facility_list
-            M-->>-D: return booking_share_facility
-            
-            %% ตอบกลับ User ว่าจองสำเร็จ
-            D-->>User: return booking successful
+        opt time slot available
+            D ->>+ M: create_booking_share_facility()
+            M ->>+ BSF: create_Booking_share_facility(resident_id, building_id, share_facility_id, booking_time)
+            BSF -->>- M: return Booking_share_facility
+            M ->> M: add to booking_share_facility_list
+            M -->>- D: return booking_share_facility
+            D -->> User: return booking successful
         end
+
     end
-    
+
     %% เผื่อกรณี Facility เป็นประเภทอื่น
     opt facility == Washing_Machine
-        %% การทำงานของ Washing Machine 
+        Note over D,BSF: Washing Machine flow (TBD)
     end
-    
-    %% "ปิดกล่องสีเขียวยาว" ของ Dorm เมื่อจบกระบวนการทั้งหมด
+
     deactivate D
