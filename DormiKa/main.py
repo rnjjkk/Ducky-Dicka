@@ -28,7 +28,7 @@ def create_resident_mock_data(count: int = 3):
             f"080000000{i}",
             status=AccountStatus.ACTIVE.value,
         )
-        print(f"Created Resident: {resident.fid}")
+        print(f"Created Resident: {resident.id}")
         residents.append(resident)
 
     return residents
@@ -154,12 +154,12 @@ async def change_lease_contract(request: ChangeContractRequest):
 
 """
 {
-  "residentId": "1",
+  "residentId": "RS-2026-0001",
   "roomId": "1",
   "issueCategory": "PLUMBING"
 }
 {
-  "residentId": "1",
+  "residentId": "RS-2026-0001",
   "roomId": "RM-STUDIO-A01-01-0001",
   "issueCategory": "PLUMBING"
 }
