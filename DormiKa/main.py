@@ -129,16 +129,16 @@ async def startup_event():
         dorm.add_technician(t)
 
 class ChangeContractRequest(BaseModel):
-    residentId: str = Field(..., example="1")
-    currentLeaseContractId: str = Field(..., example="1")
-    targetRoomId: str = Field(..., example="RM-STUDIO-A01-01-0001")
+    residentId: str = Field(..., example="RS-0001")
+    currentLeaseContractId: str = Field(..., example="LC-0001")
+    targetRoomId: str = Field(..., example="RM-0001")
     moveDate: str = Field(..., example="2026-2-27")
 
 """
 {
-  "residentId": "1",
-  "currentLeaseContractId": "1",
-  "targetRoomId": "RM-STUDIO-A01-02-0001",
+  "residentId": "RS-0001",
+  "currentLeaseContractId": "LC-0001",
+  "targetRoomId": "RM-0001",
   "moveDate": "2026-2-27"
 }
 """

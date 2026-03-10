@@ -61,7 +61,7 @@ class Dorm:
             issue_category
         )
 
-    def change_lease_contract(self, 
+    def change_contract(self, 
                             residentId,
                             currentLeaseContractId,
                             targetRoomId,

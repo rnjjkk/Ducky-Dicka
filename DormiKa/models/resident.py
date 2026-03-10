@@ -71,6 +71,6 @@ class Resident:
 
     def search_contract_by_id(self, contractId):
         for contract in self.__contracts:
-            if int(contract.id[-4:]) == int(contractId):
+            if contract.id == contractId:
                 return contract
         return None
