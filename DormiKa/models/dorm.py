@@ -35,8 +35,10 @@ class Dorm:
                     return room
         return None
     
-    def search_room_by_contract(self,room_id):
-        pass
+    def search_room_by_contracts(self,resident,room_id):
+        for res in resident.contracts:
+            if res.room.room.id == room_id:
+                pass
 
     def search_available_employee(self):
         for employee in self.__employees:

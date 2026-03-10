@@ -10,7 +10,7 @@ class CleaningStatus(Enum):
 class CleaningTicket:
     ID = 1
     def __init__(self,resident_id,room_id):
-        self.__ticket_id = CleaningTicket.ID
+        self.__ticket_id = f"CLTICKET-{CleaningTicket.ID:04d}"
         self.__resident_id = resident_id
         self.__room_id = room_id
         self.__report_time = datetime.now()
@@ -21,8 +21,8 @@ class CleaningTicket:
 
     # getter artibute CleaningTicket
     @property
-    def fid(self):
-        return f"CLTICKET-{self.__ticket_id:04d}"
+    def id(self):
+        return self.__ticket_id
     
     @property
     def status(self):

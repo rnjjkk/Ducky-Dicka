@@ -52,7 +52,7 @@ sequenceDiagram
         d ->> resAc:not found room
     end
 
-    d ->>d:search_room_by_contract(room_id)
+    d ->>d:search_room_by_contracts(resident,room_id)
 
     d ->> res:get contract_list from resident instance
     res -->> d:return contract_list
