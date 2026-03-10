@@ -46,6 +46,9 @@ def create_employee_mock_data():
     employees = [
         Employee("Alice"),
         Employee("Bob"),
+        Employee("Charlie"),
+        Employee("Diana"),
+        Employee("Eve"),
     ]
     for e in employees:
         print(f"Created Employee: {e.fid} ({e.id})")
@@ -177,9 +180,11 @@ class RequestMaintenance(BaseModel):
 
 @app.post("/request-maintenance")
 async def request_maintenance(request: RequestMaintenance):
-    return dorm.request_maintenance(request.residentId, 
-                                   request.roomId, 
-                                   request.issueCategory)
+    try:
+        result = dorm.request_maintenance(request.residentId, request.roomId, request.issueCategory.value)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1",port=8000, log_level="info", reload=True)

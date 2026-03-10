@@ -1,8 +1,5 @@
 from datetime import datetime
 
-class MaintenanceStatus:
-    pass
-
 class MaintenanceTicket:
     ID = 1
 
