@@ -22,32 +22,38 @@ def create_resident_mock_data(count: int = 3):
 
     for i in range(min(count, len(names))):
         name = names[i]
-        residents.append(
-            Resident(
-                name,
-                18 + i,
-                f"080000000{i}",
-                status=AccountStatus.ACTIVE.value,
-            )
+        resident = Resident(
+            name,
+            18 + i,
+            f"080000000{i}",
+            status=AccountStatus.ACTIVE.value,
         )
+        print(f"Created Resident: {resident.fid}")
+        residents.append(resident)
 
     return residents
 
 def create_technician_mock_data():
-    return [
+    technicians = [
         Technician(name="Tech A", phone_number="0800000001", compabilities=["PLUMBING"]),
         Technician(name="Tech B", phone_number="0800000002", compabilities=["ELECTRICAL"]),
         Technician(name="Tech C", phone_number="0800000003", compabilities=["AC"]),
     ]
+    for t in technicians:
+        print(f"Created Technician: {t.id} ({t.name})")
+    return technicians
 
 def create_employee_mock_data():
-    return [
+    employees = [
         Employee("Alice"),
         Employee("Bob"),
     ]
+    for e in employees:
+        print(f"Created Employee: {e.fid} ({e.id})")
+    return employees
 
 def create_room_mock_data(building):
-    return [
+    rooms = [
         Room(
             room_id="RM-STUDIO-A01-01-0001",
             building=building,
@@ -65,9 +71,15 @@ def create_room_mock_data(building):
             rental=8200,
         ),
     ]
+    for r in rooms:
+        print(f"Created Room: {r.id} ({r.type.value})")
+    return rooms
 
 def create_building_mock_data():
-    building = Building(floor="A01")
+    # Building requires both floor and zone (used for building ID generation).
+    # Zone is used as a prefix for building IDs; keep it consistent with room IDs.
+    building = Building(floor="A01", zone="A01")
+    print(f"Created Building: {building.id}")
     rooms = create_room_mock_data(building)
     for room in rooms:
         building.add_room(room)
@@ -86,7 +98,7 @@ def create_contract_mock_data(resident, room, status: ContractStatus = ContractS
     print(room.id)
     return contract
 
-""""==============================================================================="""
+"""==============================================================================="""
 
 dorm = None
 
@@ -131,12 +143,12 @@ class ChangeContractRequest(BaseModel):
 
 @app.post("/change-contract")
 async def change_lease_contract(request: ChangeContractRequest):
-    return dorm.change_lease_contract(request.residentId,
-                                      request.
-                                      currentLeaseContractId,
-                                      request.targetRoomId,
-                                      request.moveDate
-                                      )
+    return dorm.change_lease_contract(
+        request.residentId,
+        request.currentLeaseContractId,
+        request.targetRoomId,
+        request.moveDate,
+    )
 
 """
 {
