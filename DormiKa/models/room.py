@@ -1,5 +1,5 @@
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class RoomType(Enum):
@@ -41,6 +41,7 @@ class Room:
         self.__electric_cost = electric_cost
         self.__water_cost = water_cost
         self.__rental = rental
+        self.__hold_expiry = None  # used when a room is temporarily reserved/held
 
 
     @property
