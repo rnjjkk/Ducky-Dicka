@@ -197,10 +197,6 @@ class Operating_Staff(Staff):
         
         ticket = self.create_maintenance_ticket(reporter, room.id, issue_category, technician.id)
         technician.assign_ticket(ticket)
-        
-        ticket.approve_maintenance(self, "APPROVED")
-        
-        # Attach ticket to the room instead of only to the resident
         room.add_maintenance_ticket(ticket)
 
         return {
