@@ -25,7 +25,7 @@ class Resident:
     ID = 1
     
     def __init__(self, name: str, age: str=None, phone_number: str=None, status: str="ACTIVE"):
-        self.__id = f"RS-{self.__date_create.year}-{Resident.ID:04d}"
+        self.__id = f"RS-{Resident.ID:04d}"
         self.__name = name
         self.__age = age
         self.__phone_number = phone_number
