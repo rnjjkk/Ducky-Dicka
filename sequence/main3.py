@@ -27,7 +27,7 @@ class RoomStatus(Enum):
 class User:
     def __init__(self, user_id, name, phone):
         self._user_id = user_id 
-        self._name = name
+        self._name = name        
         self._phone = phone
 
     @property
@@ -51,9 +51,15 @@ class Room:
         return self.status == RoomStatus.AVAILABLE 
 
 class Building:
-    def __init__(self, building_id):
-        self.building_id = building_id
-        self.rooms = {}
+    ID = 1
+    
+    def __init__(self, floor, zone="A"):
+        self.__id = f"{zone}{Building.ID}"
+        self.__floor = floor
+        self.__rooms = []
+        self.__washing_machines = []
+        self.__meeting_rooms = []
+        self.__lockers = []
 
     def add_room(self, room):
         self.rooms[room.room_id] = room
