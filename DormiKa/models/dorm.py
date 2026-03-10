@@ -24,7 +24,7 @@ class Dorm:
 
     def search_resident_by_id(self, resident_id):
         for resident in self.__residents:
-            if int(resident.id) == int(resident_id):
+            if resident.id == resident_id:
                 return resident
         return None
 
