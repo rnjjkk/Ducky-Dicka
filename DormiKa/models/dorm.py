@@ -1,6 +1,6 @@
 from .contract import *
 from .room import *
-
+from .resident import *
 class Dorm:
     def __init__(self, name: str):
         self.__name: str = name
@@ -100,4 +100,15 @@ class Dorm:
                 }
     
     def request_cleaning_room(self,resident_id,room_id):
-        pass
+        # resident input resident_id and search_resident_by_id to get resident instance
+        resident = self.search_resident_by_id(resident_id)
+
+        # resident input roomt_id and search_room_by_id to get room instance
+        room_input = self.search_room_by_id(room_id)
+
+        # get contract_list from resident
+        contract_list = resident.contracts
+
+        # search room in contracts
+        room_in_contract = self.search_room_by_id()
+
