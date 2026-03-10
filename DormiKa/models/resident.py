@@ -136,4 +136,5 @@ class Resident:
         return True
         
     def create_cleaning_ticket(self,resident_id,room_id):
-        pass
+        cleaning_ticket = CleaningTicket(resident_id,room_id)
+        return cleaning_ticket
