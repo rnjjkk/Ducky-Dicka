@@ -56,7 +56,7 @@ class Dorm:
         for res in resident.contracts:
             if res.room.room.id == room_id:
                 return res.roome
-        raise ValueError("input wrong room_id")
+        raise ValueError("request wrong room resident doesn't in contract")
 
     def search_available_employee(self):
         for employee in self.__employees:
