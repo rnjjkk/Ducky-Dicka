@@ -189,21 +189,21 @@ async def request_maintenance(request: RequestMaintenance):
 """
 {
   "technicianId": "TC-0001",
-  "notes": "Pipe leaking under the sink",
-  "evidenceBefore": "photo_before.jpg"
+  "notes": "Pipe leaking under the sink"
 }
 """
 
 class StartMaintenanceRequest(BaseModel):
     technicianId: str = Field(..., example="TC-0001")
     notes: str = Field(None, example="Pipe leaking under the sink")
-    evidenceBefore: str = Field(None, example="photo_before.jpg")
 
 @app.post("/start-maintenance")
 async def start_maintenance(request: StartMaintenanceRequest):
     try:
-        technician = dorm.search_technician_by_id(request.technicianId)
-        result = technician.start_maintenance(request.notes, request.evidenceBefore)
+        result = dorm.complete_maintenance_workflow(
+            request.technicianId,
+            request.notes,
+        )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result

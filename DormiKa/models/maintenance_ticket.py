@@ -12,10 +12,10 @@ class MaintenanceTicket:
         self.__report_time = datetime.now()
         self.__responsible_technician = responsible_technician
         self.__approve_employee = None
-        self.__evidence_before = None
-        self.__evidence_after = None
         self.__notes = None
         self.__start_time = None
+        self.__end_time = None
+        self.__cost = None
         self.__status = "IDLE"
 
         MaintenanceTicket.ID += 1
@@ -49,12 +49,16 @@ class MaintenanceTicket:
         return self.__start_time
 
     @property
+    def end_time(self):
+        return self.__end_time
+
+    @property
     def notes(self):
         return self.__notes
 
     @property
-    def evidence_before(self):
-        return self.__evidence_before
+    def cost(self):
+        return self.__cost
 
     @property
     def status(self):
@@ -67,15 +71,21 @@ class MaintenanceTicket:
     def update_maintenance_status(self, status):
         self.__status = status
 
-    def begin_work(self, notes: str = None, evidence_before: str = None):
+    def begin_work(self, notes: str = None):
         if self.__status == MaintenanceStatus.IN_PROGRESS:
             raise ValueError(f"Ticket {self.__id} is already in progress")
         if self.__status == MaintenanceStatus.RESOLVED:
             raise ValueError(f"Ticket {self.__id} is already resolved")
         self.__start_time = datetime.now()
         self.__notes = notes
-        self.__evidence_before = evidence_before
         self.__status = MaintenanceStatus.IN_PROGRESS
+
+    def finish_work(self, cost: float):
+        if self.__status != MaintenanceStatus.IN_PROGRESS:
+            raise ValueError(f"Ticket {self.__id} is not in progress, cannot finish")
+        self.__end_time = datetime.now()
+        self.__cost = cost
+        self.__status = MaintenanceStatus.RESOLVED
 
     def approve_maintenance(self, employee, status):
         self.__approve_employee = employee.id

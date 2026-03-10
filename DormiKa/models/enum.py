@@ -59,3 +59,8 @@ class MemberType(Enum):
 class MaintenanceStatus(Enum):
     IN_PROGRESS = "IN_PROGRESS"
     RESOLVED = "RESOLVED"
+
+class MaintenanceCost(Enum):
+    ELECTRICAL = 750
+    PLUMBING = 1000
+    AC = 500

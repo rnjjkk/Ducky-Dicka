@@ -7,7 +7,7 @@ sequenceDiagram
     participant Technician
     participant Maintenance_Ticket
 
-    Technician_Actor ->> +Dorm: start_maintenance(technicianId, notes, evidenceBefore)
+    Technician_Actor ->> +Dorm: complete_maintenance_workflow(technicianId, notes)
 
     loop tc in dorm.technicians
         Dorm ->> +Technician: get_id()
@@ -24,7 +24,7 @@ sequenceDiagram
         Dorm -->> Technician_Actor: return "technician not found"
     end
 
-    Dorm ->> +Technician: start_maintenance(notes, evidenceBefore)
+    Dorm ->> +Technician: start_maintenance(notes)
 
     Technician ->> Technician: get_current_task()
 
@@ -46,9 +46,11 @@ sequenceDiagram
         Dorm -->> Technician_Actor: return "not capable of handling issue"
     end
 
+    Technician ->> Technician: cost = MaintenanceCost[issue_category].value
+
     Technician ->> Technician: set_status(UNAVAILABLE)
 
-    Technician ->> +Maintenance_Ticket: begin_work(notes, evidenceBefore)
+    Technician ->> +Maintenance_Ticket: begin_work(notes)
 
     Maintenance_Ticket ->> Maintenance_Ticket: get_status()
 
@@ -66,11 +68,42 @@ sequenceDiagram
 
     Maintenance_Ticket ->> Maintenance_Ticket: set_start_time(datetime.now())
     Maintenance_Ticket ->> Maintenance_Ticket: set_notes(notes)
-    Maintenance_Ticket ->> Maintenance_Ticket: set_evidence_before(evidenceBefore)
     Maintenance_Ticket ->> Maintenance_Ticket: set_status(IN_PROGRESS)
 
     Maintenance_Ticket -->> -Technician: return done
 
-    Technician -->> -Dorm: return result
+    Technician ->> +Maintenance_Ticket: finish_work(cost)
+    Maintenance_Ticket ->> Maintenance_Ticket: set_end_time(datetime.now())
+    Maintenance_Ticket ->> Maintenance_Ticket: set_cost(cost)
+    Maintenance_Ticket ->> Maintenance_Ticket: set_status(RESOLVED)
+    Maintenance_Ticket -->> -Technician: return done
+
+    Technician ->> Technician: set_status(AVAILABLE)
+
+    Technician -->> -Dorm: return completed_ticket
+
+    create participant Invoice
+    Dorm ->> Invoice: create_invoice(MAINTENANCE, room_id, ticket.cost)
+    activate Invoice
+    Invoice -->> Dorm: return invoice
+    deactivate Invoice
+
+    loop resident in dorm.residents
+        loop contract in resident.contracts
+            Dorm ->> Dorm: check contract.room.id == room_id and status == ACTIVE
+            alt match found
+                Dorm -->> Dorm: return resident
+            else no match
+                Dorm -->> Dorm: continue
+            end
+        end
+    end
+
+    opt resident not found
+        Dorm -->> Technician_Actor: return "no active resident for room"
+    end
+
+    Dorm ->> Dorm: resident.add_invoice(invoice)
+
     Dorm -->> Technician_Actor: return result
     deactivate Dorm

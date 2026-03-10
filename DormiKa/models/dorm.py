@@ -2,6 +2,7 @@ from .enum import *
 from .contract import *
 from .room import *
 from .resident import *
+from .invoice import Invoice
 
 class Dorm:
     def __init__(self, name: str):
@@ -66,6 +67,13 @@ class Dorm:
                 return technician
         raise ValueError(f"Technician '{technician_id}' not found")
 
+    def search_resident_by_room_id(self, room_id):
+        for resident in self.__residents:
+            for contract in resident.contracts:
+                if contract.room.id == room_id and contract.status == ContractStatus.ACTIVE:
+                    return resident
+        raise ValueError(f"No active resident found for room '{room_id}'")
+
     def search_available_employee(self):
         for employee in self.__employees:
             if employee.status == AvailabilityStatus.AVAILABLE:
@@ -97,6 +105,33 @@ class Dorm:
             room,
             issue_category
         )
+
+    def complete_maintenance_workflow(self, technician_id, notes=None):
+        technician = self.search_technician_by_id(technician_id)
+
+        ticket = technician.start_maintenance(notes)
+
+        invoice = Invoice(InvoiceType.MAINTENANCE, ticket.room_id, ticket.cost, InvoiceStatus.UNPAID)
+
+        resident = self.search_resident_by_room_id(ticket.room_id)
+        resident.add_invoice(invoice)
+
+        return {
+            "ticket_id": ticket.id,
+            "room_id": ticket.room_id,
+            "issue_category": ticket.issue_category,
+            "ticket_status": ticket.status.value,
+            "start_time": str(ticket.start_time),
+            "end_time": str(ticket.end_time),
+            "cost": ticket.cost,
+            "invoice": {
+                "id": invoice.id,
+                "type": InvoiceType.MAINTENANCE.value,
+                "amount": invoice.amount,
+                "status": InvoiceStatus.UNPAID.value,
+            },
+            "resident_id": resident.id,
+        }
 
     def system_contract_invoice(self, employee_ID_input):
         employee = self.search_employee_by_id(employee_ID_input)
