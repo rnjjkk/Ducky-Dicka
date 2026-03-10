@@ -72,9 +72,9 @@ class Dorm:
         room_input = self.search_room_by_id(room_id)
 
         # 3. search room by contracts (room in resident contract)
-        room_in_contract = self.search_room_by_contracts(resident,room_id)
+        room_in_contract = self.search_room_by_contracts(resident,room_input.id)
 
-        
+
     
     def request_maintenance(self, resident_id, room_id, issue_category):
         resident = self.search_resident_by_id(resident_id)

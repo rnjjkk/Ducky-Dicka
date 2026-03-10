@@ -14,7 +14,7 @@ class CleaningTicket:
         self.__resident_id = resident_id
         self.__room_id = room_id
         self.__report_time = datetime.now()
-        self.__cost = 0
+        self.__cost = 100
         self.__status = CleaningStatus.REQUESTED
         
         CleaningTicket.ID += 1
