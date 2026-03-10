@@ -74,8 +74,14 @@ class Dorm:
         # 3. search room by contracts (room in resident contract)
         room_in_contract = self.search_room_by_contracts(resident,room_input.id)
 
-        # 4. 
-        cleaning_ticket = room_in_contract.cleaning_tickets
+        # 4. get cleaning ticket list
+        cleaning_ticket_list = room_in_contract.cleaning_tickets
+
+        # 5. check status cleaning ticket
+        if resident.check_status_cleaning_ticket(cleaning_ticket_list):
+            pass
+
+
 
 
     
