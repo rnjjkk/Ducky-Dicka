@@ -3,17 +3,18 @@ from datetime import datetime, timedelta
 from .enum import RoomStatus, RoomPrice, RoomType
 
 class Room:
+    ID = 1
+    
     def __init__(
         self,
-        room_id: str,
-        building: str,
+        building: object,
         floor: int,
         room_type: RoomType = RoomType.StandardRoom,
         basic_amenities: list | None = None,
         status: RoomStatus = RoomStatus.Available,
         rental: int = RoomPrice.StandardRoom,
     ):
-        self.__room_id = room_id
+        self.__room_id = f"RM-{Room.ID:04d}"
         self.__building = building
         self.__floor = floor
         self.__type = room_type
@@ -23,15 +24,13 @@ class Room:
         self.__maintenance_tickets: list = []
         self.__monthly_rent = self.define_monthly_rent(room_type)
         self.__hold_expiry = None  # used when a room is temporarily reserved/held
+				
+				Room.ID += 1
 
     def define_monthly_rent(self, room_type):
         for type in RoomType:
             if room_type == type:
                 return RoomPrice[type.name].value
-
-    @property
-    def fid(self):
-        return f"RM-{self.__building.id}-{self.__floor:02d}-{self.__room_id[-4:]}"
 
     @property
     def id(self):
@@ -57,6 +56,10 @@ class Room:
     def status(self):
         return self.__status
 
+    @status.setter
+    def status(self, new_status):
+        self.__status = new_status
+
     @property
     def room_log(self):
         return self.__room_log
@@ -69,6 +72,17 @@ class Room:
     def monthly_rent(self):
         return self.__monthly_rent
         
+    def electric_cost(self):
+        return self.__electric_cost
+
+    @property
+    def water_cost(self):
+        return self.__water_cost
+
+    @property
+    def rental(self):
+        return self.__rental
+
     def add_maintenance_ticket(self, ticket):
         """Attach a maintenance ticket to this room."""
         self.__maintenance_tickets.append(ticket)

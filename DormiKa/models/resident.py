@@ -21,10 +21,9 @@ from .receipt import Receipt
 
 class Resident:
     ID = 1
-
-    def __init__(self, name: str, email: str = None, phone_number: str = None, age: str = None, status: str = "ACTIVE"):
+    
+    def __init__(self, name: str, age: str=None, phone_number: str=None, status: str="ACTIVE"):
         self.__id = f"RS-{Resident.ID:04d}"
-        Resident.ID += 1
         self.__name = name
         self.__email = email
         self.__phone_number = phone_number
@@ -46,6 +45,8 @@ class Resident:
         # )
         # conn.commit()
 
+        Resident.ID += 1
+
     @property
     def id(self):
         return self.__id
@@ -53,16 +54,16 @@ class Resident:
     @property
     def status(self):
         return self.__status
-    
+
     @property
-    def contract_list(self):
+    def contracts(self):
         return self.__contracts
 
     @property
-    def invoice_list(self):
+    def invoices(self):
         return self.__invoices
-    
-    def set_member(self, member):
+			
+		def set_member(self, member):
         self.__member = member
 
     def add_contract(self, contract):
@@ -116,3 +117,9 @@ class Resident:
         self.__receipts.append(receipt)
         self.__payment = None
         return receipt
+			
+    def search_contract_by_id(self, contractId):
+        for contract in self.__contracts:
+            if contract.id == contractId:
+                return contract
+        return None

@@ -57,8 +57,14 @@ class Staff:
 
 
 class Cleaner(Staff):
+    ID = 1
+
     def __init__(self, id: str, name: str, phone_number: str, cleaning_supplies_list=None, assigned_rooms=None, status: str = "ACTIVE"):
-        super().__init__(id, name, phone_number, status=status)
+        cl_id = f"CL-{Cleaner.ID:04d}"
+        super().__init__(id=cl_id, 
+                         name=name, 
+                         phone_number=phone_number, 
+                         status=status)
         self.__cleaning_supplies_list = cleaning_supplies_list or []
         self.__assigned_rooms = assigned_rooms or []
 
@@ -89,7 +95,7 @@ class Technician(Staff):
         current_task=None,
         status: str = "AVAILABLE",
     ):
-        tech_id = f"TC-{datetime.now().year}-{Technician.ID:04d}"
+        tech_id = f"TC-{Technician.ID:04d}"
         super().__init__(tech_id, name, phone_number, status=status)
         self.__compabilities = compabilities or []
         self.__schedule = schedule

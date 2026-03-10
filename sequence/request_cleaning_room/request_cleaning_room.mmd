@@ -1,3 +1,4 @@
+%%{init: {"theme": "forest"}}%%
 sequenceDiagram
     %% participant
     actor resAc as Resident_Actor
@@ -5,11 +6,16 @@ sequenceDiagram
     participant res as Resident
     participant b as Building
     participant room as Room
+    participant contract as Contract
+    participant cleaning_ticket as Cleaning_Ticket
 
     resAc ->> d:request_cleaning_room(resident_id,room_id)
+
     d ->> d:search_resident_by_id(resident_id)
+
     loop for resident in resident_list
-        d ->> +res:get_resident_id()
+
+        d ->> res:get_resident_id()
         res ->> d:return resident_id
 
         alt found resident
@@ -17,17 +23,19 @@ sequenceDiagram
         else not found resident
             res -->> d:loop find until found resident
         end
+
     end
 
     opt not found resident
         d -->> resAc:not found resident
     end
 
-    d ->> d:search_building()
+    d ->> d:search_room_by_id(room_id)
 
     loop for building in building_list
+    
         d ->> b:get_building()
-        b ->> d:return building instance
+        b -->> d:return building instance
 
         loop for room in building.room_list
         
@@ -35,6 +43,7 @@ sequenceDiagram
                 room -->> d:return room instance and building instance
             else room.id != room_id
                 room -->>d:loop until found room
+
             end
         end
     end
@@ -43,15 +52,49 @@ sequenceDiagram
         d ->> resAc:not found room
     end
 
-    d ->> res:request_cleaning_room(resident_id,building,room,report_time,respondsible_cleaner)
-    create participant ticket_req_c_r as Cleaning_Ticket
-    res ->> ticket_req_c_r:create_cleaning_ticket(resident_id,building,room,report_time,respondsible_cleaner)
-    ticket_req_c_r -->> res:return ticket 
-    res ->> b:add ticket to building
-    b -->> res:return request success
+    d ->> res:get contract_list from resident instance
+    res -->> d:return contract_list
+
+    loop for contract in contract_list
+
+        d ->> contract:get_room_id()
+        contract -->> d:return room_id
+
+        alt contract.room_id == room_id
+            contract -->> d:return room_id
+        else contract.room_id != room_id
+            contract -->> d:loop until found contract same room_id
+        end
+    
+    end
+    
+    d ->> res:request_cleaning_room(resident_id,room_id)
+    res ->> room:get_cleaning_ticket_list()
+    room -->> res:return cleaning_ticket_list
+    
+    loop for cleaning_ticket in room.cleaning_ticket_list
+
+        res ->> cleaning_ticket:get_cleaning_ticket_status()
+        cleaning_ticket -->> res:return cleaning_ticket_status
+
+        opt cleaning_ticket.status == "Requested" or cleaning_ticket.status == "Cleaning"
+            cleaning_ticket -->> res:can't create cleaning ticket
+        end
+
+    end
+    
+    opt room status is "Requested" or "Cleaning"
+        res -->> d:this room already has cleaning ticket with status Requested or Cleaning
+        d -->> resAc:this room already has cleaning ticket with status Requested or Cleaning
+    end
+    
+    
+    res ->> cleaning_ticket:create_cleaning_ticket(resident_id,room_id)
+    cleaning_ticket -->> res:return ticket 
+    res ->> room:add ticket to room(cleaning_ticket)
+    room -->> res:return add to room success
     res -->> d:return request success
-    d -->> resAc:return request success
+    d -->> resAc:return request cleaning room success
 
     
 
-    

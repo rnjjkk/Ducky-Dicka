@@ -9,6 +9,7 @@ from models.employee import *
 from models.staff import *
 from models.resident import *
 from models.room import Room, RoomType, RoomStatus
+from models.contract import Contract, ContractStatus
 from models.building import Building
 from models.contract import Contract, ContractStatus
 
@@ -21,34 +22,39 @@ def create_resident_mock_data(count: int = 3):
 
     for i in range(min(count, len(names))):
         name = names[i]
-        residents.append(
-            Resident(
-                name,
-                18 + i,
-                f"080000000{i}",
-                status=AccountStatus.ACTIVE.value,
-            )
+        resident = Resident(
+            name,
+            18 + i,
+            f"080000000{i}",
+            status=AccountStatus.ACTIVE.value,
         )
+        print(f"Created Resident: {resident.id}")
+        residents.append(resident)
 
     return residents
 
 def create_technician_mock_data():
-    return [
+    technicians = [
         Technician(name="Tech A", phone_number="0800000001", compabilities=["PLUMBING"]),
         Technician(name="Tech B", phone_number="0800000002", compabilities=["ELECTRICAL"]),
         Technician(name="Tech C", phone_number="0800000003", compabilities=["AC"]),
     ]
+    for t in technicians:
+        print(f"Created Technician: {t.id} ({t.name})")
+    return technicians
 
 def create_employee_mock_data():
-    return [
+    employees = [
         Employee("Alice"),
         Employee("Bob"),
     ]
+    for e in employees:
+        print(f"Created Employee: {e.fid} ({e.id})")
+    return employees
 
 def create_room_mock_data(building):
-    return [
+    rooms = [
         Room(
-            room_id="RM-STUDIO-A01-01-0001",
             building=building,
             floor=1,
             room_type=RoomType.StudioRoom,
@@ -56,7 +62,6 @@ def create_room_mock_data(building):
             rental=6500,
         ),
         Room(
-            room_id="RM-STANDARD-A01-02-0001",
             building=building,
             floor=2,
             room_type=RoomType.StandardRoom,
@@ -64,14 +69,34 @@ def create_room_mock_data(building):
             rental=8200,
         ),
     ]
+    for r in rooms:
+        print(f"Created Room: {r.id} ({r.type.value})")
+    return rooms
 
 def create_building_mock_data():
-    building = Building(floor="A01")
+    # Building requires both floor and zone (used for building ID generation).
+    # Zone is used as a prefix for building IDs; keep it consistent with room IDs.
+    building = Building(floor_count=5, zone="A")
+    print(f"Created Building: {building.id}")
     rooms = create_room_mock_data(building)
     for room in rooms:
         building.add_room(room)
     return building
 
+def create_contract_mock_data(resident, room, status: ContractStatus = ContractStatus.ACTIVE):
+    """Create a simple lease contract pointing to a room and attach it to a resident."""
+
+    contract = Contract(status=status)
+    contract.room = room
+    # Mark the room as occupied when it's under contract.
+    room.status = RoomStatus.Occupied
+    resident.add_contract(contract)
+    
+    print(resident.contracts[0].id)
+    print(room.id)
+    return contract
+
+"""==============================================================================="""
 
 dorm = None
 
@@ -91,6 +116,10 @@ async def startup_event():
     for r in mock_residents:
         dorm.add_resident(r)
 
+    # Create a sample lease contract for the first resident using the first available room
+    if mock_residents and mock_building.rooms:
+        create_contract_mock_data(mock_residents[0], mock_building.rooms[0])
+
     mock_employees = create_employee_mock_data()
     for e in mock_employees:
         dorm.add_operation_staff(e)
@@ -100,86 +129,37 @@ async def startup_event():
         dorm.add_technician(t)
 
 class ChangeContractRequest(BaseModel):
-    residentId: str
-    currentLeaseContractId: str
-    targetRoomId: str
-    moveDate: str
+    residentId: str = Field(..., example="RS-0001")
+    currentLeaseContractId: str = Field(..., example="LC-0001")
+    targetRoomId: str = Field(..., example="RM-0001")
+    moveDate: str = Field(..., example="2026-2-27")
 
 """
 {
-  "residentId": "1",
-  "currentLeaseContractId": "1",
-  "targetRoomId": "RM-STUDIO-A01-02-0001",
+  "residentId": "RS-0001",
+  "currentLeaseContractId": "LC-0001",
+  "targetRoomId": "RM-0001",
   "moveDate": "2026-2-27"
 }
 """
 
 @app.post("/change-contract")
 async def change_lease_contract(request: ChangeContractRequest):
-    return dorm.change_lease_contract(request.residentId,
-                                      request.
-                                      currentLeaseContractId,
-                                      request.targetRoomId,
-                                      request.moveDate
-                                      )
-
-class BookingRequest(BaseModel):
-    resident_id: str
-    room_id: str
-
-@app.post("/request-booking")
-async def request_booking(request: BookingRequest):
-    resident = dorm.search_resident_by_id(request.resident_id)
-    if resident is None:
-        raise HTTPException(status_code=404, detail="Resident not found")
-
-    if resident.status == AccountStatus.SUSPEND.value:
-        raise HTTPException(status_code=403, detail="Account restricted")
-
-    current_hour = datetime.now().hour
-    if not (8 <= current_hour <= 17):
-        raise HTTPException(status_code=400, detail="Office hours not available")
-
-    room = dorm.search_room_by_id(request.room_id)
-    if room is None:
-        raise HTTPException(status_code=404, detail="Room not found")
-
-    # auto-release holds if expired
-    if hasattr(room, "is_hold_expired"):
-        room.is_hold_expired()
-
-    if room.status != RoomStatus.Available:
-        raise HTTPException(status_code=400, detail="Room is busy or in maintenance")
-
-    held = getattr(room, "hold", None)
-    if held is None or not held(48):
-        raise HTTPException(status_code=400, detail="Unable to reserve room")
-
-    contract = Contract(status=ContractStatus.DRAFT)
-    contract.room = room
-    resident.add_contract(contract)
-
-    return {
-        "status": "success",
-        "lease_id": contract.id,
-        "room_id": room.id,
-        "room_status": room.status.value if hasattr(room.status, 'value') else str(room.status),
-        "message": "Booking successful, held for 48 hours."
-    }
-
-class RequestMaintenance(BaseModel):
-    residentId: str
-    roomId: str
-    issueCategory: str
+    return dorm.change_lease_contract(
+        request.residentId,
+        request.currentLeaseContractId,
+        request.targetRoomId,
+        request.moveDate,
+    )
 
 """
 {
-  "residentId": "1",
+  "residentId": "RS-2026-0001",
   "roomId": "1",
   "issueCategory": "PLUMBING"
 }
 {
-  "residentId": "1",
+  "residentId": "RS-2026-0001",
   "roomId": "RM-STUDIO-A01-01-0001",
   "issueCategory": "PLUMBING"
 }
