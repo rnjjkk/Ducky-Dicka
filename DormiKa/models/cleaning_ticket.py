@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from .staff import *
 
 class CleaningStatus(Enum):
     REQUESTED = "Requested"
@@ -15,5 +16,11 @@ class CleaningTicket:
         self.__report_time = datetime.now()
         self.__cost = 0
         self.__status = CleaningStatus.REQUESTED
+        
         CleaningTicket.ID += 1
+
+    # getter artibute CleaningTicket
+    @property
+    def fid(self):
+        return f"CLTICKET-{self.__ticket_id:04d}"
 
