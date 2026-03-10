@@ -300,11 +300,7 @@ class Maintenance_Technician:
         self.__status = new_status
 
     def assign_ticket(self, ticket):
-        self.__status = "WORKING"
         self.__current_mt = ticket
-
-        ticket.update_maintenance_status("FINISH")
-        self.__status = "ACTIVE"
         return "done"
 
 """========================================================================================================================"""
