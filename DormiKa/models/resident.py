@@ -35,7 +35,7 @@ class Resident:
         self.__facility_bookings = []
         self.__contracts = []
         self.__discounts = []
-        self.__inovices = []
+        self.__invoices = []
         self.__receipts = []
         self.__status = status
 
@@ -54,3 +54,23 @@ class Resident:
     @property
     def status(self):
         return self.__status
+
+    @property
+    def contracts(self):
+        return self.__contracts
+
+    @property
+    def invoices(self):
+        return self.__invoices
+
+    def add_contract(self, contract):
+        self.__contracts.append(contract)
+
+    def add_invoice(self, invoice):
+        self.__invoices.append(invoice)
+
+    def search_contract_by_id(self, contractId):
+        for contract in self.__contracts:
+            if int(contract.id[-4:]) == int(contractId):
+                return contract
+        return None

@@ -1,3 +1,6 @@
+from .contract import *
+from .room import *
+
 class Dorm:
     def __init__(self, name: str):
         self.__name: str = name
@@ -38,13 +41,6 @@ class Dorm:
                 return employee
         return None
 
-    # def search_capability_technician(self, capability):
-    #     for technician in self.__technicians:
-    #         for skill in technician.skills:
-    #             if skill == capability and technician.status == "AVAILABLE":
-    #                 return technician
-    #     return None
-
     def request_maintenance(self, resident_id, room_id, issue_category):
         resident = self.search_resident_by_id(resident_id)
         if resident is None:
@@ -64,3 +60,41 @@ class Dorm:
             room,
             issue_category
         )
+
+    def change_lease_contract(self, 
+                            residentId,
+                            currentLeaseContractId,
+                            targetRoomId,
+                            moveDate
+                            ):
+        resident = self.search_resident_by_id(residentId)
+        if resident is None:
+            return {"response": "resident not found"}
+
+        current_contract = resident.search_contract_by_id(currentLeaseContractId)
+        if current_contract is None:
+            return {"response": "current contract not found"}
+
+        if current_contract.status == ContractStatus.EXPIRED:
+            return {"response": "expired contract not found"}
+
+        target_room = self.search_room_by_id(targetRoomId)
+        if target_room is None:
+            return {"response": "target room not found"}
+
+        if target_room.status != RoomStatus.Available:
+            return {"response": "target room not available"}
+
+        if len(resident.invoices) > 0:
+            return {"response": "please settle existing invoices before changing contract"}
+
+        invoice = current_contract.calculate_upgrade_amount(target_room.ROOM_COST, moveDate)
+        old_room = current_contract.room
+        old_room.status = RoomStatus.Available
+        current_contract.room = target_room
+        target_room.status = RoomStatus.Occupied
+
+        resident.add_invoice(invoice)
+        return {"resident": resident,
+                "old-room": old_room,
+                }
