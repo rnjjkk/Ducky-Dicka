@@ -115,3 +115,27 @@ class Room:
             "handover_water": meter_water,
         })
         return {"handover_electric": meter_elect, "handover_water": meter_water}
+
+    def hold(self, hours: int = 48) -> bool:
+        """Temporarily reserve the room for a short time.
+
+        This is used during a booking workflow before a contract is confirmed.
+        """
+        if self.__status != RoomStatus.Available:
+            return False
+
+        self.__status = RoomStatus.Reserved
+        self.__hold_expiry = datetime.now() + timedelta(hours=hours)
+        return True
+
+    def is_hold_expired(self) -> bool:
+        """Return True if the current hold has expired and reset status."""
+        if self.__hold_expiry is None:
+            return False
+
+        if datetime.now() >= self.__hold_expiry:
+            self.__hold_expiry = None
+            self.__status = RoomStatus.Available
+            return True
+
+        return False
