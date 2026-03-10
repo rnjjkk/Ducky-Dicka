@@ -57,6 +57,7 @@ class MemberType(Enum):
     PLATINUM = "PLATINUM"
 
 class MaintenanceStatus(Enum):
+    REPORTED = "REPORTED"
     IN_PROGRESS = "IN_PROGRESS"
     RESOLVED = "RESOLVED"
 

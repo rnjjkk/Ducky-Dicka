@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
 import uvicorn
 from pydantic import BaseModel, Field
 from datetime import datetime, timedelta
@@ -108,15 +109,22 @@ def create_contract_mock_data(resident, room, status: ContractStatus = ContractS
 
 dorm = None
 
-app = FastAPI()
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize in-memory mock data when the API starts."""
+def init_mock_data():
     global dorm
+
+    # Reset all class-level ID counters
+    Resident.ID = 1
+    Technician.ID = 1
+    Cleaner.ID = 1
+    Employee.ID = 1
+    Contract.ID = 1
+    Building.ID = 1
+    Room.ID = 1
+    MaintenanceTicket.ID = 1
+    Invoice._running_number = 1
+
     dorm = Dorm("Ducka")
 
-    # Mock room/building data (needed for room lookup during maintenance requests)
     mock_building = create_building_mock_data()
     dorm.add_building(mock_building)
 
@@ -124,7 +132,6 @@ async def startup_event():
     for r in mock_residents:
         dorm.add_resident(r)
 
-    # Create a sample lease contract for the first resident using the first available room
     if mock_residents and mock_building.rooms:
         create_contract_mock_data(mock_residents[0], mock_building.rooms[0])
 
@@ -135,6 +142,18 @@ async def startup_event():
     mock_technicians = create_technician_mock_data()
     for t in mock_technicians:
         dorm.add_technician(t)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_mock_data()
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+@app.post("/reset")
+async def reset_mock_data():
+    init_mock_data()
+    return {"message": "Mock data has been reset successfully"}
 
 class ChangeContractRequest(BaseModel):
     residentId: str = Field(..., example="RS-0001")
