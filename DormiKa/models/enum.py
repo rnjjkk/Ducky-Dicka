@@ -60,3 +60,14 @@ class CleaningStatus(Enum):
     REQUESTED = "Requested"
     CLEANING = "Cleaning"
     FINISHED = "Finished"
+
+class BookingStatus(Enum):
+    AVAILABLE = "AVAILABLE"
+    RESERVED = "RESERVED"
+    IN_USE = "IN_USE"
+    MAINTENANCE = "MAINTENANCE"
+    DISABLED = "DISABLED"
+
+class ShareFacilityPrice(Enum):
+    MeetingRoom = 100
+    WashingMachine = 50
