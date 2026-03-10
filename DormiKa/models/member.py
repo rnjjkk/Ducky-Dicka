@@ -1,25 +1,27 @@
-class Member:
-    def __init__(self, discount_amount):
-        self.__discount_amount = discount_amount
-        self.__type = None
+from abc import ABC
+from .enum import MemberType
 
-class Share_Facility_Member(Member):
-    def check_status(self):
-        pass
+class Member(ABC):
+    def __init__(self, member_type: MemberType, discount: float):
+        self.__member_type = member_type
+        self.__discount = discount
 
-    def calculate_discount(self):
-        pass
+    @property
+    def member_type(self):
+        return self.__member_type
 
-class Service_Member(Member):
-    def check_paydate(self):
-        pass
+    @property
+    def discount(self):
+        return self.__discount
 
-    def calculate_discount(self):
-        pass
+class Standard_Member(Member):
+    def __init__(self):
+        super().__init__(member_type=MemberType.STANDARD, discount=0.02)
 
-class Contract_Member(Member):
-    def check_contract_range(self):
-        pass
+class Plus_Member(Member):
+    def __init__(self):
+        super().__init__(member_type=MemberType.PLUS, discount=0.05)
 
-    def calculate_discount(self):
-        pass
+class Platinum_Member(Member):
+    def __init__(self):
+        super().__init__(member_type=MemberType.PLATINUM, discount=0.10)

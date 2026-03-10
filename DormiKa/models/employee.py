@@ -1,20 +1,22 @@
 from datetime import datetime
-from .maintenance_ticket import *
+from .enum import AvailabilityStatus, InvoiceType, InvoiceStatus
+from .maintenance_ticket import MaintenanceTicket
+from .invoice import Invoice
 
 class Employee:
     ID = 1
-    
+
     def __init__(self, name):
-        self.__id = Employee.ID
+        self.__id = f"EM-{Employee.ID:04d}"
         self.__date_create = datetime.now()
         self.__name = name
-        self.__status = 'AVAILABLE'
+        self.__status = AvailabilityStatus.AVAILABLE
 
         Employee.ID += 1
 
     @property
     def fid(self):
-        return f"EM-{self.__date_create.year}-{self.__id:04d}"
+        return f"EM-{self.__date_create.year}-{self.__id[-4:]}"
 
     @property
     def id(self):
@@ -65,3 +67,6 @@ class Employee:
                                     responsible_technician=technician
         )
         return ticket
+    
+    def create_contract_invoice(self, monthly_rent, room_id):
+        return Invoice(InvoiceType.CONTRACT, room_id, monthly_rent, InvoiceStatus.UNPAID)
