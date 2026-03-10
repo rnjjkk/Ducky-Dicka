@@ -24,8 +24,7 @@ class Room:
         self.__maintenance_tickets: list = []
         self.__monthly_rent = self.define_monthly_rent(room_type)
         self.__hold_expiry = None  # used when a room is temporarily reserved/held
-				
-				Room.ID += 1
+        Room.ID += 1
 
     def define_monthly_rent(self, room_type):
         for type in RoomType:

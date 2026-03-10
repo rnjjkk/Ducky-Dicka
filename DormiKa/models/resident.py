@@ -22,7 +22,7 @@ from .receipt import Receipt
 class Resident:
     ID = 1
     
-    def __init__(self, name: str, age: str=None, phone_number: str=None, status: str="ACTIVE"):
+    def __init__(self, name: str, email: str=None, phone_number: str=None, status: str="ACTIVE"):
         self.__id = f"RS-{Resident.ID:04d}"
         self.__name = name
         self.__email = email
@@ -63,7 +63,7 @@ class Resident:
     def invoices(self):
         return self.__invoices
 			
-		def set_member(self, member):
+    def set_member(self, member):
         self.__member = member
 
     def add_contract(self, contract):
