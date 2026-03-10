@@ -71,28 +71,28 @@ class Dorm:
         if resident is None:
             return {"response": "resident not found"}
 
-        cur_contract = resident.search_contract_by_id(currentLeaseContractId)
-        if cur_contract is None:
+        current_contract = resident.search_contract_by_id(currentLeaseContractId)
+        if current_contract is None:
             return {"response": "current contract not found"}
 
-        if cur_contract.status == ContractStatus.EXPIRED:
+        if current_contract.status == ContractStatus.EXPIRED:
             return {"response": "expired contract not found"}
 
         target_room = self.search_room_by_id(targetRoomId)
         if target_room is None:
             return {"response": "target room not found"}
 
-        if target_room.status != "AVAILABLE":
+        if target_room.status != RoomStatus.AVAILABLE:
             return {"response": "target room not available"}
 
         if len(resident.invoices) > 0:
-            return {"response": "reject"}
+            return {"response": "please settle existing invoices before changing contract"}
 
-        invoice = cur_contract.calculate_upgrade_amount(target_room.ROOM_COST, moveDate)
-        old_room = cur_contract.room
-        old_room.status = "AVAILABLE"
-        cur_contract.room = target_room
-        target_room.status = "OCCUPIED"
+        invoice = current_contract.calculate_upgrade_amount(target_room.ROOM_COST, moveDate)
+        old_room = current_contract.room
+        old_room.status = RoomStatus.AVAILABLE
+        current_contract.room = target_room
+        target_room.status = RoomStatus.OCCUPIED
 
         resident.add_invoice(invoice)
         return {"resident": resident,
