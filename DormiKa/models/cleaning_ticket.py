@@ -23,4 +23,8 @@ class CleaningTicket:
     @property
     def fid(self):
         return f"CLTICKET-{self.__ticket_id:04d}"
+    
+    @property
+    def status(self):
+        return self.__status
 
