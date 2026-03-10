@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-class CleaningStatus:
+class CleaningStatus(Enum):
     REQUESTED = "Requested"
     CLEANING = "Cleaning"
     FINISHED = "Finished"
@@ -12,7 +12,8 @@ class CleaningTicket:
         self.__ticket_id = CleaningTicket.ID
         self.__reporter_id = reporter_id
         self.__room_id = room_id
-        self.__report_time = 0
+        self.__report_time = datetime.now()
+        self.__cost = 0
         self.__status = CleaningStatus.REQUESTED
         CleaningTicket.ID += 1
 
