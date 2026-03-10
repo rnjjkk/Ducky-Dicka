@@ -27,8 +27,8 @@ class Employee:
         return self.__status
 
     def start_maintenance(self, reporter, technicians, room, issue_category):
-        self.__status = "WORKING"
-        
+        self.__status = AvailabilityStatus.UNAVAILABLE
+
         technician = self.find_available_technician(technicians)
         
         ticket = self.create_maintenance_ticket(reporter, room.id, issue_category, technician.id)
