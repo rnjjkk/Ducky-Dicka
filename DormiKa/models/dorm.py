@@ -102,6 +102,7 @@ class Dorm:
                 resident.add_invoice(invoice)
         s = 'system_contract_invoice : success'
         self.show_success(s)
+        return s
 
     def select_payment_method_and_invoices(self, Resident_ID_input, payment_method_input, invoice_ids):
         resident = self.search_resident_by_id(Resident_ID_input)
@@ -110,6 +111,7 @@ class Dorm:
         net_amount = payment.net_amount
         s = f'select_payment_method_and_invoices : success\nAmount to be paid : {net_amount}\n{format}'
         self.show_success(s)
+        return s
 
     def payment_system(self, Resident_ID_input, paymentdata):
         resident = self.search_resident_by_id(Resident_ID_input)
@@ -117,6 +119,7 @@ class Dorm:
         receipt_id = receipt.id
         s = f'payment_system : success\nreceipt : {receipt_id}'
         self.show_success(s)
+        return s
 
     def change_contract(self, 
                             residentId,
@@ -175,6 +178,7 @@ class Dorm:
             print(invoice.id)
         s = f'display_invoice : success'
         self.show_success(s)
+        return s
 
     def display_receipt(self, resident_id_input):
         resident = self.search_resident_by_id(resident_id_input)
@@ -182,3 +186,14 @@ class Dorm:
             print(receipt.id)
         s = f'display_receipt : success'
         self.show_success(s)
+        return s
+
+    #type member expect : STANDARD_MEMBER, PLUS, PLATINUM พิมพ์ใหญ่พิมเล็กได้ทั้งหมด
+    def create_member(self, resident_id_input, type_member):
+        resident = self.search_resident_by_id(resident_id_input)
+        employee = self.search_available_employee()
+        invoice = employee.asign_member(resident, type_member)
+        resident.add_invoice(invoice)
+        s = f"create_member: success, ID: {invoice.id}, amount: {invoice.amount}"
+        self.show_success(s)
+        return s

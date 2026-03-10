@@ -41,6 +41,7 @@ class InvoiceType(Enum):
     CONTRACT       = "invoice_contract"
     MAINTENANCE    = "invoice_maintenance"
     CLEANER        = "invoice_cleaner"
+    MEMBER         = "invoice_member"
     SHARE_FACILITY = "invoice_share_facility"
 
 class InvoiceStatus(Enum):
@@ -56,6 +57,10 @@ class MemberType(Enum):
     PLUS = "PLUS"
     PLATINUM = "PLATINUM"
 
+class MemberPrice(Enum):
+    STANDARD = 990
+    PLUS = 2790
+    PLATINUM = 9890
 class CleaningStatus(Enum):
     REQUESTED = "Requested"
     CLEANING = "Cleaning"

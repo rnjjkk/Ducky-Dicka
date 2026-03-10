@@ -5,11 +5,11 @@ from .enum import InvoiceStatus, InvoiceType
 class Invoice:
     _running_number = 1
 
-    def __init__(self, type, room_id, amount, status):
+    def __init__(self, type, amount, status, room_id=None):
         self.__id = f"INV-{Invoice._running_number:04d}"
         self.__type = type
-        self.__room_id = room_id
         self.__amount = amount
+        self.__room_id = room_id
         self.__status = status
         self.__date_create = datetime.now()
 
