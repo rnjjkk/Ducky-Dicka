@@ -53,8 +53,8 @@ class Dorm:
         raise PermissionError("Room id : not found")
     
     def search_room_by_contracts(self,resident,room_id):
-        for res in resident.contracts:
-            if res.room.room.id == room_id:
+        for contract in resident.contracts:
+            if contract.room.room.id == room_id:
                 return res.room
         raise ValueError("request wrong room resident doesn't in contract")
 
