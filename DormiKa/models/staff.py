@@ -90,22 +90,22 @@ class Technician(Staff):
         self,
         name: str,
         phone_number: str,
-        compabilities: list = None,
+        capabilities: list = None,
         schedule=None,
         current_task=None,
         status: str = "AVAILABLE",
     ):
         tech_id = f"TC-{Technician.ID:04d}"
         super().__init__(tech_id, name, phone_number, status=status)
-        self.__compabilities = compabilities or []
+        self.__capabilities = capabilities or []
         self.__schedule = schedule
         self._current_task = current_task
 
         Technician.ID += 1
 
     @property
-    def compabilities(self):
-        return self.__compabilities
+    def capabilities(self):
+        return self.__capabilities
 
     @property
     def schedule(self):
