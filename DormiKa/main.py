@@ -78,7 +78,7 @@ def create_room_mock_data(building):
 def create_building_mock_data():
     # Building requires both floor and zone (used for building ID generation).
     # Zone is used as a prefix for building IDs; keep it consistent with room IDs.
-    building = Building(floor="A01", zone="A01")
+    building = Building(floor_count=5, zone="A")
     print(f"Created Building: {building.id}")
     rooms = create_room_mock_data(building)
     for room in rooms:
@@ -94,7 +94,7 @@ def create_contract_mock_data(resident, room, status: ContractStatus = ContractS
     room.status = RoomStatus.Occupied
     resident.add_contract(contract)
     
-    print(resident.contracts[0].id, "================================================================")
+    print(resident.contracts[0].id)
     print(room.id)
     return contract
 
@@ -117,6 +117,10 @@ async def startup_event():
     mock_residents = create_resident_mock_data(3)
     for r in mock_residents:
         dorm.add_resident(r)
+
+    # Create a sample lease contract for the first resident using the first available room
+    if mock_residents and mock_building.rooms:
+        create_contract_mock_data(mock_residents[0], mock_building.rooms[0])
 
     mock_employees = create_employee_mock_data()
     for e in mock_employees:
