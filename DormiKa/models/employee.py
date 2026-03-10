@@ -27,7 +27,11 @@ class Employee:
     def start_maintenance(self, reporter, technicians, room, issue_category):
         self.__status = "WORKING"
         
-        technician = self.find_available_technician(technicians)
+        try:
+            technician = self.find_available_technician(technicians)
+        except Exception as e:
+            return {"error": str(e)}
+        
         if technician is None:
             self.__status = "AVAILABLE"
             return {"error": "no available technician"}
