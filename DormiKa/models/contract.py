@@ -5,12 +5,12 @@ from .invoice import Invoice
 
 
 class ContractStatus(Enum):
-    DRAFT = "DRAFT"
-    PENDING_SIGN = "PENDING_SIGN"
-    ACTIVE = "ACTIVE"
-    ENDING_SOON = "ENDING_SOON"
-    TERMINATED = "TERMINATED"
-    EXPIRED = "EXPIRED"
+    DRAFT = "Draft"
+    PENDING_SIGN = "Pending Sign"
+    ACTIVE = "Active"
+    ENDING_SOON = "Ending Soon"
+    TERMINATED = "Terminated"
+    EXPIRED = "Expired"
 
 
 class Contract:
