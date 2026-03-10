@@ -96,6 +96,18 @@ class Dorm:
         target_room.status = RoomStatus.Occupied
 
         resident.add_invoice(invoice)
-        return {"resident": resident,
-                "old-room": old_room,
-                }
+        return {
+            "resident": {
+                "id": resident.id,
+                "status": resident.status,
+                "new_room": target_room.id,
+                "invoice": {
+                    "id": invoice.id,
+                    "amount": invoice.amount,
+                } if invoice else None,
+            },
+            "old-room": {
+                "id": old_room.id,
+                "status": old_room.status.value,
+            }
+        }
