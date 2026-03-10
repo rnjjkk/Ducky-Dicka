@@ -103,7 +103,7 @@ class Technician(Staff):
         current_task=None,
         status: str = "AVAILABLE",
     ):
-        tech_id = f"TC-{datetime.now().year}-{Technician.ID:04d}"
+        tech_id = f"TC-{Technician.ID:04d}"
         super().__init__(tech_id, name, phone_number, status=status)
         self.__compabilities = compabilities or []
         self.__schedule = schedule
