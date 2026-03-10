@@ -1,3 +1,4 @@
+%%{init: {'theme': 'default', 'themeVariables': {'activationBkgColor': '#d9ead3', 'activationBorderColor': '#6aa84f'}}}%%
 sequenceDiagram
     actor User as Resident
     participant D as Dorm
@@ -6,50 +7,57 @@ sequenceDiagram
     participant M as Meeting_Room
     participant BSF as Booking_Share_Facility
 
+    %% User เรียกใช้งาน Dorm และ "เปิดกล่องสีเขียวยาว" ของ Dorm
     User->>D: booking_share_facility(resident_id, share_facility_id, building_id, booking_time)
+    activate D
     
-    %% 1. ค้นหา Resident
+    %% 1. ค้นหา Resident (เรียกตัวเองเส้นจะวนกลับมาที่กล่องเดิม)
     D->>D: search_resident_by_id(resident_id)
     loop for rs in resident_list
-        D->>R: getResidentID(resident_id)
+        %% เรียก Resident 
+        D->>+R: getResidentID(resident_id)
+        R-->>-D: return resident instance
     end
     
     %% เช็คกรณีหา Resident ไม่เจอ
     opt not found resident
-        R-->>D: return not found resident
         D-->>User: return not found resident
     end
     
-    %% 2. ค้นหา Building
+    %% 2. ค้นหา Building (เรียกตัวเอง)
     D->>D: search_share_facility_by_id(building_id, share_facility_id)
     loop for building in building_list
-        D->>B: getBuildingID(building_id)
+        %% เรียก Building 
+        D->>+B: getBuildingID(building_id)
+        B-->>-D: return building instance
     end
     
     %% เช็คกรณีหา Building ไม่เจอ
     opt not found building
-        B-->>D: return not found building
         D-->>User: return not found building
     end
 
     %% 3. ตรวจสอบ Facility ว่าเป็น Meeting Room หรือไม่
     opt facility == Meeting_Room
         loop for meeting_room in building.meeting_room_list
-            D->>M: getMeeting_RoomID(meeting_room_id)
+            %% เรียก Meeting_Room
+            D->>+M: getMeeting_RoomID(meeting_room_id)
+            M-->>-D: return meeting_room instance
         end
         
         %% เช็คกรณีหา Meeting Room ไม่เจอ
         opt not found meeting_room
-            M-->>D: return not found meeting_room
             D-->>User: return not found meeting_room
         end
         
-        %% 4. ดึงข้อมูลและตรวจสอบการจอง (ถ้าหา Meeting Room เจอ)
-        D->>M: getbooking_share_facility_list()
-        M-->>D: booking_share_facility
+        %% 4. ดึงข้อมูลและตรวจสอบเวลาการจอง
+        D->>+M: getbooking_share_facility_list()
+        M-->>-D: booking_share_facility
         
         loop for booking in booking_share_facility_list
-            D->>BSF: check_booking_share_facility(booking_time)
+            %% เรียก Booking_Share_Facility
+            D->>+BSF: check_booking_share_facility(booking_time)
+            BSF-->>-D: status
             
             %% เช็คกรณีมีคนจองเวลาซ้อนทับแล้ว
             opt found booking in booking_share_facility_list
@@ -57,13 +65,19 @@ sequenceDiagram
             end
         end
         
-        %% 5. ทำการจอง (กรณีเวลาว่างและไม่ติดเงื่อนไขใดๆ ด้านบน)
+        %% 5. ทำการจอง (กรณีเวลาว่าง)
         opt not found every resident booking this share facility
-            D->>M: create_booking_share_facility()
-            M->>BSF: create_Booking_share_facility(resident_id, building_id, share_facility_id, booking_time)
-            BSF-->>M: return Booking_share_facility(booking_share_facility)
+            D->>+M: create_booking_share_facility()
+            
+            %% Meeting Room เรียก Booking_Share_Facility
+            M->>+BSF: create_Booking_share_facility(resident_id, building_id, share_facility_id, booking_time)
+            BSF-->>-M: return Booking_share_facility(booking_share_facility)
+            
+            %% Meeting Room เรียกตัวเอง (Self-message)
             M->>M: add to booking_share_facility_list
-            M-->>D: return booking_share_facility
+            M-->>-D: return booking_share_facility
+            
+            %% ตอบกลับ User ว่าจองสำเร็จ
             D-->>User: return booking successful
         end
     end
@@ -72,3 +86,6 @@ sequenceDiagram
     opt facility == Washing_Machine
         %% การทำงานของ Washing Machine 
     end
+    
+    %% "ปิดกล่องสีเขียวยาว" ของ Dorm เมื่อจบกระบวนการทั้งหมด
+    deactivate D
