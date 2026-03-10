@@ -197,10 +197,6 @@ class Operating_Staff(Staff):
         
         ticket = self.create_maintenance_ticket(reporter, room.id, issue_category, technician.id)
         technician.assign_ticket(ticket)
-        
-        ticket.approve_maintenance(self, "APPROVED")
-        
-        # Attach ticket to the room instead of only to the resident
         room.add_maintenance_ticket(ticket)
 
         return {
@@ -300,11 +296,7 @@ class Maintenance_Technician:
         self.__status = new_status
 
     def assign_ticket(self, ticket):
-        self.__status = "WORKING"
         self.__current_mt = ticket
-
-        ticket.update_maintenance_status("FINISH")
-        self.__status = "ACTIVE"
         return "done"
 
 """========================================================================================================================"""
