@@ -1,6 +1,7 @@
 from .contract import *
 from .room import *
 from .resident import *
+from unittest.mock import MagicMock
 class Dorm:
     def __init__(self, name: str):
         self.__name: str = name
@@ -99,10 +100,6 @@ class Dorm:
 
         except Exception as e:
             return self.show_error({"error": str(e)})
-
-
-
-
     
     def request_maintenance(self, resident_id, room_id, issue_category):
         resident = self.search_resident_by_id(resident_id)
@@ -214,3 +211,122 @@ class Dorm:
             print(receipt.id)
         s = f'display_receipt : success'
         self.show_success(s)
+
+
+def run_test(name, dorm):
+    print(f"\n{'='*50}")
+    print(f"TEST: {name}")
+    print(f"{'='*50}")
+    try:
+        result = request_cleaning_room(dorm, "RES001", "R101")
+        print(f"RESULT: {result}")
+    except Exception as e:
+        print(f"UNEXPECTED ERROR: {e}")
+
+# -------------------------------------------------------
+# function จริงที่ test
+# -------------------------------------------------------
+def request_cleaning_room(self, resident_id, room_id):
+    resident = self.search_resident_by_id(resident_id)
+    room_input = self.search_room_by_id(room_id)
+    room_in_contract = self.search_room_by_contracts(resident, room_input.id)
+    cleaning_ticket_list = room_in_contract.cleaning_tickets
+
+    try:
+        if resident.check_status_cleaning_ticket(cleaning_ticket_list):
+            cleaning_ticket = resident.create_cleaning_ticket(resident_id, room_id)
+            resident.add_cleaning_ticket(room_in_contract, cleaning_ticket)
+            s = {
+                "reporter": resident.name,
+                "room_id": cleaning_ticket.room_id,
+                "ticket id": cleaning_ticket.id,
+                "report_time": cleaning_ticket.report_time,
+                "cost": cleaning_ticket.cost,
+                "status": cleaning_ticket.status
+            }
+            return self.show_success(s)
+        else:
+            return self.show_error({"error": "Cleaning ticket already exists or invalid status"})
+    except Exception as e:
+        return self.show_error({"error": str(e)})
+
+# -------------------------------------------------------
+# helper สร้าง mock พื้นฐาน
+# -------------------------------------------------------
+def base_mock():
+    dorm = MagicMock()
+
+    resident = MagicMock()
+    resident.name = "John Doe"
+
+    room_input = MagicMock()
+    room_input.id = "R101"
+
+    room_in_contract = MagicMock()
+    room_in_contract.cleaning_tickets = []
+
+    cleaning_ticket = MagicMock()
+    cleaning_ticket.room_id = "R101"
+    cleaning_ticket.id = "CT001"
+    cleaning_ticket.report_time = "2024-01-01 10:00"
+    cleaning_ticket.cost = 100
+    cleaning_ticket.status = "pending"
+
+    dorm.search_resident_by_id.return_value = resident
+    dorm.search_room_by_id.return_value = room_input
+    dorm.search_room_by_contracts.return_value = room_in_contract
+    dorm.show_success.side_effect = lambda s: {"success": True, "data": s}
+    dorm.show_error.side_effect = lambda e: {"success": False, "data": e}
+
+    resident.check_status_cleaning_ticket.return_value = True
+    resident.create_cleaning_ticket.return_value = cleaning_ticket
+
+    return dorm, resident, room_in_contract, cleaning_ticket
+
+# -------------------------------------------------------
+# case 1: success
+# -------------------------------------------------------
+dorm, resident, room_in_contract, cleaning_ticket = base_mock()
+run_test("Case 1: Success", dorm)
+
+# -------------------------------------------------------
+# case 2: check_status return False
+# -------------------------------------------------------
+dorm, resident, room_in_contract, cleaning_ticket = base_mock()
+resident.check_status_cleaning_ticket.return_value = False
+run_test("Case 2: Already has ticket", dorm)
+
+# -------------------------------------------------------
+# case 3: resident not found
+# -------------------------------------------------------
+dorm, resident, room_in_contract, cleaning_ticket = base_mock()
+dorm.search_resident_by_id.side_effect = Exception("Resident not found")
+run_test("Case 3: Resident not found", dorm)
+
+# -------------------------------------------------------
+# case 4: room not found
+# -------------------------------------------------------
+dorm, resident, room_in_contract, cleaning_ticket = base_mock()
+dorm.search_room_by_id.side_effect = Exception("Room not found")
+run_test("Case 4: Room not found", dorm)
+
+# -------------------------------------------------------
+# case 5: room not in contract
+# -------------------------------------------------------
+dorm, resident, room_in_contract, cleaning_ticket = base_mock()
+dorm.search_room_by_contracts.side_effect = Exception("Room not in contract")
+run_test("Case 5: Room not in contract", dorm)
+
+# -------------------------------------------------------
+# case 6: create_cleaning_ticket fails
+# -------------------------------------------------------
+dorm, resident, room_in_contract, cleaning_ticket = base_mock()
+resident.create_cleaning_ticket.side_effect = Exception("Failed to create ticket")
+run_test("Case 6: Create ticket fails", dorm)
+
+# -------------------------------------------------------
+# case 7: add_cleaning_ticket fails
+# -------------------------------------------------------
+dorm, resident, room_in_contract, cleaning_ticket = base_mock()
+resident.add_cleaning_ticket.side_effect = Exception("Failed to add ticket")
+run_test("Case 7: Add ticket fails", dorm)
