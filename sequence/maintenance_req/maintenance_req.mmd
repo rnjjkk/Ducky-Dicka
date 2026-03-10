@@ -80,17 +80,8 @@ sequenceDiagram
     Maintenance_Ticket -->> Employee: return ticket
     deactivate Maintenance_Ticket
 
-    Employee ->> +Technician: assign_ticket(ticket)
-    Technician ->> Maintenance_Ticket: update_maintenance_status("FINISH")
-    activate Maintenance_Ticket
-    Maintenance_Ticket -->> Technician: return
-    deactivate Maintenance_Ticket
-    Technician -->> -Employee: return "done"
-
-    Employee ->> Maintenance_Ticket: approve_maintenance(self, "APPROVED")
-    activate Maintenance_Ticket
-    Maintenance_Ticket -->> Employee: return
-    deactivate Maintenance_Ticket
+    Employee ->> Technician: assign_ticket(ticket)
+    Technician -->> Employee: return "done"
 
     Employee ->> Room: add_maintenance_ticket(ticket)
     Room -->> Employee: return ok
