@@ -1,6 +1,6 @@
 from .contract import *
 from .room import *
-
+from .resident import *
 class Dorm:
     def __init__(self, name: str):
         self.__name: str = name
@@ -51,13 +51,31 @@ class Dorm:
                 if room.id == room_id:
                     return room
         raise PermissionError("Room id : not found")
+    
+    def search_room_by_contracts(self,resident,room_id):
+        for contract in resident.contracts:
+            if contract.room.room.id == room_id:
+                return contract.room
+        raise ValueError("request wrong room resident doesn't in contract")
 
     def search_available_employee(self):
         for employee in self.__employees:
             if employee.status == "AVAILABLE":
                 return employee
         raise ValueError("No employee are available at the moment")
+    
+    def request_cleaning_room(self,resident_id,room_id):
+        # 1.search resident by id
+        resident = self.search_resident_by_id(resident_id)
 
+        # 2. serach room by id (room resident input)
+        room_input = self.search_room_by_id(room_id)
+
+        # 3. search room by contracts (room in resident contract)
+        room_in_contract = self.search_room_by_contracts(resident,room_input.id)
+
+
+    
     def request_maintenance(self, resident_id, room_id, issue_category):
         resident = self.search_resident_by_id(resident_id)
         if resident is None:
