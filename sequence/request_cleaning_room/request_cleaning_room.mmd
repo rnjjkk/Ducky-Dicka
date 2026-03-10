@@ -1,57 +1,85 @@
+%%{init: {"theme": "forest"}}%%
 sequenceDiagram
     %% participant
     actor resAc as Resident_Actor
     participant d as Dorm
     participant res as Resident
     participant b as Building
+    participant con as Contract 
     participant room as Room
 
     resAc ->> d:request_cleaning_room(resident_id,room_id)
-    d ->> d:search_resident_by_id(resident_id)
-    loop for resident in resident_list
-        d ->> +res:get_resident_id()
-        res ->> d:return resident_id
-
-        alt found resident
-            res -->> d:return resident instance
-        else not found resident
-            res -->> d:loop find until found resident
-        end
-    end
-
-    opt not found resident
+	@@ -23,34 +25,76 @@ sequenceDiagram
         d -->> resAc:not found resident
     end
 
-    d ->> d:search_building()
+    d ->> d:search_room_by_id(room_id)
 
     loop for building in building_list
         d ->> b:get_building()
-        b ->> d:return building instance
+        b -->> d:return building instance
 
-        loop for room in building.room_list
-        
-            alt room.id == room_id
+        loop for room_resident_input building.room_list
+
+            alt room_resident_input.id == room_id
                 room -->> d:return room instance and building instance
-            else room.id != room_id
+            else room_resident_input.id != room_id
                 room -->>d:loop until found room
             end
         end
     end
 
-    opt not found room
+    opt not found room_resident_input
         d ->> resAc:not found room
     end
 
-    d ->> res:request_cleaning_room(resident_id,building,room,report_time,respondsible_cleaner)
-    create participant ticket_req_c_r as Cleaning_Ticket
-    res ->> ticket_req_c_r:create_cleaning_ticket(resident_id,building,room,report_time,respondsible_cleaner)
-    ticket_req_c_r -->> res:return ticket 
-    res ->> b:add ticket to building
-    b -->> res:return request success
-    res -->> d:return request success
-    d -->> resAc:return request success
+    loop for contract in resident.contract_list
+        d ->> res:get contract from resident
+        res -->> d:return resident.contract
+        d ->> con:get room_in_contract from contract
+        con ->> room:get room_in_contract_id from room
+        room -->> d:return room_in_contract_id
+        d ->> room:get room_resident_input from contract
+        room -->> d:return room_resident_input_id
+        alt room_resident_input_id == room_in_contract_id
+            room -->> d:return room instance
+        else room_resident_input_id != room_in_contract_id
+            room -->> d:loop until found room
+        end
+    end
 
-    
+    opt resident input wrong room_id
+            room -->> d:return resident input wrong room_id
+            d -->> resAc:return resident input wrong room_id
+    end
 
-    
+    d ->> res:request_cleaning_room(resident_id,room_id)
+    res ->> room:check_cleaning_ticket_status(room_id)
+    room ->> room:search_cleaning_ticket_list_by_room_id(room_id)
+    opt cleaning_ticket_list is None
+        create participant cleaning_ticket AS Cleaning_Ticket
+        res ->> cleaning_ticket:create_cleaning_ticket(resident_id,room_id)
+    end
+
+    cleaning_ticket -->> room:return cleaning_ticket_list
+    room -->> res:return cleaning_ticket_list
+    loop for cleaning_ticket in cleaning_ticket_list
+        alt cleaning_ticket.status == "Finished"
+           room -->> res:return True
+        else Else
+            room -->> res:return False
+        end
+    end
+
+    opt check_cleaning_ticket_status(room_id) == False
+        room -->> res:Can't request cleaning room because your room is cleaning or room just request cleaning
+        res -->> d:Can't request cleaning room because your room is cleaning or room just request cleaning
+        d -->> resAc:Can't request cleaning room because your room is cleaning or room just request cleaning
+    end
+
+    res ->> cleaning_ticket:create_cleaning_ticket(resident_id,room_id)
+    cleaning_ticket -->> res:return cleaning_ticket 
+    res ->> room:add cleaning_ticket to room
+    room -->> res:create cleaning_ticket successfully
+    res -->> d:return request_cleaning_room successfully
+    d -->> resAc:return request_cleaning_room successfully
