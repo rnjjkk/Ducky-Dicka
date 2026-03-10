@@ -1,6 +1,8 @@
+from .enum import *
 from .contract import *
 from .room import *
 from .resident import *
+
 class Dorm:
     def __init__(self, name: str):
         self.__name: str = name
@@ -60,7 +62,7 @@ class Dorm:
 
     def search_available_employee(self):
         for employee in self.__employees:
-            if employee.status == "AVAILABLE":
+            if employee.status == AvailabilityStatus.AVAILABLE:
                 return employee
         raise ValueError("No employee are available at the moment")
     
