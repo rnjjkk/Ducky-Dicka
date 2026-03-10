@@ -6,6 +6,7 @@ sequenceDiagram
     participant res as Resident
     participant b as Building
     participant room as Room
+    participant contract as Contract
 
     resAc ->> d:request_cleaning_room(resident_id,room_id)
 
@@ -13,7 +14,7 @@ sequenceDiagram
 
     loop for resident in resident_list
 
-        d ->> +res:get_resident_id()
+        d ->> res:get_resident_id()
         res ->> d:return resident_id
 
         alt found resident
@@ -28,7 +29,7 @@ sequenceDiagram
         d -->> resAc:not found resident
     end
 
-    d ->> d:search_building()
+    d ->> d:search_room_by_id(room_id)
 
     loop for building in building_list
     
@@ -55,22 +56,37 @@ sequenceDiagram
 
     loop for contract in contract_list
 
-        d ->> +contract:get_room_id()
+        d ->> contract:get_room_id()
         contract -->> d:return room_id
 
         alt contract.room_id == room_id
-            contract -->> d:return contract instance
+            contract -->> d:return room_id
         else contract.room_id != room_id
-            contract -->> d:loop until found contract with room_id
+            contract -->> d:loop until found contract same room_id
         end
     
     end
     
-    
-
     d ->> res:request_cleaning_room(resident_id,room_id)
-    create participant cleaning_ticket as Cleaning_Ticket
-    res ->> cleaning_ticket:create_cleaning_ticket(resident_id,room_id,report_time,respondsible_cleaner)
+    res ->> room:get_cleaning_ticket_list()
+    room -->> res:return cleaning_ticket_list
+    
+    loop for cleaning_ticket in cleaning_ticket_list
+
+        alt cleaning_ticket.status == "Finished"
+            cleaning_ticket -->> res:can create cleaning ticket
+        else cleaning_ticket.status != "Finished"
+            cleaning_ticket -->> res:can't create cleaning ticket
+        end
+
+    end
+    
+    opt room has cleaning ticket with status not finished
+        res -->> d:can't create cleaning ticket
+        d -->> resAc:can't create cleaning ticket
+    end
+    
+    res ->> cleaning_ticket:create_cleaning_ticket(resident_id,room_id)
     cleaning_ticket -->> res:return ticket 
     res ->> b:add ticket to building
     b -->> res:return request success
