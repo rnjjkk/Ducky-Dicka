@@ -89,7 +89,7 @@ class Resident:
         list_selected_invoice = []
         for invoice_id in list_invoice_id:
             for invoice in self.__invoices:
-                if invoice_id == invoice.ID:
+                if invoice_id == invoice.id:
                     count += 1
                     total_amount += invoice.amount
                     list_selected_invoice.append(invoice)
