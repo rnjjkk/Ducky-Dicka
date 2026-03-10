@@ -42,7 +42,7 @@ class Contract:
         new_room_cost = avg_new_room_cost * days_left
         print(new_room_cost)
         
-        old_room_cost = (self.__room.ROOM_COST / days_in_month) * days_left
+        old_room_cost = (self.__room.monthly_rent / days_in_month) * days_left
         print(old_room_cost)
         cost_diff = new_room_cost - old_room_cost
 
