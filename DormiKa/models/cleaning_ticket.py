@@ -1,12 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from .staff import *
-
-class CleaningStatus(Enum):
-    REQUESTED = "Requested"
-    CLEANING = "Cleaning"
-    FINISHED = "Finished"
-
+from .enum import CleaningStatus
 class CleaningTicket:
     ID = 1
     def __init__(self,resident_id,room_id):

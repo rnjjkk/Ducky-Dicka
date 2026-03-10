@@ -55,3 +55,8 @@ class MemberType(Enum):
     STANDARD = "STANDARD"
     PLUS = "PLUS"
     PLATINUM = "PLATINUM"
+
+class CleaningStatus(Enum):
+    REQUESTED = "Requested"
+    CLEANING = "Cleaning"
+    FINISHED = "Finished"
