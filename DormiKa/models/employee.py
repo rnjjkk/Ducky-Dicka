@@ -40,7 +40,7 @@ class Employee:
             "reporter": f"{ticket.reporter}",
             "room": f"{ticket.room_id}",
             "technician": f"{ticket.responsible_technician}",
-            "status": f"{ticket.status}"
+            "status": f"{ticket.status.value}"
         }
 
     def find_available_technician(self, technicians):
