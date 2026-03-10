@@ -22,8 +22,7 @@ class Room:
     
     def __init__(
         self,
-        room_id: str,
-        building: str,
+        building: object,
         floor: int,
         room_type: RoomType = RoomType.StandardRoom,
         basic_amenities: list | None = None,
@@ -46,10 +45,6 @@ class Room:
         self.__hold_expiry = None  # used when a room is temporarily reserved/held
 
         Room.ID += 1
-
-    @property
-    def id(self):
-        return self.__room_id
 
     @property
     def id(self):
