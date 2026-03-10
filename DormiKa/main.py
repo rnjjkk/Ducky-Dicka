@@ -200,10 +200,24 @@ class StartMaintenanceRequest(BaseModel):
 @app.post("/start-maintenance")
 async def start_maintenance(request: StartMaintenanceRequest):
     try:
-        result = dorm.complete_maintenance_workflow(
-            request.technicianId,
-            request.notes,
-        )
+        result = dorm.start_maintenance_workflow(request.technicianId, request.notes)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
+"""
+{
+  "technicianId": "TC-0001"
+}
+"""
+
+class FinishMaintenanceRequest(BaseModel):
+    technicianId: str = Field(..., example="TC-0001")
+
+@app.post("/finish-maintenance")
+async def finish_maintenance(request: FinishMaintenanceRequest):
+    try:
+        result = dorm.finish_maintenance_workflow(request.technicianId)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result
