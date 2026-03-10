@@ -31,6 +31,10 @@ class Contract:
     def room(self):
         return self.__room
 
+    @room.setter    
+    def room(self, room):
+        self.__room = room
+
     def calculate_upgrade_amount(self, target_room_cost, moveDate):
         move_date = datetime.datetime.strptime(moveDate, "%Y-%m-%d").date()
         days_in_month = calendar.monthrange(move_date.year, move_date.month)[1]
