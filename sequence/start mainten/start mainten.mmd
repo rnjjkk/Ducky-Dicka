@@ -1,0 +1,54 @@
+sequenceDiagram
+    actor Client
+    participant API as FastAPI (main.py)
+    participant Dorm
+    participant Technician
+    participant MaintenanceTicket
+
+    Client->>API: POST /start-maintenance\n{technicianId, notes, evidenceBefore}
+
+    API->>Dorm: search_technician_by_id(technicianId)
+    loop search __technicians list
+        Dorm->>Dorm: check technician.id == technicianId
+    end
+    alt technician not found
+        Dorm-->>API: raise ValueError("Technician not found")
+        API-->>Client: 400 Bad Request
+    else technician found
+        Dorm-->>API: return Technician
+    end
+
+    API->>Technician: start_maintenance(notes, evidenceBefore)
+
+    Technician->>Technician: check _current_task is not None
+    alt no task assigned
+        Technician-->>API: raise ValueError("No assigned ticket")
+        API-->>Client: 400 Bad Request
+    end
+
+    Technician->>Technician: check issue_category in capabilities
+    alt capability mismatch
+        Technician-->>API: raise PermissionError("Not capable")
+        API-->>Client: 400 Bad Request
+    end
+
+    Technician->>Technician: set status = UNAVAILABLE
+
+    Technician->>MaintenanceTicket: begin_work(notes, evidenceBefore)
+
+    MaintenanceTicket->>MaintenanceTicket: check status != IN_PROGRESS
+    MaintenanceTicket->>MaintenanceTicket: check status != RESOLVED
+    alt already started or resolved
+        MaintenanceTicket-->>Technician: raise ValueError
+        Technician-->>API: propagate error
+        API-->>Client: 400 Bad Request
+    end
+
+    MaintenanceTicket->>MaintenanceTicket: set start_time = datetime.now()
+    MaintenanceTicket->>MaintenanceTicket: set notes, evidence_before
+    MaintenanceTicket->>MaintenanceTicket: set status = IN_PROGRESS
+    MaintenanceTicket-->>Technician: return (done)
+
+    Technician-->>API: return result dict\n{technician_id, ticket_id, room_id,\nissue_category, status, start_time,\nnotes, evidence_before}
+
+    API-->>Client: 200 OK\n{result}

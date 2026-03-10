@@ -60,6 +60,12 @@ class Dorm:
                 return contract.room
         raise ValueError("request wrong room resident doesn't in contract")
 
+    def search_technician_by_id(self, technician_id):
+        for technician in self.__technicians:
+            if technician.id == technician_id:
+                return technician
+        raise ValueError(f"Technician '{technician_id}' not found")
+
     def search_available_employee(self):
         for employee in self.__employees:
             if employee.status == AvailabilityStatus.AVAILABLE:

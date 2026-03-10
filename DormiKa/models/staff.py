@@ -117,9 +117,32 @@ class Technician(Staff):
         # Placeholder: return maintenance tasks for a building
         return []
 
-    def start_maintenance(self, mt, detail=None):
-        self.assign_task(mt)
-        return {"status": "started", "task": mt, "detail": detail}
+    def start_maintenance(self, notes: str = None, evidence_before: str = None):
+        if self._current_task is None:
+            raise ValueError(f"Technician {self.id} has no assigned ticket")
+
+        ticket = self._current_task
+
+        if ticket.issue_category not in self.__capabilities:
+            raise PermissionError(
+                f"Technician {self.id} is not capable of handling '{ticket.issue_category}' "
+                f"(capabilities: {self.__capabilities})"
+            )
+
+        self.status = AvailabilityStatus.UNAVAILABLE
+        ticket.begin_work(notes, evidence_before)
+
+        return {
+            "technician_id": self.id,
+            "technician_name": self.name,
+            "ticket_id": ticket.id,
+            "room_id": ticket.room_id,
+            "issue_category": ticket.issue_category,
+            "status": ticket.status.value,
+            "start_time": str(ticket.start_time),
+            "notes": ticket.notes,
+            "evidence_before": ticket.evidence_before,
+        }
 
     def assign_ticket(self, ticket):
         self.status = "WORKING"

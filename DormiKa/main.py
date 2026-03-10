@@ -186,5 +186,27 @@ async def request_maintenance(request: RequestMaintenance):
         raise HTTPException(status_code=400, detail=str(e))
     return result
 
+"""
+{
+  "technicianId": "TC-0001",
+  "notes": "Pipe leaking under the sink",
+  "evidenceBefore": "photo_before.jpg"
+}
+"""
+
+class StartMaintenanceRequest(BaseModel):
+    technicianId: str = Field(..., example="TC-0001")
+    notes: str = Field(None, example="Pipe leaking under the sink")
+    evidenceBefore: str = Field(None, example="photo_before.jpg")
+
+@app.post("/start-maintenance")
+async def start_maintenance(request: StartMaintenanceRequest):
+    try:
+        technician = dorm.search_technician_by_id(request.technicianId)
+        result = technician.start_maintenance(request.notes, request.evidenceBefore)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1",port=8000, log_level="info", reload=True)
