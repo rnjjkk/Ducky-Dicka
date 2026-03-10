@@ -76,6 +76,7 @@ class Dorm:
             self.__technicians,
             room,
             issue_category
+        )
 
     def system_contract_invoice(self, employee_ID_input):
         employee = self.search_employee_by_id(employee_ID_input)
