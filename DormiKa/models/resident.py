@@ -141,4 +141,5 @@ class Resident:
         return cleaning_ticket
     
     def add_cleaning_ticket(self,room,cleaning_ticket):
-        pass
+        room.cleaning_tickets.append(cleaning_ticket)
+        return f"add to room success"

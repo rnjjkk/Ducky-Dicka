@@ -78,8 +78,27 @@ class Dorm:
         cleaning_ticket_list = room_in_contract.cleaning_tickets
 
         # 5. check status cleaning ticket
-        if resident.check_status_cleaning_ticket(cleaning_ticket_list):
-            cleaning_ticket = resident.create_cleaning_ticket(resident_id,room_id)
+        try:
+            if resident.check_status_cleaning_ticket(cleaning_ticket_list):
+                # 6. create cleaning ticket
+                cleaning_ticket = resident.create_cleaning_ticket(resident_id, room_id)
+                # 7. add cleaning ticket to room
+                resident.add_cleaning_ticket(room_in_contract, cleaning_ticket)
+                # 8. request success
+                s = {
+                    "reporter": resident.name,
+                    "room_id": cleaning_ticket.room_id,
+                    "ticket id": cleaning_ticket.id,
+                    "report_time": cleaning_ticket.report_time,
+                    "cost": cleaning_ticket.cost,
+                    "status": cleaning_ticket.status
+                }
+                return self.show_success(s)
+            else:
+                return self.show_error({"error": "Cleaning ticket already exists or invalid status"})
+
+        except Exception as e:
+            return self.show_error({"error": str(e)})
 
 
 
