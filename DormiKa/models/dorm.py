@@ -106,10 +106,14 @@ class Dorm:
             issue_category
         )
 
-    def complete_maintenance_workflow(self, technician_id, notes=None):
+    def start_maintenance_workflow(self, technician_id, notes=None):
+        technician = self.search_technician_by_id(technician_id)
+        return technician.start_maintenance(notes)
+
+    def finish_maintenance_workflow(self, technician_id):
         technician = self.search_technician_by_id(technician_id)
 
-        ticket = technician.start_maintenance(notes)
+        ticket = technician.finish_maintenance()
 
         invoice = Invoice(InvoiceType.MAINTENANCE, ticket.room_id, ticket.cost, InvoiceStatus.UNPAID)
 
