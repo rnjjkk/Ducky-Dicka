@@ -31,7 +31,7 @@ class Room:
         water_cost: float = 0.0,
         rental: float = 0.0,
     ):
-        self.__room_id = f"RM-{building.id}-{Room.ID:04d}"
+        self.__room_id = f"RM-{Room.ID:04d}"
         self.__building = building
         self.__floor = floor
         self.__type = room_type
