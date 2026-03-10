@@ -95,7 +95,7 @@ class Dorm:
                 }
                 return self.show_success(s)
             else:
-                return self.show_error({"error": "Cleaning ticket already exists or invalid status"})
+                return self.show_error({"error": "this room already has cleaning ticket with status Requested or Cleaning"})
 
         except Exception as e:
             return self.show_error({"error": str(e)})
