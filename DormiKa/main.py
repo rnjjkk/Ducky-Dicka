@@ -1,4 +1,3 @@
-from fastmcp import FastMCP
 from fastapi import FastAPI, HTTPException
 import uvicorn
 from pydantic import BaseModel, Field
@@ -8,10 +7,10 @@ from models.dorm import *
 from models.employee import *
 from models.staff import *
 from models.resident import *
-from models.room import Room, RoomType, RoomStatus
-from models.contract import Contract, ContractStatus
-from models.building import Building
-from models.contract import Contract, ContractStatus
+from models.room import *
+from models.contract import *
+from models.building import *
+from models.enum import *
 
 def create_resident_mock_data(count: int = 3):
     """Generate a list of mock Resident objects."""
@@ -35,9 +34,9 @@ def create_resident_mock_data(count: int = 3):
 
 def create_technician_mock_data():
     technicians = [
-        Technician(name="Tech A", phone_number="0800000001", compabilities=["PLUMBING"]),
-        Technician(name="Tech B", phone_number="0800000002", compabilities=["ELECTRICAL"]),
-        Technician(name="Tech C", phone_number="0800000003", compabilities=["AC"]),
+        Technician(name="Tech A", phone_number="0800000001", capabilities=["PLUMBING"]),
+        Technician(name="Tech B", phone_number="0800000002", capabilities=["ELECTRICAL"]),
+        Technician(name="Tech C", phone_number="0800000003", capabilities=["AC"]),
     ]
     for t in technicians:
         print(f"Created Technician: {t.id} ({t.name})")
@@ -77,7 +76,7 @@ def create_room_mock_data(building):
         ),
     ]
     for r in rooms:
-        print(f"Created Room: {r.id} ({r.type.value}) {r.status.value})")
+        print(f"Created Room: {r.id} ({r.type.value}) {r.status.value}")
     return rooms
 
 def create_building_mock_data():
@@ -93,8 +92,7 @@ def create_building_mock_data():
 def create_contract_mock_data(resident, room, status: ContractStatus = ContractStatus.ACTIVE):
     """Create a simple lease contract pointing to a room and attach it to a resident."""
 
-    contract = Contract(status=status)
-    contract.room = room
+    contract = Contract(resident.id, room.id, status=status)
     # Mark the room as occupied when it's under contract.
     room.status = RoomStatus.Occupied
     resident.add_contract(contract)
