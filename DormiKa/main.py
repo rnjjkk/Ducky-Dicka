@@ -95,7 +95,7 @@ def create_building_mock_data():
 def create_contract_mock_data(resident, room, status: ContractStatus = ContractStatus.ACTIVE):
     """Create a simple lease contract pointing to a room and attach it to a resident."""
 
-    contract = Contract(resident.id, room.id, status=status)
+    contract = Contract(resident, room, status=status)
     # Mark the room as occupied when it's under contract.
     room.status = RoomStatus.OCCUPIED
     resident.add_contract(contract)
