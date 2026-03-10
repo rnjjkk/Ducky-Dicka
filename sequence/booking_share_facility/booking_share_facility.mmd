@@ -4,12 +4,11 @@ sequenceDiagram
     participant D as Dorm
     participant R as Resident
     participant B as Building
-    participant M as Meeting_Room
+    participant SF as Share_Facility
     participant BSF as Booking_Share_Facility
 
     User ->>+ D: booking_share_facility(resident_id, share_facility_id, building_id, booking_time)
 
-    %% 1. ค้นหา Resident
     loop for rs in resident_list
         D ->>+ R: getResidentID(resident_id)
         R -->>- D: return resident instance
@@ -19,7 +18,6 @@ sequenceDiagram
         D -->> User: return not found resident
     end
 
-    %% 2. ค้นหา Building
     loop for building in building_list
         D ->>+ B: getBuildingID(building_id)
         B -->>- D: return building instance
@@ -29,46 +27,40 @@ sequenceDiagram
         D -->> User: return not found building
     end
 
-    %% 3. ตรวจสอบ Facility == Meeting_Room
-    opt facility == Meeting_Room
+    loop for sf in building.share_facility_list
+        D ->>+ B: getShareFacilityID(share_facility_id)
+        B ->>+ SF: getShareFacilityID(share_facility_id)
+        SF -->>- B: return share_facility instance
+        B -->>- D: return share_facility instance
+    end
 
-        loop for meeting_room in building.meeting_room_list
-            D ->>+ M: getMeeting_RoomID(meeting_room_id)
-            M -->>- D: return meeting_room instance
-        end
+    opt not found share_facility
+        D -->> User: return not found share_facility
+    end
 
-        opt not found meeting_room
-            D -->> User: return not found meeting_room
-        end
-
-        %% 4. ดึงข้อมูลและตรวจสอบเวลาการจอง
-        D ->>+ M: getbooking_share_facility_list()
-        M -->>- D: return booking_share_facility_list
+    loop for resident in dorm.resident_list
+        D ->>+ R: getBookingShareFacilityList()
+        R -->>- D: return booking_share_facility_list
 
         loop for booking in booking_share_facility_list
-            D ->>+ BSF: check_booking_share_facility(booking_time)
-            BSF -->>- D: status
-
-            opt found overlapping booking
-                D -->> User: return booking unsuccessful
-            end
+            D ->>+ BSF: checkBookingTime(share_facility_id, booking_time)
+            BSF -->>- D: return status
         end
-
-        %% 5. ทำการจอง (กรณีเวลาว่าง)
-        opt time slot available
-            D ->>+ M: create_booking_share_facility()
-            M ->>+ BSF: create_Booking_share_facility(resident_id, building_id, share_facility_id, booking_time)
-            BSF -->>- M: return Booking_share_facility
-            M ->> M: add to booking_share_facility_list
-            M -->>- D: return booking_share_facility
-            D -->> User: return booking successful
-        end
-
     end
 
-    %% เผื่อกรณี Facility เป็นประเภทอื่น
-    opt facility == Washing_Machine
-        Note over D,BSF: Washing Machine flow (TBD)
+    opt overlap found
+        D -->> User: return this share facility already booking
     end
+
+    D ->>+ SF: createBooking(resident_id, share_facility_id, building_id, booking_time)
+    SF ->>+ BSF: create_Booking_Share_Facility(resident_id, share_facility_id, building_id, booking_time)
+    BSF -->>- SF: return booking_share_facility instance
+    SF -->>- D: return booking_share_facility instance
+
+    D ->>+ R: addBookingShareFacility(booking_share_facility)
+    R ->> R: add to booking_share_facility_list
+    R -->>- D: done
+
+    D -->> User: return booking share facility success
 
     deactivate D
