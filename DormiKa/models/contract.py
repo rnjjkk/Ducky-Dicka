@@ -17,7 +17,7 @@ class Contract:
     ID = 1
 
     def __init__(self, status: ContractStatus = ContractStatus.DRAFT):
-        self.__id = f"LC-{self.__date_create.year}-{Contract.ID:04d}"
+        self.__id = f"LC-{Contract.ID:04d}"
         self.__date_create = datetime.datetime.now()
         self.__room: object = None
         self.__cancel_rent_condition: str = None
