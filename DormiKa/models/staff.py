@@ -1,12 +1,4 @@
 from datetime import datetime
-from enum import Enum
-
-class IssueCategory(str, Enum):
-    PLUMBING = "PLUMBING"
-    ELECTRICAL = "ELECTRICAL"
-    AC = "AC"
-    # add more as needed
-
 
 class Staff:
     def __init__(self, id: str, name: str, phone_number: str, status: str = "ACTIVE"):

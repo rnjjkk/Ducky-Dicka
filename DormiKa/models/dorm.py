@@ -7,6 +7,17 @@ class Dorm:
         self.__technicians: list = []
         self.__cleaner: list = []
 
+    def show_success(self, success):
+        print(success)
+        return success
+
+    def show_error(self, error):
+        print(error)
+        return error
+
+    def add_employee(self, employee):
+        self.__employees.append(employee)
+
     def add_resident(self, resident):
         self.__residents.append(resident)
 
@@ -19,24 +30,30 @@ class Dorm:
     def add_building(self, building):
         self.__buildings.append(building)
 
+    def search_employee_by_id(self, employee_id):
+        for employee in self.__employees :
+            if employee.id == employee_id:
+                return employee
+        raise PermissionError("Employee id : not found")
+    
     def search_resident_by_id(self, resident_id):
-        for resident in self.__residents:
-            if int(resident.id) == int(resident_id):
+        for resident in self.__residents :
+            if resident.id == resident_id:
                 return resident
-        return None
+        raise PermissionError("Resident id : not found")
 
     def search_room_by_id(self, room_id):
         for building in self.__buildings:
             for room in building.rooms:
                 if room.id == room_id:
                     return room
-        return None
+        raise PermissionError("Room id : not found")
 
     def search_available_employee(self):
         for employee in self.__employees:
             if employee.status == "AVAILABLE":
                 return employee
-        return None
+        raise ValueError("No employee are available at the moment")
 
     # def search_capability_technician(self, capability):
     #     for technician in self.__technicians:
@@ -64,3 +81,31 @@ class Dorm:
             room,
             issue_category
         )
+    
+    # ไม่ใช้ try-except ใน model layer — ให้ exception propagate ขึ้นไปจัดการที่ API layer แทน
+
+    def system_contract_invoice(self, employee_ID_input):
+        employee = self.search_employee_by_id(employee_ID_input)
+        for resident in self.__residents:
+            for contract in resident.contract_list:
+                monthly_rent = contract.room.monthly_rent
+                room_id = contract.room.id
+                invoice = employee.create_contract_invoice(monthly_rent, room_id)
+                resident.add_invoice(invoice)
+        s = 'system_contract_invoice : success'
+        self.show_success(s)
+
+    def select_payment_method_and_invoices(self, Resident_ID_input, payment_method_input, invoice_ids):
+        resident = self.search_resident_by_id(Resident_ID_input)
+        payment = resident.set_payment(payment_method_input, invoice_ids)
+        format = payment.payment_method.payment_format()
+        net_amount = payment.net_amount
+        s = f'select_payment_method_and_invoices : success\nAmount to be paid : {net_amount}\n{format}'
+        self.show_success(s)
+
+    def payment_system(self, Resident_ID_input, paymentdata):
+        resident = self.search_resident_by_id(Resident_ID_input)
+        receipt = resident.payment(paymentdata)
+        receipt_id = receipt.ID
+        s = f'payment_system : success\nreceipt : {receipt_id}'
+        self.show_success(s)
