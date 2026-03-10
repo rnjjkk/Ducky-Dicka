@@ -73,25 +73,31 @@ def create_building_mock_data():
     return building
 
 
-dorm = Dorm("Ducka")
-
-# Mock room/building data (needed for room lookup during maintenance requests)
-mock_building = create_building_mock_data()
-dorm.add_building(mock_building)
-
-mock_residents = create_resident_mock_data(3)
-for r in mock_residents:
-    dorm.add_resident(r)
-
-mock_employees = create_employee_mock_data()
-for e in mock_employees:
-    dorm.add_operation_staff(e)
-
-mock_technicians = create_technician_mock_data()
-for t in mock_technicians:
-    dorm.add_technician(t)
+dorm = None
 
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize in-memory mock data when the API starts."""
+    global dorm
+    dorm = Dorm("Ducka")
+
+    # Mock room/building data (needed for room lookup during maintenance requests)
+    mock_building = create_building_mock_data()
+    dorm.add_building(mock_building)
+
+    mock_residents = create_resident_mock_data(3)
+    for r in mock_residents:
+        dorm.add_resident(r)
+
+    mock_employees = create_employee_mock_data()
+    for e in mock_employees:
+        dorm.add_operation_staff(e)
+
+    mock_technicians = create_technician_mock_data()
+    for t in mock_technicians:
+        dorm.add_technician(t)
 
 class ChangeContractRequest(BaseModel):
     residentId: str
