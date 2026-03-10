@@ -17,7 +17,7 @@ class Contract:
     ID = 1
 
     def __init__(self, status: ContractStatus = ContractStatus.DRAFT):
-        self.__id = Contract.ID
+        self.__id = f"LC-{self.__date_create.year}-{Contract.ID:04d}"
         self.__date_create = datetime.datetime.now()
         self.__room: object = None
         self.__cancel_rent_condition: str = None
@@ -30,8 +30,7 @@ class Contract:
 
     @property
     def id(self) -> str:
-        """Return a stable contract identifier."""
-        return f"LC-{self.__date_create.year}-{self.__id:04d}"
+        return self.__id
 
     @property
     def status(self) -> ContractStatus:
