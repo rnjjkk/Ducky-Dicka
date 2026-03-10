@@ -1,6 +1,7 @@
 import datetime
 # import sqlite3
 from enum import Enum
+from .cleaning_ticket import *
 
 class AccountStatus(Enum):
     ACTIVE = "ACTIVE"
@@ -58,3 +59,14 @@ class Resident:
     @property
     def status(self):
         return self.__status
+
+    # Resident Method
+    def create_cleaning_ticket(self,room_id):
+        # room = 
+        ticket = CleaningTicket(room_id)
+        return ticket
+    
+    def add_cleaning_ticket(self,room,ticket):
+        if ticket:    
+            room.cleaning_ticket.append(ticket)
+            return True

@@ -41,6 +41,7 @@ class Room:
         self.__electric_cost = electric_cost
         self.__water_cost = water_cost
         self.__rental = rental
+        self.__cleaning_ticket = []
 
 
     @property
@@ -86,6 +87,10 @@ class Room:
     @property
     def water_cost(self):
         return self.__water_cost
+    
+    @property
+    def cleaning_ticket(self):
+        return self.__cleaning_ticket
 
     @property
     def rental(self):

@@ -19,6 +19,9 @@ class Dorm:
     def add_building(self, building):
         self.__buildings.append(building)
 
+    def add_cleaner(self,cleaner):
+        self.__cleaner.append(cleaner)
+
     def search_resident_by_id(self, resident_id):
         for resident in self.__residents:
             if int(resident.id) == int(resident_id):
@@ -64,3 +67,27 @@ class Dorm:
             room,
             issue_category
         )
+    
+    # request cleaning room by tonson
+    def requset_cleaning_room(self,resident_id,room_id):
+        # search resident by id
+        resident = self.search_resident_by_id(resident_id)
+        if resident is None:
+            return {"error": "resident not found!"}
+        
+        # search room by id
+        room = self.search_room_by_id(room_id)
+        if room is None:
+            return {"error": "room not found!"}
+        
+        # resident create cleaning ticket
+        ticket = resident.create_cleaning_ticket(room.id)
+
+        # resident add cleaning ticket
+        is_add_cleaning_room = resident.add_cleaning_ticket(room,ticket)
+
+        
+
+
+        return f"aaaa"
+        
