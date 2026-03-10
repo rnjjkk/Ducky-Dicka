@@ -47,8 +47,6 @@ class Contract:
 
     def calculate_upgrade_amount(self, target_room_rental: float, moveDate: str):
         """Calculate the pro-rated amount due when upgrading to a different room.
-
-        This mirrors the logic used in the previous `sequence/change_contract` example.
         """
 
         move_date = datetime.datetime.strptime(moveDate, "%Y-%m-%d").date()
