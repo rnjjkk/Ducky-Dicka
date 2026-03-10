@@ -79,7 +79,7 @@ class Dorm:
 
         # 5. check status cleaning ticket
         if resident.check_status_cleaning_ticket(cleaning_ticket_list):
-            pass
+            cleaning_ticket = resident.create_cleaning_ticket(resident_id,room_id)
 
 
 

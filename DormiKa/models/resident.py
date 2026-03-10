@@ -3,6 +3,7 @@ from .payment_gateway import Payment_Method
 from .payment import Payment
 from .receipt import Receipt
 from .cleaning_ticket import *
+from .room import *
 # import sqlite3
 
 
@@ -138,3 +139,6 @@ class Resident:
     def create_cleaning_ticket(self,resident_id,room_id):
         cleaning_ticket = CleaningTicket(resident_id,room_id)
         return cleaning_ticket
+    
+    def add_cleaning_ticket(self,room,cleaning_ticket):
+        pass
