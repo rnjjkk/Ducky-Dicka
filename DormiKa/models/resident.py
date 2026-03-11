@@ -50,6 +50,16 @@ class Resident:
     @property
     def id(self):
         return self.__id
+    
+    @property
+    def strike(self):              
+        return self.__strike
+
+    def add_strike(self, amount: int):   
+        self.__strike += amount
+
+    def reset_strike(self):             
+        self.__strike = 0
 
     @property
     def status(self):

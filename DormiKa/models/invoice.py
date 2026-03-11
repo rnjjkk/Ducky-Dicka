@@ -1,7 +1,6 @@
 from datetime import datetime
 from .enum import InvoiceStatus, InvoiceType
 
-# ================== Invoice
 class Invoice:
     _running_number = 1
 
@@ -22,6 +21,14 @@ class Invoice:
     @property
     def amount(self):
         return self.__amount
+
+    @property
+    def status(self):
+        return self.__status
+
+    @property
+    def date_create(self):         
+        return self.__date_create
 
     def PAID(self):
         self.__status = InvoiceStatus.PAID
