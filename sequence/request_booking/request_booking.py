@@ -6,7 +6,7 @@ from typing import List
 import uvicorn
 
 
-# ── Enums ────────────────────────────────────────────────────────────────────
+
 
 class RoomType(Enum):
     STUDIOROOM      = "StudioRoom"
@@ -41,13 +41,11 @@ class ContractStatus(Enum):
     EXPIRED      = "EXPIRED"
 
 
-# ── Domain Classes ────────────────────────────────────────────────────────────
 
-# ── Domain Classes ────────────────────────────────────────────────────────────
 
 class Resident:
     def __init__(self, resident_id: str, name: str, phone: str,
-                 status: AccountStatus = AccountStatus.ACTIVE):
+                status: AccountStatus = AccountStatus.ACTIVE):
         self.__resident_id = resident_id
         self.__name        = name
         self.__phone       = phone
@@ -76,7 +74,7 @@ class Resident:
 
 class Room:
     def __init__(self, room_type: RoomType, building_id: str,
-                 floor: str, room_number: str, price: int):
+                floor: str, room_number: str, price: int):
         self.__room_type  = room_type
         self.__room_id    = f"RM-{room_type.value}-{building_id}-{floor}-{room_number}"
         self.__price      = price
@@ -137,18 +135,18 @@ class Building:
         raise LookupError(f"ไม่พบห้องว่างประเภท {room_type.value} ในตึกนี้")
 
 
-class LeaseContract:
+class Contract:
     ID = 1
 
     def __init__(self, resident: Resident, room: Room,
-                 status: ContractStatus = ContractStatus.DRAFT):
-        self.__contract_id = f"LC-{LeaseContract.ID:04d}"
+                status: ContractStatus = ContractStatus.DRAFT):
+        self.__contract_id = f"LC-{Contract.ID:04d}"
         self.__resident    = resident
         self.__room        = room
         self.__status      = status
         self.__created_at  = datetime.now()
 
-        LeaseContract.ID += 1
+        Contract.ID += 1
 
     @property
     def contract_id(self):
@@ -179,7 +177,7 @@ class DormSystem:
     def __init__(self):
         self.__residents: List[Resident]      = []
         self.__buildings: List[Building]      = []
-        self.__contracts: List[LeaseContract] = []
+        self.__contracts: List[Contract] = []
 
     @property
     def residents(self):
@@ -206,8 +204,8 @@ class DormSystem:
         raise LookupError(f"ไม่พบตึก: {building_id}")
 
     def request_booking(self, resident_id: str, building_id: str,
-                        room_type: RoomType) -> LeaseContract:
-        # 1. ตรวจสอบ resident
+                        room_type: RoomType) -> Contract:
+
         resident = self.get_resident_by_id(resident_id)
 
         if resident.status == AccountStatus.SUSPENDED:
@@ -216,22 +214,20 @@ class DormSystem:
         if resident.status == AccountStatus.PENDING_VERIFICATION:
             raise PermissionError("บัญชีอยู่ระหว่างการตรวจสอบ")
 
-        # 2. ตรวจสอบเวลาทำการ
+
         if not (8 <= datetime.now().hour <= 17):
             raise ValueError("ขณะนี้อยู่นอกเวลาทำการ (08:00–17:00)")
 
-        # 3. หาตึกและห้องว่าง (raise ถ้าไม่พบ)
         building = self.get_building_by_id(building_id)
         room     = building.find_and_hold_available_room_by_type(room_type)
 
-        # 4. สร้างสัญญา (ID auto-generate จาก class counter)
-        new_contract = LeaseContract(resident, room)
+
+        new_contract = Contract(resident, room)
         self.__contracts.append(new_contract)
 
         return new_contract
 
 
-# ── FastAPI App ───────────────────────────────────────────────────────────────
 
 app    = FastAPI(title="Dorminika Booking System")
 system = DormSystem()
