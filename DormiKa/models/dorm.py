@@ -211,8 +211,6 @@ class Dorm:
             return {"response": "expired contract not found"}
 
         target_room = self.search_room_by_id(targetRoomId)
-        if target_room is None:
-            return {"response": "target room not found"}
 
         if target_room.status != RoomStatus.AVAILABLE:
             print(target_room.status, RoomStatus.AVAILABLE)
@@ -231,7 +229,6 @@ class Dorm:
         return {
             "resident": {
                 "id": resident.id,
-                "status": resident.status,
                 "new_room": target_room.id,
                 "invoice": {
                     "id": invoice.id,

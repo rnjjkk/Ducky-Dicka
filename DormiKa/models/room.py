@@ -84,9 +84,6 @@ class Room:
     def cleaning_tickets(self):
         return self.__cleaning_tickets
     
-    def monthly_rent(self):
-        return self.__monthly_rent
-
     def add_maintenance_ticket(self, ticket):
         """Attach a maintenance ticket to this room."""
         self.__maintenance_tickets.append(ticket)
