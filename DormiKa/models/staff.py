@@ -86,7 +86,7 @@ class Cleaner(Staff):
         raise ValueError(f"No active cleaning ticket found for room {room_id}")
 
     def clean_room(self, room, ticket=None):
-        self.status = "WORKING"
+        self.assign_task(room)
         if ticket is None:
             ticket = self.search_cleaning_ticket_by_room_id(room.id)
         ticket.status = ticket.status.CLEANING
@@ -99,6 +99,13 @@ class Cleaner(Staff):
         self.__assigned_rooms.remove(room)
         return {"room_id": room.id, "status": "available"}
 
+
+    def complete_task(self):
+        completed_room = self.current_task
+        if completed_room is None:
+            raise ValueError(f"Cleaner {self.id} has no assigned room")
+        super().complete_task()
+        return {"room_id": completed_room, "cleaner_status": self.status}
 
 
 class Technician(Staff):
@@ -159,14 +166,14 @@ class Technician(Staff):
             "notes": ticket.notes,
         }
 
-    def finish_maintenance(self):
+    def complete_task(self):
         if self._current_task is None:
             raise ValueError(f"Technician {self.id} has no assigned ticket")
 
         ticket = self._current_task
 
         if ticket.status != MaintenanceStatus.IN_PROGRESS:
-            raise ValueError(f"Ticket {ticket.id} is not in progress, cannot finish")
+            raise ValueError(f"Ticket {ticket.id} is not in progress, cannot complete")
 
         cost = MaintenanceCost[ticket.issue_category].value
         ticket.finish_work(cost)
@@ -242,6 +249,6 @@ class ACTech(Technician):
             )
         return super().start_maintenance(notes)
 
-    def finish_maintenance(self):
+    def complete_task(self):
         self.__gas_level_refrigerant = max(0.0, self.__gas_level_refrigerant - 10.0)
-        return super().finish_maintenance()
+        return super().complete_task()
