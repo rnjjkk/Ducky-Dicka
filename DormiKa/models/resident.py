@@ -30,7 +30,7 @@ class Resident:
         self.__email = email
         self.__phone_number = phone_number
         self.__strike = 0
-        self.__date_create = datetime.datetime.now()
+        self.__date_create = datetime.now()
         self.__payment = None
         self.__member = None
         self.__room_bookings = []
