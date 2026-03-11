@@ -26,8 +26,7 @@ class Building:
     def __iter__(self):
         return iter(self.__rooms)
     
-    @property
-    def share_facility_by_id(self, facility_id):
+    def get_share_facility_by_id(self, facility_id):
         for sf in self.share_facility_list:
             if sf.id == facility_id:
                 return sf
