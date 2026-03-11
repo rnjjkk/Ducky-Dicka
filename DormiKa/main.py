@@ -12,7 +12,7 @@ from models.room import *
 from models.contract import *
 from models.building import *
 from models.enum import *
-from models.facility_booking import FacilityBooking
+from models.facility_booking import BookingShareFacility
 
 # ==================== Mock Data ====================
 
