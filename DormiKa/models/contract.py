@@ -52,6 +52,14 @@ class Contract:
     def room(self, room):
         self.__room = room
 
+    def validate_contract_status_for_handover(self):
+        valid_statuses = [ContractStatus.ACTIVE, ContractStatus.PENDING_SIGN]
+        if self.__status not in valid_statuses:
+            raise ValueError(
+                f"Contract {self.__id} cannot be handed over "
+                f"(current status: {self.__status.value} — must be ACTIVE or PENDING_SIGN)"
+            )
+
     def validate_for_signing(self):
         if self.__status != ContractStatus.DRAFT:
             raise ValueError(

@@ -137,7 +137,13 @@ class Dorm:
         # 1. find resident
         resident = self.search_resident_by_id(resident_id)
 
-        # 2. check business hours
+        # 2. check account status
+        if resident.status == AccountStatus.SUSPEND:
+            raise PermissionError("Account is suspended")
+        if resident.status == AccountStatus.CLOSED:
+            raise PermissionError("Account is closed")
+
+        # 3. check business hours
         if not (8 <= datetime.datetime.now().hour <= 17):
             raise ValueError("Outside business hours (08:00–17:00)")
 
@@ -205,6 +211,27 @@ class Dorm:
             "contract_status": contract.status.value,
             "room_id": contract.room.id,
             "room_status": contract.room.status.value,
+        }
+
+    def complete_handover(self, contract_id, meter_elect: float, meter_water: float):
+        # 1. find resident and contract
+        resident, contract = self.search_contract_by_id(contract_id)
+
+        # 2. validate contract status (must be ACTIVE or PENDING_SIGN)
+        contract.validate_contract_status_for_handover()
+
+        # 3. record handover meter readings and mark room as OCCUPIED
+        room = contract.room
+        handover_log = room.record_handover(meter_elect, meter_water)
+        room.status = RoomStatus.OCCUPIED
+
+        return {
+            "contract_id": contract.id,
+            "resident_id": resident.id,
+            "room_id": room.id,
+            "room_status": room.status.value,
+            "handover_electric": handover_log["handover_electric"],
+            "handover_water": handover_log["handover_water"],
         }
 
     def search_resident_by_room_id(self, room_id):
@@ -318,16 +345,43 @@ class Dorm:
         return technician.start_maintenance(notes)
 
     def finish_maintenance_workflow(self, technician_id):
-        technician = self.search_technician_by_id(technician_id)
+        return self.complete_task_workflow(technician_id)
 
-        ticket = technician.finish_maintenance()
+    def complete_task_workflow(self, staff_id):
+        # search cleaners first, then technicians
+        staff = None
+        for c in self.__cleaner:
+            if c.id == staff_id:
+                staff = c
+                break
+        if staff is None:
+            for t in self.__technicians:
+                if t.id == staff_id:
+                    staff = t
+                    break
+        if staff is None:
+            raise ValueError(f"Staff '{staff_id}' not found")
 
+        result = staff.complete_task()
+
+        # Technician case — result is a MaintenanceTicket
+        if isinstance(result, dict):
+            return {
+                "staff_id": staff.id,
+                "staff_name": staff.name,
+                "room_id": result["room_id"],
+                "staff_status": result["cleaner_status"],
+            }
+
+        # Technician case — result is a MaintenanceTicket
+        ticket = result
         invoice = Invoice(InvoiceType.MAINTENANCE, ticket.room_id, ticket.cost, InvoiceStatus.UNPAID)
-
         resident = self.search_resident_by_room_id(ticket.room_id)
         resident.add_invoice(invoice)
 
         return {
+            "staff_id": staff.id,
+            "staff_name": staff.name,
             "ticket_id": ticket.id,
             "room_id": ticket.room_id,
             "issue_category": ticket.issue_category,

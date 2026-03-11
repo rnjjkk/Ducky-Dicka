@@ -77,28 +77,19 @@ class Cleaner(Staff):
     @property
     def assigned_rooms(self):
         return self.__assigned_rooms
-    
-    def search_cleaning_ticket_by_room_id(self, room_id):
-        for room in self.__assigned_rooms:
-            for ticket in room.cleaning_tickets:
-                if ticket.room_id == room_id and ticket.status != "Finished":
-                    return ticket
-        raise ValueError(f"No active cleaning ticket found for room {room_id}")
 
-    def clean_room(self, room, ticket=None):
-        self.status = "WORKING"
-        if ticket is None:
-            ticket = self.search_cleaning_ticket_by_room_id(room.id)
-        ticket.status = ticket.status.CLEANING
-        return {"room_id": ticket.room_id, "status": "cleaning"}
-    
-    def finished_cleaning(self, room):
-        self.status = "AVAILABLE"
-        ticket = self.search_cleaning_ticket_by_room_id(room.id)
-        ticket.status = ticket.status.FINISHED
-        self.__assigned_rooms.remove(room)
-        return {"room_id": room.id, "status": "available"}
+    def clean_room(self, room_id):
+        if room_id not in self.__assigned_rooms:
+            self.__assigned_rooms.append(room_id)
+        self.assign_task(room_id)
+        return {"room": room_id, "status": "cleaning"}
 
+    def complete_task(self):
+        completed_room = self.current_task
+        if completed_room is None:
+            raise ValueError(f"Cleaner {self.id} has no assigned room")
+        super().complete_task()
+        return {"room_id": completed_room, "cleaner_status": self.status}
 
 
 class Technician(Staff):
@@ -159,14 +150,14 @@ class Technician(Staff):
             "notes": ticket.notes,
         }
 
-    def finish_maintenance(self):
+    def complete_task(self):
         if self._current_task is None:
             raise ValueError(f"Technician {self.id} has no assigned ticket")
 
         ticket = self._current_task
 
         if ticket.status != MaintenanceStatus.IN_PROGRESS:
-            raise ValueError(f"Ticket {ticket.id} is not in progress, cannot finish")
+            raise ValueError(f"Ticket {ticket.id} is not in progress, cannot complete")
 
         cost = MaintenanceCost[ticket.issue_category].value
         ticket.finish_work(cost)
@@ -242,6 +233,6 @@ class ACTech(Technician):
             )
         return super().start_maintenance(notes)
 
-    def finish_maintenance(self):
+    def complete_task(self):
         self.__gas_level_refrigerant = max(0.0, self.__gas_level_refrigerant - 10.0)
-        return super().finish_maintenance()
+        return super().complete_task()
