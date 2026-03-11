@@ -214,6 +214,27 @@ async def pay_contract_invoice(request: PayContractInvoiceBody):
         raise HTTPException(status_code=400, detail=str(e))
     return result
 
+class HandoverBody(BaseModel):
+    contractId: str = Field(..., example="LC-0001")
+    meterElect: float = Field(..., example=100.0)
+    meterWater: float = Field(..., example=50.0)
+
+"""
+{
+  "contractId": "LC-0001",
+  "meterElect": 100.0,
+  "meterWater": 50.0
+}
+"""
+
+@contract_router.post("/handover")
+async def complete_handover(request: HandoverBody):
+    try:
+        result = dorm.complete_handover(request.contractId, request.meterElect, request.meterWater)
+    except (LookupError, KeyError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
 class ChangeContractRequest(BaseModel):
     residentId: str = Field(..., example="RS-0001")
     currentLeaseContractId: str = Field(..., example="LC-0001")
