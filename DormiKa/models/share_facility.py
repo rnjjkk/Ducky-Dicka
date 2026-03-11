@@ -7,6 +7,3 @@ class WashingMachine:
 
 class MeetingRoom:
     pass
-
-class Locker:
-    pass
