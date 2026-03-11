@@ -1,0 +1,455 @@
+---
+config:
+    layout: elk
+---
+%%{init: {'theme': 'forest', 'classDiagram': {'curve': 'linear', 'padding': 20}}}%%
+classDiagram
+
+%% ─────────────── ENUMERATIONS ───────────────
+
+    class ContractStatus {
+        <<enumeration>>
+        DRAFT
+        PENDING_SIGN
+        ACTIVE
+        ENDING_SOON
+        TERMINATED
+        EXPIRED
+    }
+
+    class RoomStatus {
+        <<enumeration>>
+        AVAILABLE
+        RESERVED
+        OCCUPIED
+        TURNOVER_CLEANING
+        MAINTENANCE
+        DISABLE
+    }
+
+    class RoomType {
+        <<enumeration>>
+        STUDIO_ROOM
+        STANDARD_ROOM
+        ONE_BED_ROOM
+    }
+
+    class RoomPrice {
+        <<enumeration>>
+        STUDIO_ROOM : 6700
+        STANDARD_ROOM : 9100
+        ONE_BED_ROOM : 10500
+    }
+
+    class AccountStatus {
+        <<enumeration>>
+        ACTIVE
+        SUSPEND
+        CLOSED
+    }
+
+    class InvoiceType {
+        <<enumeration>>
+        CONTRACT
+        MAINTENANCE
+        CLEANER
+        SHARE_FACILITY
+    }
+
+    class InvoiceStatus {
+        <<enumeration>>
+        PAID
+        UNPAID
+    }
+
+    class AvailabilityStatus {
+        <<enumeration>>
+        AVAILABLE
+        UNAVAILABLE
+    }
+
+    class MemberType {
+        <<enumeration>>
+        STANDARD
+        PLUS
+        PLATINUM
+    }
+
+    class MaintenanceStatus {
+        <<enumeration>>
+        REPORTED
+        IN_PROGRESS
+        RESOLVED
+    }
+
+    class MaintenanceCost {
+        <<enumeration>>
+        ELECTRICAL : 750
+        PLUMBING : 1000
+        AC : 500
+    }
+
+    class IssueCategory {
+        <<enumeration>>
+        PLUMBING
+        ELECTRICAL
+        AC
+    }
+
+    class CleaningStatus {
+        <<enumeration>>
+        REQUESTED
+        CLEANING
+        FINISHED
+    }
+
+%% ─────────────── CORE DOMAIN ───────────────
+
+    class Dorm {
+        - name : str
+        - buildings : list
+        - residents : list
+        - employees : list
+        - technicians : list
+        - cleaner : list
+        + add_building(building)
+        + add_resident(resident)
+        + add_employee(employee)
+        + add_technician(technician)
+        + search_resident_by_id(id)
+        + search_room_by_id(id)
+        + search_employee_by_id(id)
+        + search_technician_by_id(id)
+        + search_available_employee()
+        + search_resident_by_room_id(room_id)
+        + search_room_by_contracts(resident, room_id)
+        + request_cleaning_room(resident_id, room_id)
+        + request_maintenance(resident_id, room_id, issue_category)
+        + start_maintenance_workflow(technician_id, notes)
+        + finish_maintenance_workflow(technician_id)
+        + system_contract_invoice(employee_id)
+        + select_payment_method_and_invoices(resident_id, method, invoice_ids)
+        + payment_system(resident_id, paymentdata)
+        + change_contract(residentId, contractId, targetRoomId, moveDate)
+        + display_invoice(resident_id)
+        + display_receipt(resident_id)
+    }
+
+    class Building {
+        - id : str
+        - floor_count : int
+        - rooms : list
+        - washing_machines : list
+        - meeting_rooms : list
+        - lockers : list
+        + add_room(room)
+    }
+
+    class Room {
+        - room_id : str
+        - building : Building
+        - floor : int
+        - type : RoomType
+        - basic_amenities : list
+        - status : RoomStatus
+        - room_log : list
+        - maintenance_tickets : list
+        - monthly_rent : int
+        - hold_expiry : datetime
+        + define_monthly_rent(room_type)
+        + add_maintenance_ticket(ticket)
+        + update_meter(meter_elect, meter_water)
+        + record_handover(meter_elect, meter_water)
+        + hold(hours)
+        + is_hold_expired()
+    }
+
+    class Resident {
+        - id : str
+        - name : str
+        - email : str
+        - phone_number : str
+        - strike : int
+        - date_create : datetime
+        - status : str
+        - payment : Payment
+        - member : Member
+        - room_bookings : list
+        - facility_bookings : list
+        - contracts : list
+        - invoices : list
+        - receipts : list
+        + set_member(member)
+        + add_contract(contract)
+        + add_invoice(invoice)
+        + calculate_net_amount(amount, discount)
+        + set_payment(payment_method_input, invoice_ids)
+        + payment(raw_payment)
+        + search_contract_by_id(contractId)
+    }
+
+    class Contract {
+        - id : str
+        - date_create : datetime
+        - resident : Resident
+        - room : Room
+        - cancel_rent_condition : str
+        - move_in_date : date
+        - status : ContractStatus
+        - rental_time : int
+        - monthly_rent : float
+        + calculate_upgrade_amount(target_room_cost, moveDate)
+    }
+
+%% ─────────────── TICKETS ───────────────
+
+    class MaintenanceTicket {
+        - id : str
+        - reporter : str
+        - room_id : str
+        - issue_category : IssueCategory
+        - report_time : datetime
+        - responsible_technician : str
+        - approve_employee : str
+        - notes : str
+        - start_time : datetime
+        - end_time : datetime
+        - cost : float
+        - status : MaintenanceStatus
+        + update_maintenance_status(status)
+        + begin_work(notes)
+        + finish_work(cost)
+        + approve_maintenance(employee, status)
+    }
+
+    class CleaningTicket {
+        - ticket_id : str
+        - resident_id : str
+        - room_id : str
+        - report_time : datetime
+        - cost : float
+        - status : CleaningStatus
+    }
+
+%% ─────────────── FINANCIALS ───────────────
+
+    class Invoice {
+        - id : str
+        - type : InvoiceType
+        - room_id : str
+        - amount : float
+        - status : InvoiceStatus
+        - date_create : datetime
+        + PAID()
+    }
+
+    class Payment {
+        - payment_method : Payment_Method
+        - invoice_list : list
+        - discount : float
+        - net_amount : float
+    }
+
+    class Receipt {
+        - id : str
+        - payment : Payment
+        - date_create : datetime
+    }
+
+%% ─────────────── PAYMENT METHODS ───────────────
+
+    class Payment_Method {
+        <<abstract>>
+        + format_payment_method(payment_method_input)$
+        + payment_format()*
+        + check_format(raw_payment)*
+    }
+
+    class Bank_Account {
+        + type : str
+        + dorm_bank_account_number : str
+        + bank : str
+        + payment_format()
+        + check_format(raw_payment)
+    }
+
+    class Card {
+        + type : str
+        + format : str
+        + payment_format()
+        + check_format(raw_payment)
+    }
+
+%% ─────────────── MEMBERSHIP ───────────────
+
+    class Member {
+        <<abstract>>
+        - member_type : MemberType
+        - discount : float
+    }
+
+    class Standard_Member {
+        + discount : 0.02
+    }
+
+    class Plus_Member {
+        + discount : 0.05
+    }
+
+    class Platinum_Member {
+        + discount : 0.10
+    }
+
+%% ─────────────── STAFF ───────────────
+
+    class Staff {
+        - id : str
+        - name : str
+        - phone_number : str
+        - status : str
+        - hire_date : datetime
+        - current_task : object
+        + update_status(task, status)
+        + assign_task(task)
+        + complete_task()
+    }
+
+    class Employee {
+        - id : str
+        - name : str
+        - date_create : datetime
+        - status : AvailabilityStatus
+        + start_maintenance(reporter, technicians, room, issue_category)
+        + find_available_technician(technicians)
+        + create_maintenance_ticket(reporter, room_id, issue_category, technician)
+        + create_contract_invoice(monthly_rent, room_id)
+    }
+
+    class Cleaner {
+        - cleaning_supplies_list : list
+        - assigned_rooms : list
+        + clean_room(room_id)
+    }
+
+    class Technician {
+        - capabilities : list
+        - schedule : object
+        - current_task : MaintenanceTicket
+        + show_all_mt(building_id)
+        + start_maintenance(notes)
+        + finish_maintenance()
+        + assign_ticket(ticket)
+    }
+
+    class ElectricalTech {
+        - certification_no : str
+        + start_maintenance(notes)
+    }
+
+    class PlumbingTech {
+        - water_meter_tool : str
+        + start_maintenance(notes)
+    }
+
+    class ACTech {
+        - gas_level_refrigerant : float
+        + MIN_GAS_LEVEL : 20.0
+        + start_maintenance(notes)
+        + finish_maintenance()
+    }
+
+%% ─────────────── BOOKINGS ───────────────
+
+    class RoomBooking {
+        - id : str
+        - room : Room
+        - detail : str
+    }
+
+    class FacilityBooking {
+    }
+
+%% ─────────────── SHARED FACILITIES ───────────────
+
+    class ShareFacility {
+    }
+
+    class WashingMachine {
+    }
+
+    class MeetingRoom {
+    }
+
+    class Locker {
+    }
+
+%% ─────────────── RELATIONSHIPS ───────────────
+
+    %% Dorm aggregations
+    Dorm o-- Building
+    Dorm o-- Resident
+    Dorm o-- Employee
+    Dorm o-- Technician
+    Dorm o-- Cleaner
+
+    %% Building → Room
+    Building o-- Room
+    Building o-- WashingMachine
+    Building o-- MeetingRoom
+    Building o-- Locker
+
+    %% Shared facilities
+    ShareFacility <|-- WashingMachine
+    ShareFacility <|-- MeetingRoom
+    ShareFacility <|-- Locker
+
+    %% Room associations
+    Room o-- MaintenanceTicket
+    Room --> RoomType
+    Room --> RoomStatus
+
+    %% Resident associations
+    Resident o-- Contract
+    Resident o-- Invoice
+    Resident o-- Receipt
+    Resident --> Payment
+    Resident --> Member
+    Resident o-- RoomBooking
+    Resident o-- FacilityBooking
+
+    %% Contract
+    Contract --> Room
+    Contract --> Resident
+    Contract --> ContractStatus
+
+    %% Tickets
+    MaintenanceTicket --> IssueCategory
+    MaintenanceTicket --> MaintenanceStatus
+    CleaningTicket --> CleaningStatus
+
+    %% Financials
+    Payment --> Payment_Method
+    Payment o-- Invoice
+    Receipt --> Payment
+    Invoice --> InvoiceType
+    Invoice --> InvoiceStatus
+
+    %% Payment methods
+    Payment_Method <|-- Bank_Account
+    Payment_Method <|-- Card
+
+    %% Membership
+    Member <|-- Standard_Member
+    Member <|-- Plus_Member
+    Member <|-- Platinum_Member
+    Member --> MemberType
+
+    %% Staff hierarchy
+    Staff <|-- Cleaner
+    Staff <|-- Technician
+    Technician <|-- ElectricalTech
+    Technician <|-- PlumbingTech
+    Technician <|-- ACTech
+    Technician --> MaintenanceTicket
+    Employee --> MaintenanceTicket
+    Employee --> AvailabilityStatus
