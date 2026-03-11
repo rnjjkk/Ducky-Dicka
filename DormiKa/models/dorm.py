@@ -61,6 +61,12 @@ class Dorm:
                 return contract.room
         raise ValueError("request wrong room resident doesn't in contract")
 
+    def search_building_by_id(self, building_id):
+        for building in self.__buildings:
+            if building.id == building_id:
+                return building
+        raise PermissionError("Building id : not found")
+    
     def search_technician_by_id(self, technician_id):
         for technician in self.__technicians:
             if technician.id == technician_id:
@@ -115,6 +121,9 @@ class Dorm:
 
         except Exception as e:
             return self.show_error({"error": str(e)})
+        
+    def booking_share_facility(self, resident_id, facility_id, building_id, booking_time):
+        pass
     
     def request_maintenance(self, resident_id, room_id, issue_category):
         resident = self.search_resident_by_id(resident_id)
