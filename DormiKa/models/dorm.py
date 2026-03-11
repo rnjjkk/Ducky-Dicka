@@ -2,6 +2,7 @@ from .enum import *
 from .contract import *
 from .room import *
 from .resident import *
+from .facility_booking import FacilityBooking
 from .invoice import Invoice
 import re
 import datetime
@@ -116,6 +117,52 @@ class Dorm:
             else:
                 return self.show_error({"error": "Cleaning ticket already exists or invalid status"})
 
+        except Exception as e:
+            return self.show_error({"error": str(e)})
+    
+    def booking_share_facility(self, resident_id, building_id, facility_id, booking_time, facility_name="Shared Facility"):
+        try:
+            # 1. Search resident by id
+            resident = self.search_resident_by_id(resident_id)
+            
+            # 2. Search building by id
+            building = None
+            for bld in self.__buildings:
+                if bld.id == building_id:
+                    building = bld
+                    break
+            
+            if building is None:
+                return self.show_error({"error": f"Building '{building_id}' not found"})
+            
+            # 3. Check if facility exists (for now we just check if facility_id is provided)
+            # In a full implementation, we would search in building.meeting_rooms or building.washing_machines
+            
+            # 4. Check for booking conflicts from resident's existing bookings
+            existing_bookings = resident.get_facility_bookings()
+            for booking in existing_bookings:
+                if booking.facility_id == facility_id and booking.booking_time == booking_time:
+                    return self.show_error({"error": f"This facility is already booked at the requested time"})
+            
+            # 5. Create facility booking
+            facility_booking = FacilityBooking(resident_id, building_id, facility_id, facility_name, booking_time)
+            
+            # 6. Add booking to resident
+            resident.add_facility_booking(facility_booking)
+            
+            # 7. Return success response
+            result = {
+                "booking_id": facility_booking.id,
+                "resident_id": resident.id,
+                "building_id": building.id,
+                "facility_id": facility_booking.facility_id,
+                "facility_name": facility_booking.facility_name,
+                "booking_time": str(facility_booking.booking_time),
+                "created_at": str(facility_booking.created_at),
+                "status": "Booked"
+            }
+            return self.show_success(result)
+            
         except Exception as e:
             return self.show_error({"error": str(e)})
     

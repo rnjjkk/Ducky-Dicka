@@ -164,3 +164,12 @@ class Resident:
     def add_cleaning_ticket(self,room,cleaning_ticket):
         room.cleaning_tickets.append(cleaning_ticket)
         return f"add to room success"
+    
+    def add_facility_booking(self, facility_booking):
+        """Add a facility booking to the resident's booking list"""
+        self.__booking_share_facility_list.append(facility_booking)
+        return facility_booking
+    
+    def get_facility_bookings(self):
+        """Get all facility bookings for this resident"""
+        return self.__booking_share_facility_list
