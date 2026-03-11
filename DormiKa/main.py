@@ -27,7 +27,6 @@ def create_resident_mock_data(count: int = 3):
             name,
             18 + i,
             f"080000000{i}",
-            status=AccountStatus.ACTIVE.value,
         )
         print(f"Created Resident: {resident.id}")
         residents.append(resident)
