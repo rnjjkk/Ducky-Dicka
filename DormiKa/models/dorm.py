@@ -60,7 +60,7 @@ class Dorm:
     
     def search_room_by_contracts(self,resident,room_id):
         for contract in resident.contracts:
-            if contract.room.room.id == room_id:
+            if contract.room.id == room_id:
                 return contract.room
         raise ValueError("request wrong room resident doesn't in contract")
 
@@ -105,7 +105,7 @@ class Dorm:
                 resident.add_cleaning_ticket(room_in_contract, cleaning_ticket)
                 # 8. request success
                 s = {
-                    "reporter": resident.name,
+                    "reporter": resident.id,
                     "room_id": cleaning_ticket.room_id,
                     "ticket id": cleaning_ticket.id,
                     "report_time": cleaning_ticket.report_time,

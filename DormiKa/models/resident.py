@@ -49,6 +49,10 @@ class Resident:
         Resident.ID += 1
 
     @property
+    def name(self): 
+        return self.__name
+    
+    @property
     def email(self):
         return self.__email
 

@@ -130,6 +130,7 @@ app = FastAPI(lifespan=lifespan)
 system_router      = APIRouter(prefix="",           tags=["System"])
 contract_router    = APIRouter(prefix="/contract",  tags=["Contract"])
 maintenance_router = APIRouter(prefix="/maintenance", tags=["Maintenance"])
+cleaning_router    = APIRouter(prefix="/cleaning",  tags=["Cleaning"])
 
 # ==================== System ====================
 
@@ -223,11 +224,33 @@ async def finish_maintenance(request: FinishMaintenanceBody):
         raise HTTPException(status_code=400, detail=str(e))
     return result
 
+# ==================== Cleaning ====================
+
+class RequestCleaningRoomBody(BaseModel):
+    residentId: str = Field(..., example="RS-0001")
+    roomId: str = Field(..., example="RM-0001")
+
+"""
+{
+  "residentId": "RS-0001",
+  "roomId": "RM-0001"
+}
+"""
+
+@cleaning_router.post("/request")
+async def request_cleaning_room(request: RequestCleaningRoomBody):
+    try:
+        result = dorm.request_cleaning_room(request.residentId, request.roomId)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
 # ==================== Register Routers ====================
 
 app.include_router(system_router)
 app.include_router(contract_router)
 app.include_router(maintenance_router)
+app.include_router(cleaning_router)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, log_level="info", reload=True)
