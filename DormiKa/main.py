@@ -156,6 +156,27 @@ async def reset_mock_data():
     init_mock_data()
     return {"message": "Mock data has been reset successfully"}
 
+class SignInBody(BaseModel):
+    name: str = Field(..., example="kenny")
+    email: str = Field(..., example="kenny@example.com")
+    phoneNumber: str = Field(..., example="0812345678")
+
+"""
+{
+  "name": "kenny",
+  "email": "kenny@example.com",
+  "phoneNumber": "0812345678"
+}
+"""
+
+@system_router.post("/sign-in", tags=["Resident"])
+async def sign_in(request: SignInBody):
+    try:
+        result = dorm.sign_in(request.name, request.email, request.phoneNumber)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"message": result}
+
 # ==================== Contract ====================
 
 class RequestBookingBody(BaseModel):
