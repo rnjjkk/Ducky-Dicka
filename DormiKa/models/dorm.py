@@ -3,6 +3,8 @@ from .contract import *
 from .room import *
 from .resident import *
 from .invoice import Invoice
+import re
+import datetime
 
 class Dorm:
     def __init__(self, name: str):
@@ -309,3 +311,27 @@ class Dorm:
             s = 'add_strike : success'
             self.show_success(s)
             return s
+    
+    def sign_in(self, name, email, phone_number):
+        # validate name
+        if not name.replace(" ", "").isalpha():
+            return self.show_error("sign_in : error, name must be letters only")
+
+        # validate email
+        if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
+            return self.show_error("sign_in : error, invalid email format")
+
+        # validate phone
+        if not phone_number.isdigit() or len(phone_number) != 10:
+            return self.show_error("sign_in : error, phone number must be 10 digits")
+
+        # check blacklist
+        for blacklisted in self.__blacklist:
+            if blacklisted.email == email or blacklisted.phone_number == phone_number:
+                return self.show_error("sign_in : error, email or phone number is blacklisted")
+
+        resident = Resident(name, email, phone_number)
+        self.add_resident(resident)
+        s = f'sign_in : success, your id is: {resident.id}'
+        self.show_success(s)
+        return s
