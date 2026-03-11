@@ -2,7 +2,7 @@ from .enum import *
 from .contract import *
 from .room import *
 from .resident import *
-from .facility_booking import FacilityBooking
+from .facility_booking import *
 from .invoice import Invoice
 import re
 import datetime

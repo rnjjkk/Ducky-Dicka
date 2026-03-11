@@ -12,7 +12,7 @@ from models.room import *
 from models.contract import *
 from models.building import *
 from models.enum import *
-from models.facility_booking import FacilityBooking
+from models.facility_booking import *
 
 # ==================== Mock Data ====================
 
@@ -107,7 +107,7 @@ def init_mock_data():
     Room.ID = 1
     MaintenanceTicket.ID = 1
     Invoice._running_number = 1
-    FacilityBooking.ID = 1
+    BookingShareFacility.ID = 1
 
     dorm = Dorm("Ducka")
 
