@@ -34,7 +34,6 @@ class Resident:
         self.__payment = None
         self.__member = None
         self.__room_bookings = []
-        self.__facility_bookings = []
         self.__contracts = []
         self.__invoices = []
         self.__receipts = []
@@ -89,6 +88,10 @@ class Resident:
     @property
     def receipts(self):
         return self.__receipts
+    
+    @property
+    def booking_share_facility_list(self):
+        return self.__booking_share_facility_list
 			
     def set_member(self, member):
         self.__member = member
@@ -98,6 +101,9 @@ class Resident:
 
     def add_invoice(self, invoice):
         self.__invoices.append(invoice)
+
+    def add_booking_share_facility(self, booking):
+        self.__booking_share_facility_list.append(booking)
 
     def calculate_net_amount(self, amount, discount):
         discount = 1 - discount
@@ -164,3 +170,12 @@ class Resident:
     def add_cleaning_ticket(self,room,cleaning_ticket):
         room.cleaning_tickets.append(cleaning_ticket)
         return f"add to room success"
+    
+    def add_facility_booking(self, facility_booking):
+        """Add a facility booking to the resident's booking list"""
+        self.__booking_share_facility_list.append(facility_booking)
+        return facility_booking
+    
+    def get_facility_bookings(self):
+        """Get all facility bookings for this resident"""
+        return self.__booking_share_facility_list

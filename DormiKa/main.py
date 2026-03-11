@@ -12,6 +12,7 @@ from models.room import *
 from models.contract import *
 from models.building import *
 from models.enum import *
+from models.facility_booking import FacilityBooking
 
 # ==================== Mock Data ====================
 
@@ -106,6 +107,7 @@ def init_mock_data():
     Room.ID = 1
     MaintenanceTicket.ID = 1
     Invoice._running_number = 1
+    FacilityBooking.ID = 1
 
     dorm = Dorm("Ducka")
 
@@ -144,6 +146,7 @@ system_router      = APIRouter(prefix="",           tags=["System"])
 contract_router    = APIRouter(prefix="/contract",  tags=["Contract"])
 maintenance_router = APIRouter(prefix="/maintenance", tags=["Maintenance"])
 cleaning_router    = APIRouter(prefix="/cleaning",  tags=["Cleaning"])
+facility_router    = APIRouter(prefix="/facility",  tags=["Facility"])
 
 # ==================== System ====================
 
@@ -275,6 +278,37 @@ async def clean_room(request: CleanRoomBody):
         result = dorm.clean_room_workflow(request.cleanerId, request.roomId)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+# ==================== Facility Booking ====================
+
+class BookShareFacilityRequest(BaseModel):
+    residentId: str = Field(..., example="RS-0001")
+    buildingId: str = Field(..., example="A01")
+    facilityId: str = Field(..., example="MR-001")
+    bookingTime: str = Field(..., example="2026-03-15 14:00:00")
+    facilityName: str = Field(default="Shared Facility", example="Meeting Room")
+
+"""
+{
+  "residentId": "RS-0001",
+  "buildingId": "A01",
+  "facilityId": "MR-001",
+  "bookingTime": "2026-03-15 14:00:00",
+  "facilityName": "Meeting Room"
+}
+"""
+
+@facility_router.post("/book")
+async def book_share_facility(request: BookShareFacilityRequest):
+    try:
+        result = dorm.booking_share_facility(
+            request.residentId,
+            request.buildingId,
+            request.facilityId,
+            request.bookingTime,
+            request.facilityName
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return result
 
 # ==================== Register Routers ====================
@@ -283,6 +317,7 @@ app.include_router(system_router)
 app.include_router(contract_router)
 app.include_router(maintenance_router)
 app.include_router(cleaning_router)
+app.include_router(facility_router)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, log_level="info", reload=True)
