@@ -20,6 +20,7 @@ def create_resident_mock_data(count: int = 3):
     emails = ["kenny", "john",  "alice",  "mary",  "bob"]
     residents = []
     for i in range(min(count, len(names))):
+        # BUG FIX: old code passed (name, 18+i, phone) — age was treated as email
         resident = Resident(
             name=names[i],
             email=f"{emails[i]}@example.com",
@@ -30,6 +31,8 @@ def create_resident_mock_data(count: int = 3):
     return residents
 
 def create_cleaner_mock_data():
+    # BUG FIX: Cleaner auto-generates its own id via CL-{ID:04d},
+    # do NOT pass id= as kwarg — it is ignored and creates confusion.
     cleaners = [
         Cleaner(name="Cleaner A", phone_number="0900000001"),
         Cleaner(name="Cleaner B", phone_number="0900000002"),
@@ -98,7 +101,8 @@ def init_mock_data():
     Building.ID          = 1
     Room.ID              = 1
     MaintenanceTicket.ID = 1
-    Invoice._running_number = 1
+    Invoice._running_number  = 1
+    BookingShareFacility.ID  = 1
 
     dorm = Dorm("Ducka")
 
@@ -152,6 +156,7 @@ facility_router    = APIRouter(prefix="/facility",    tags=["Facility"])
 
 @system_router.post("/reset")
 async def reset_mock_data():
+    """Reset all mock data to initial state."""
     init_mock_data()
     return {"message": "Mock data has been reset successfully"}
 
@@ -161,6 +166,7 @@ class SystemContractInvoiceBody(BaseModel):
 
 @system_router.post("/system-contract-invoice")
 async def system_contract_invoice(request: SystemContractInvoiceBody):
+    """Generate monthly contract invoices for all active residents."""
     try:
         result = dorm.system_contract_invoice(request.employeeId)
     except Exception as e:
@@ -173,6 +179,7 @@ class AddStrikeBody(BaseModel):
 
 @system_router.post("/add-strike")
 async def add_strike(request: AddStrikeBody):
+    """Add a strike to a resident's account."""
     try:
         result = dorm.add_strike(request.employeeId)
     except Exception as e:
@@ -191,6 +198,7 @@ class SignInBody(BaseModel):
 
 @resident_router.post("/sign-in")
 async def sign_in(request: SignInBody):
+    """Register a new resident account."""
     try:
         result = dorm.sign_in(request.name, request.email, request.phoneNumber)
     except ValueError as e:
@@ -209,6 +217,7 @@ class RequestBookingBody(BaseModel):
 
 @contract_router.post("/request")
 async def request_booking(request: RequestBookingBody):
+    """Request a room booking (holds the room for 48 h)."""
     try:
         result = dorm.request_booking(request.residentId, request.buildingId, request.roomType)
     except (LookupError, ValueError) as e:
@@ -223,6 +232,7 @@ class SignContractBody(BaseModel):
 
 @contract_router.post("/sign")
 async def sign_contract(request: SignContractBody):
+    """Sign a draft contract (moves it to PENDING_SIGN)."""
     try:
         result = dorm.sign_contract(request.contractId)
     except (LookupError, ValueError) as e:
@@ -235,6 +245,7 @@ class PayContractInvoiceBody(BaseModel):
 
 @contract_router.post("/pay")
 async def pay_contract_invoice(request: PayContractInvoiceBody):
+    """Pay a pending contract invoice directly."""
     try:
         result = dorm.pay_contract_invoice(request.invoiceId)
     except (LookupError, ValueError) as e:
@@ -243,13 +254,14 @@ async def pay_contract_invoice(request: PayContractInvoiceBody):
 
 
 class ChangeContractBody(BaseModel):
-    residentId:             str = Field(..., example="RS-0001")
+    residentId:            str = Field(..., example="RS-0001")
     currentLeaseContractId: str = Field(..., example="LC-0001")
-    targetRoomId:           str = Field(..., example="RM-0003")
-    moveDate:               str = Field(..., example="2026-03-15")
+    targetRoomId:          str = Field(..., example="RM-0003")
+    moveDate:              str = Field(..., example="2026-03-15")
 
 @contract_router.post("/change")
 async def change_contract(request: ChangeContractBody):
+    """Move a resident to a different room with a prorated upgrade invoice."""
     try:
         result = dorm.change_contract(
             request.residentId,
@@ -258,33 +270,6 @@ async def change_contract(request: ChangeContractBody):
             request.moveDate,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    return result
-
-
-class SelectHandoverBody(BaseModel):
-    contractId: str = Field(..., example="LC-0001")
-
-"""
-{
-  "contractId": "LC-0001"
-}
-"""
-
-@contract_router.post("/select_handover")
-async def select_contract_for_handover(request: SelectHandoverBody):
-    try:
-        resident, contract = dorm.search_contract_by_id(request.contractId)
-        contract.validate_contract_status_for_handover()
-        return {
-            "status":          "success",
-            "contract_id":     contract.id,
-            "resident_id":     resident.id,
-            "room_id":         contract.room.id,
-            "contract_status": contract.status.value,
-            "message":         "เลือกสัญญาสำเร็จ พร้อมดำเนินการส่งมอบห้อง",
-        }
-    except (LookupError, ValueError) as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -314,12 +299,13 @@ async def complete_handover(request: HandoverBody):
 # ==================================================
 
 class RequestMaintenanceBody(BaseModel):
-    residentId:    str           = Field(..., example="RS-0001")
-    roomId:        str           = Field(..., example="RM-0001")
+    residentId:    str          = Field(..., example="RS-0001")
+    roomId:        str          = Field(..., example="RM-0001")
     issueCategory: IssueCategory = Field(..., example=IssueCategory.PLUMBING)
 
 @maintenance_router.post("/request")
 async def request_maintenance(request: RequestMaintenanceBody):
+    """Submit a maintenance request — assigns an employee and technician automatically."""
     try:
         result = dorm.request_maintenance(
             request.residentId, request.roomId, request.issueCategory.value
@@ -330,11 +316,12 @@ async def request_maintenance(request: RequestMaintenanceBody):
 
 
 class StartMaintenanceBody(BaseModel):
-    technicianId: str           = Field(..., example="TC-0001")
-    notes:        Optional[str] = Field(None, example="Pipe leaking under the sink")
+    technicianId: str            = Field(..., example="TC-0001")
+    notes:        Optional[str]  = Field(None, example="Pipe leaking under the sink")
 
 @maintenance_router.post("/start")
 async def start_maintenance(request: StartMaintenanceBody):
+    """Technician begins work on their assigned ticket."""
     try:
         result = dorm.start_maintenance_workflow(request.technicianId, request.notes)
     except Exception as e:
@@ -347,6 +334,7 @@ class FinishMaintenanceBody(BaseModel):
 
 @maintenance_router.post("/finish")
 async def finish_maintenance(request: FinishMaintenanceBody):
+    """Technician marks the ticket resolved — generates an invoice for the resident."""
     try:
         result = dorm.finish_maintenance_workflow(request.technicianId)
     except Exception as e:
@@ -364,6 +352,7 @@ class RequestCleaningBody(BaseModel):
 
 @cleaning_router.post("/request")
 async def request_cleaning(request: RequestCleaningBody):
+    """Submit a cleaning request for a room — assigns an available cleaner."""
     try:
         result = dorm.request_cleaning_room(request.residentId, request.roomId)
     except Exception as e:
@@ -388,6 +377,7 @@ class FinishCleaningBody(BaseModel):
 
 @cleaning_router.post("/finish")
 async def finish_cleaning(request: FinishCleaningBody):
+    """Cleaner finishes the job — generates a cleaning invoice for the resident."""
     try:
         result = dorm.finish_cleaning_workflow(request.cleanerId)
     except Exception as e:
@@ -401,10 +391,11 @@ async def finish_cleaning(request: FinishCleaningBody):
 
 class CreateMemberBody(BaseModel):
     residentId: str = Field(..., example="RS-0001")
-    memberType: str = Field(..., example="STANDARD")
+    memberType: str = Field(..., example="STANDARD")   # STANDARD | PLUS | PLATINUM
 
 @member_router.post("/create")
 async def create_member(request: CreateMemberBody):
+    """Assign a membership tier to a resident and create a membership invoice."""
     try:
         result = dorm.create_member(request.residentId, request.memberType)
     except Exception as e:
@@ -418,11 +409,13 @@ async def create_member(request: CreateMemberBody):
 
 class SelectPaymentBody(BaseModel):
     residentId:    str = Field(..., example="RS-0001")
+    # BUG FIX: valid values are 'bank_account' or 'card' — not 'PROMPTPAY'
     paymentMethod: str = Field(..., example="bank_account")
     invoiceIds:    str = Field(..., example="INV-0001, INV-0002")
 
 @payment_router.post("/select")
 async def select_payment(request: SelectPaymentBody):
+    """Choose a payment method and select invoices to pay."""
     try:
         result = dorm.select_payment_method_and_invoices(
             request.residentId, request.paymentMethod, request.invoiceIds
@@ -438,6 +431,7 @@ class PayBody(BaseModel):
 
 @payment_router.post("/pay")
 async def pay(request: PayBody):
+    """Submit payment data to confirm and settle selected invoices."""
     try:
         result = dorm.payment_system(request.residentId, request.paymentData)
     except Exception as e:
@@ -451,6 +445,7 @@ async def pay(request: PayBody):
 
 @invoice_router.get("/{resident_id}")
 async def display_invoice(resident_id: str):
+    """List all pending invoices for a resident."""
     try:
         result = dorm.display_invoice(resident_id)
     except Exception as e:
@@ -464,6 +459,7 @@ async def display_invoice(resident_id: str):
 
 @receipt_router.get("/{resident_id}")
 async def display_receipt(resident_id: str):
+    """List all payment receipts for a resident."""
     try:
         result = dorm.display_receipt(resident_id)
     except Exception as e:
@@ -484,6 +480,7 @@ class BookShareFacilityBody(BaseModel):
 
 @facility_router.post("/book")
 async def book_share_facility(request: BookShareFacilityBody):
+    """Book a shared facility (meeting room, washing machine, etc.)."""
     try:
         result = dorm.booking_share_facility(
             request.residentId,
