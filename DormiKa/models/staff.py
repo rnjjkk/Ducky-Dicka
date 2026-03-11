@@ -63,12 +63,14 @@ class Cleaner(Staff):
 
     def __init__(self, name: str, phone_number: str, cleaning_supplies_list=None, assigned_rooms=None, status: str = "ACTIVE"):
         cl_id = f"CL-{Cleaner.ID:04d}"
-        super().__init__(id=cl_id, 
-                         name=name, 
-                         phone_number=phone_number, 
-                         status=status)
+        super().__init__(id=cl_id,
+                        name=name,
+                        phone_number=phone_number,
+                        status=status)
         self.__cleaning_supplies_list = cleaning_supplies_list or []
         self.__assigned_rooms = assigned_rooms or []
+
+        Cleaner.ID += 1
 
     @property
     def cleaning_supplies_list(self):
@@ -254,4 +256,4 @@ class ACTech(Technician):
 
     def complete_task(self):
         self.__gas_level_refrigerant = max(0.0, self.__gas_level_refrigerant - 10.0)
-        return super().complete_task()
+        return super().finish_maintenance()

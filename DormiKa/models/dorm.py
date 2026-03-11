@@ -296,25 +296,23 @@ class Dorm:
             "room_status": contract.room.status.value,
         }
 
-    def complete_handover(self, contract_id, meter_elect: float, meter_water: float):
+    def complete_handover(self, contract_id: str):
         # 1. find resident and contract
         resident, contract = self.search_contract_by_id(contract_id)
 
         # 2. validate contract status (must be ACTIVE or PENDING_SIGN)
         contract.validate_contract_status_for_handover()
 
-        # 3. record handover meter readings and mark room as OCCUPIED
+        # 3. mark room as OCCUPIED
         room = contract.room
-        handover_log = room.record_handover(meter_elect, meter_water)
         room.status = RoomStatus.OCCUPIED
 
         return {
-            "contract_id": contract.id,
-            "resident_id": resident.id,
-            "room_id": room.id,
-            "room_status": room.status.value,
-            "handover_electric": handover_log["handover_electric"],
-            "handover_water": handover_log["handover_water"],
+            "contract_id":     contract.id,
+            "resident_id":     resident.id,
+            "room_id":         room.id,
+            "room_status":     room.status.value,
+            "contract_status": contract.status.value,
         }
 
     def search_resident_by_room_id(self, room_id):
