@@ -85,6 +85,12 @@ class ShareFacilityStatus(Enum):
     MAINTENANCE = "MAINTENANCE"
     DISABLED = "DISABLED"
 
+class BookingShareFacilityStatus(Enum):
+    BOOK = "BOOKED"
+    IN_USE = "IN_USE"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+
 class MaintenanceStatus(Enum):
     REPORTED = "REPORTED"
     IN_PROGRESS = "IN_PROGRESS"
