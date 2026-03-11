@@ -91,16 +91,30 @@ class Dorm:
             cleaner = self.search_cleaner_by_id(cleaner_id)
             # search cleaning ticket by room id and check status
             room = self.search_room_by_id(room_id)
-            cleaner.assign_rooms.append(room)
-            ticket = cleaner.search_cleaning_ticket_by_room_id(room_id)
-            cleaner.clean_room(ticket)
-            cleaner.finished_cleaning(ticket)
+            
+            # find the cleaning ticket for this room
+            ticket = None
+            for t in room.cleaning_tickets:
+                if t.room_id == room_id and t.status != "Finished":
+                    ticket = t
+                    break
+            
+            if ticket is None:
+                raise ValueError(f"No active cleaning ticket found for room {room_id}")
+            
+            # Add room to assigned rooms
+            cleaner.assigned_rooms.append(room)
+            
+            # Clean the room
+            cleaner.clean_room(room, ticket)
+            cleaner.finished_cleaning(room)
+            
             return {
                 "cleaner_id": cleaner.id,
                 "cleaner_name": cleaner.name,
                 "ticket_id": ticket.id,
                 "room_id": ticket.room_id,
-                "status": ticket.status,
+                "status": "Finished",
             }
         except ValueError as e:
             return self.show_error({"error": str(e)})

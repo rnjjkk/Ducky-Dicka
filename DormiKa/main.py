@@ -81,6 +81,24 @@ def create_building_mock_data():
     rooms = create_room_mock_data(building)
     for room in rooms:
         building.add_room(room)
+    
+    # Add share facilities
+    from models.share_facility import MeetingRoom, WashingMachine
+    meeting_rooms = [
+        MeetingRoom(),
+        MeetingRoom(),
+    ]
+    washing_machines = [
+        WashingMachine(),
+        WashingMachine(),
+    ]
+    for mr in meeting_rooms:
+        building.add_meeting_room(mr)
+        print(f"Created Meeting Room: {mr.id}")
+    for wm in washing_machines:
+        building.add_washing_machine(wm)
+        print(f"Created Washing Machine: {wm.id}")
+    
     return building
 
 def create_contract_mock_data(resident, room, status: ContractStatus = ContractStatus.ACTIVE):
@@ -108,6 +126,8 @@ def init_mock_data():
     MaintenanceTicket.ID = 1
     Invoice._running_number = 1
     BookingShareFacility.ID = 1
+    from models.share_facility import ShareFacility
+    ShareFacility.ID = 1
 
     dorm = Dorm("Ducka")
 
@@ -335,22 +355,21 @@ async def clean_room(request: CleanRoomBody):
         result = dorm.clean_room_workflow(request.cleanerId, request.roomId)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    return result
 # ==================== Facility Booking ====================
 
 class BookShareFacilityRequest(BaseModel):
     residentId: str = Field(..., example="RS-0001")
     buildingId: str = Field(..., example="A01")
-    facilityId: str = Field(..., example="MR-001")
+    facilityId: str = Field(..., example="SHARE-0001")
     bookingTime: str = Field(..., example="2026-03-15 14:00:00")
-    facilityName: str = Field(default="Shared Facility", example="Meeting Room")
 
 """
 {
   "residentId": "RS-0001",
   "buildingId": "A01",
-  "facilityId": "MR-001",
-  "bookingTime": "2026-03-15 14:00:00",
-  "facilityName": "Meeting Room"
+  "facilityId": "SHARE-0001",
+  "bookingTime": "2026-03-15 14:00:00"
 }
 """
 
@@ -359,10 +378,9 @@ async def book_share_facility(request: BookShareFacilityRequest):
     try:
         result = dorm.booking_share_facility(
             request.residentId,
-            request.buildingId,
             request.facilityId,
-            request.bookingTime,
-            request.facilityName
+            request.buildingId,
+            request.bookingTime
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

@@ -79,21 +79,26 @@ class Cleaner(Staff):
         return self.__assigned_rooms
     
     def search_cleaning_ticket_by_room_id(self, room_id):
-        for ticket in self.__assigned_rooms:
-            if ticket.room_id == room_id and ticket.status != "Finished":
-                return ticket
+        for room in self.__assigned_rooms:
+            for ticket in room.cleaning_tickets:
+                if ticket.room_id == room_id and ticket.status != "Finished":
+                    return ticket
         raise ValueError(f"No active cleaning ticket found for room {room_id}")
 
-    def clean_room(self, ticket):
+    def clean_room(self, room, ticket=None):
         self.status = "WORKING"
+        if ticket is None:
+            ticket = self.search_cleaning_ticket_by_room_id(room.id)
         ticket.status = ticket.status.CLEANING
         return {"room_id": ticket.room_id, "status": "cleaning"}
     
-    def finished_cleaning(self, ticket):
+    def finished_cleaning(self, room):
         self.status = "AVAILABLE"
-        self.__assigned_rooms.remove(ticket)
+        ticket = self.search_cleaning_ticket_by_room_id(room.id)
         ticket.status = ticket.status.FINISHED
-        return {"room_id": ticket.room_id, "status": "available"}
+        self.__assigned_rooms.remove(room)
+        return {"room_id": room.id, "status": "available"}
+
 
 
 class Technician(Staff):

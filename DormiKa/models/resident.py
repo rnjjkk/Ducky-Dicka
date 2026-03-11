@@ -176,6 +176,16 @@ class Resident:
         self.__booking_share_facility_list.append(facility_booking)
         return facility_booking
     
+    def add_booking_share_facility(self, booking):
+        """Add a booking to the resident's booking list"""
+        self.__booking_share_facility_list.append(booking)
+        return booking
+    
     def get_facility_bookings(self):
         """Get all facility bookings for this resident"""
+        return self.__booking_share_facility_list
+    
+    @property
+    def booking_share_facility_list(self):
+        """Property accessor for booking list"""
         return self.__booking_share_facility_list
