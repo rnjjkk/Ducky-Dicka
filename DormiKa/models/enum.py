@@ -77,5 +77,11 @@ class ShareFacilityPrice(Enum):
     MeetingRoom = 100
     WashingMachine = 50
 class MaintenanceStatus(Enum):
+    REPORTED = "REPORTED"
     IN_PROGRESS = "IN_PROGRESS"
     RESOLVED = "RESOLVED"
+
+class MaintenanceCost(Enum):
+    ELECTRICAL = 750
+    PLUMBING = 1000
+    AC = 500

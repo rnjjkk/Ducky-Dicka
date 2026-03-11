@@ -1,0 +1,83 @@
+%%{init: {"theme": "forest"}}%%
+sequenceDiagram
+    autonumber
+
+    actor Technician_Actor
+    participant Dorm
+    participant Technician
+    participant Maintenance_Ticket
+    participant Resident
+
+    Technician_Actor ->> +Dorm: finish_maintenance_workflow(technicianId)
+
+    loop tc in dorm.technicians
+        Dorm ->> +Technician: get_id()
+        Technician -->> -Dorm: return id
+
+        alt id == technicianId
+            Technician -->> Dorm: return technician
+        else id != technicianId
+            Technician -->> Dorm: continue
+        end
+    end
+
+    opt technician not found
+        Dorm -->> Technician_Actor: return "technician not found"
+    end
+
+    Dorm ->> +Technician: finish_maintenance()
+
+    Technician ->> Technician: get_current_task()
+
+    opt current_task is None
+        Technician -->> Dorm: return "no assigned ticket"
+        Dorm -->> Technician_Actor: return "no assigned ticket"
+    end
+
+    Technician ->> +Maintenance_Ticket: get_status()
+    Maintenance_Ticket -->> -Technician: return status
+
+    opt status != IN_PROGRESS
+        Technician -->> Dorm: return "ticket is not in progress"
+        Dorm -->> Technician_Actor: return "ticket is not in progress"
+    end
+
+    Technician ->> Technician: cost = MaintenanceCost[issue_category].value
+
+    Technician ->> +Maintenance_Ticket: finish_work(cost)
+    Maintenance_Ticket ->> Maintenance_Ticket: set_end_time(datetime.now())
+    Maintenance_Ticket ->> Maintenance_Ticket: set_cost(cost)
+    Maintenance_Ticket ->> Maintenance_Ticket: set_status(RESOLVED)
+    Maintenance_Ticket -->> -Technician: return done
+
+    Technician ->> Technician: set_status(AVAILABLE)
+    Technician ->> Technician: clear_current_task()
+
+    Technician -->> -Dorm: return completed_ticket
+
+    create participant Invoice
+    Dorm ->> Invoice: create_invoice(MAINTENANCE, room_id, ticket.cost)
+    activate Invoice
+    Invoice -->> Dorm: return invoice
+    deactivate Invoice
+
+    loop resident in dorm.residents
+        loop contract in resident.contracts
+            Dorm ->> Dorm: check contract.room.id == room_id and status == ACTIVE
+            alt match found
+                Dorm -->> Dorm: return resident
+            else no match
+                Dorm -->> Dorm: continue
+            end
+        end
+    end
+
+    opt resident not found
+        Dorm -->> Technician_Actor: return "no active resident for room"
+    end
+
+    Dorm ->> +Resident: add_invoice(invoice)
+    Resident -->> -Dorm: return done
+
+    Dorm -->> Technician_Actor: return result
+    deactivate Dorm

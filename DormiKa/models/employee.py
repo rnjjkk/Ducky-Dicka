@@ -35,7 +35,7 @@ class Employee:
         ticket = self.create_maintenance_ticket(reporter, room.id, issue_category, technician.id)
         technician.assign_ticket(ticket)
         room.add_maintenance_ticket(ticket)
-        ticket.status = MaintenanceStatus.IN_PROGRESS
+        ticket.status = MaintenanceStatus.REPORTED
 
         return {
             "reporter": f"{ticket.reporter}",

@@ -1,0 +1,75 @@
+%%{init: {"theme": "forest"}}%%
+sequenceDiagram
+    autonumber
+
+    actor Technician_Actor
+    participant Dorm
+    participant Technician
+    participant Maintenance_Ticket
+
+    Technician_Actor ->> +Dorm: start_maintenance_workflow(technicianId, notes)
+
+    loop tc in dorm.technicians
+        Dorm ->> +Technician: get_id()
+        Technician -->> -Dorm: return id
+
+        alt id == technicianId
+            Technician -->> Dorm: return technician
+        else id != technicianId
+            Technician -->> Dorm: continue
+        end
+    end
+
+    opt technician not found
+        Dorm -->> Technician_Actor: return "technician not found"
+    end
+
+    Dorm ->> +Technician: start_maintenance(notes)
+
+    Technician ->> Technician: get_current_task()
+
+    opt current_task is None
+        Technician -->> Dorm: return "no assigned ticket"
+        Dorm -->> Technician_Actor: return "no assigned ticket"
+    end
+
+    loop cap in technician.capabilities
+        alt cap == ticket.issue_category
+            Technician -->> Technician: capability matched
+        else cap != ticket.issue_category
+            Technician -->> Technician: continue
+        end
+    end
+
+    opt issue_category not in capabilities
+        Technician -->> Dorm: return "not capable of handling issue"
+        Dorm -->> Technician_Actor: return "not capable of handling issue"
+    end
+
+    Technician ->> Technician: set_status(UNAVAILABLE)
+
+    Technician ->> +Maintenance_Ticket: begin_work(notes)
+
+    Maintenance_Ticket ->> Maintenance_Ticket: get_status()
+
+    opt status == IN_PROGRESS
+        Maintenance_Ticket -->> Technician: return "ticket already in progress"
+        Technician -->> Dorm: propagate error
+        Dorm -->> Technician_Actor: return error
+    end
+
+    opt status == RESOLVED
+        Maintenance_Ticket -->> Technician: return "ticket already resolved"
+        Technician -->> Dorm: propagate error
+        Dorm -->> Technician_Actor: return error
+    end
+
+    Maintenance_Ticket ->> Maintenance_Ticket: set_start_time(datetime.now())
+    Maintenance_Ticket ->> Maintenance_Ticket: set_notes(notes)
+    Maintenance_Ticket ->> Maintenance_Ticket: set_status(IN_PROGRESS)
+
+    Maintenance_Ticket -->> -Technician: return done
+
+    Technician -->> -Dorm: return result
+    Dorm -->> Technician_Actor: return result
+    deactivate Dorm
