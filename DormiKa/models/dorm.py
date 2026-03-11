@@ -315,20 +315,28 @@ class Dorm:
     def sign_in(self, name, email, phone_number):
         # validate name
         if not name.replace(" ", "").isalpha():
-            return self.show_error("sign_in : error, name must be letters only")
+            e = "sign_in : error, name must be letters only"
+            self.show_error(e)
+            raise ValueError(e)
 
         # validate email
         if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
-            return self.show_error("sign_in : error, invalid email format")
+            e = "sign_in : error, invalid email format"
+            self.show_error(e)
+            raise ValueError(e)
 
         # validate phone
         if not phone_number.isdigit() or len(phone_number) != 10:
-            return self.show_error("sign_in : error, phone number must be 10 digits")
+            e = "sign_in : error, phone number must be 10 digits"
+            self.show_error(e)
+            raise ValueError(e)
 
         # check blacklist
         for blacklisted in self.__blacklist:
             if blacklisted.email == email or blacklisted.phone_number == phone_number:
-                return self.show_error("sign_in : error, email or phone number is blacklisted")
+                e = "sign_in : error, email or phone number is blacklisted"
+                self.show_error(e)
+                raise ValueError(e)
 
         resident = Resident(name, email, phone_number)
         self.add_resident(resident)
