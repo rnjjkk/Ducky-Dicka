@@ -88,6 +88,7 @@ class Dorm:
 
     def clean_room_workflow(self, cleaner_id, room_id):
         try:
+            from .enum import CleaningStatus
             cleaner = self.search_cleaner_by_id(cleaner_id)
             # search cleaning ticket by room id and check status
             room = self.search_room_by_id(room_id)
@@ -95,7 +96,7 @@ class Dorm:
             # find the cleaning ticket for this room
             ticket = None
             for t in room.cleaning_tickets:
-                if t.room_id == room_id and t.status != "Finished":
+                if t.room_id == room_id and t.status != CleaningStatus.FINISHED:
                     ticket = t
                     break
             
@@ -103,7 +104,8 @@ class Dorm:
                 raise ValueError(f"No active cleaning ticket found for room {room_id}")
             
             # Add room to assigned rooms
-            cleaner.assigned_rooms.append(room)
+            if room not in cleaner.assigned_rooms:
+                cleaner.assigned_rooms.append(room)
             
             # Clean the room
             cleaner.clean_room(room, ticket)
@@ -115,6 +117,87 @@ class Dorm:
                 "ticket_id": ticket.id,
                 "room_id": ticket.room_id,
                 "status": "Finished",
+            }
+        except ValueError as e:
+            return self.show_error({"error": str(e)})
+
+    def start_cleaning_workflow(self, cleaner_id, room_id):
+        """Start cleaning process for a specific room."""
+        try:
+            from .enum import CleaningStatus
+            cleaner = self.search_cleaner_by_id(cleaner_id)
+            room = self.search_room_by_id(room_id)
+            
+            # Add room to assigned rooms if not already there
+            if room not in cleaner.assigned_rooms:
+                cleaner.assigned_rooms.append(room)
+            
+            # Find the cleaning ticket for this room
+            ticket = None
+            for t in room.cleaning_tickets:
+                if t.room_id == room_id and t.status != CleaningStatus.FINISHED:
+                    ticket = t
+                    break
+            
+            if ticket is None:
+                raise ValueError(f"No active cleaning ticket found for room {room_id}")
+            
+            # Update status to CLEANING
+            ticket.status = CleaningStatus.CLEANING
+            cleaner.status = "WORKING"
+            
+            return {
+                "cleaner_id": cleaner.id,
+                "cleaner_name": cleaner.name,
+                "ticket_id": ticket.id,
+                "room_id": ticket.room_id,
+                "status": ticket.status.value,
+            }
+        except ValueError as e:
+            return self.show_error({"error": str(e)})
+
+    def finish_cleaning_workflow(self, cleaner_id, room_id):
+        """Mark cleaning as finished for a specific room."""
+        try:
+            from .enum import CleaningStatus
+            cleaner = self.search_cleaner_by_id(cleaner_id)
+            room = self.search_room_by_id(room_id)
+            
+            # Find the cleaning ticket for this room
+            ticket = None
+            for t in room.cleaning_tickets:
+                if t.room_id == room_id and t.status != CleaningStatus.FINISHED:
+                    ticket = t
+                    break
+            
+            if ticket is None:
+                raise ValueError(f"No active cleaning ticket found for room {room_id}")
+            
+            # Update status to FINISHED
+            ticket.status = CleaningStatus.FINISHED
+            if room in cleaner.assigned_rooms:
+                cleaner.assigned_rooms.remove(room)
+            cleaner.status = "AVAILABLE"
+            
+            # Find resident for this room and create cleaning invoice
+            resident = self.search_resident_by_room_id(room_id)
+            if resident:
+                cleaning_invoice = Invoice(
+                    InvoiceType.CLEANER,
+                    ticket.id,
+                    ticket.cost,
+                    InvoiceStatus.UNPAID
+                )
+                resident.add_invoice(cleaning_invoice)
+            
+            return {
+                "cleaner_id": cleaner.id,
+                "cleaner_name": cleaner.name,
+                "ticket_id": ticket.id,
+                "room_id": ticket.room_id,
+                "status": ticket.status.value,
+                "invoice_id": cleaning_invoice.id if resident else None,
+                "cost": ticket.cost if resident else None,
             }
         except ValueError as e:
             return self.show_error({"error": str(e)})
@@ -272,9 +355,9 @@ class Dorm:
                     "reporter": resident.id,
                     "room_id": cleaning_ticket.room_id,
                     "ticket id": cleaning_ticket.id,
-                    "report_time": cleaning_ticket.report_time,
+                    "report_time": str(cleaning_ticket.report_time),
                     "cost": cleaning_ticket.cost,
-                    "status": cleaning_ticket.status
+                    "status": cleaning_ticket.status.value
                 }
                 return self.show_success(s)
             else:

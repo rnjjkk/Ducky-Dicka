@@ -79,23 +79,26 @@ class Cleaner(Staff):
         return self.__assigned_rooms
     
     def search_cleaning_ticket_by_room_id(self, room_id):
+        from .enum import CleaningStatus
         for room in self.__assigned_rooms:
             for ticket in room.cleaning_tickets:
-                if ticket.room_id == room_id and ticket.status != "Finished":
+                if ticket.room_id == room_id and ticket.status != CleaningStatus.FINISHED:
                     return ticket
         raise ValueError(f"No active cleaning ticket found for room {room_id}")
 
     def clean_room(self, room, ticket=None):
+        from .enum import CleaningStatus
         self.assign_task(room)
         if ticket is None:
             ticket = self.search_cleaning_ticket_by_room_id(room.id)
-        ticket.status = ticket.status.CLEANING
+        ticket.status = CleaningStatus.CLEANING
         return {"room_id": ticket.room_id, "status": "cleaning"}
     
     def finished_cleaning(self, room):
+        from .enum import CleaningStatus
         self.status = "AVAILABLE"
         ticket = self.search_cleaning_ticket_by_room_id(room.id)
-        ticket.status = ticket.status.FINISHED
+        ticket.status = CleaningStatus.FINISHED
         self.__assigned_rooms.remove(room)
         return {"room_id": room.id, "status": "available"}
 

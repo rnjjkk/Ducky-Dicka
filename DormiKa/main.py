@@ -372,27 +372,28 @@ async def request_cleaning(request: RequestCleaningBody):
 
 class CleanRoomBody(BaseModel):
     cleanerId: str = Field(..., example="CL-0001")
+    roomId: str = Field(..., example="RM-0001")
 
 @cleaning_router.post("/start")
 async def start_cleaning(request: CleanRoomBody):
     """Cleaner begins cleaning their assigned room."""
     try:
-        # BUG FIX: old endpoint was /clean and called clean_room_workflow —
-        # renamed to /start to match maintenance pattern; update dorm method name accordingly.
-        result = dorm.start_cleaning_workflow(request.cleanerId)
+        # First assign the room to the cleaner, then start cleaning
+        result = dorm.start_cleaning_workflow(request.cleanerId, request.roomId)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-    return result  # BUG FIX: original was missing return
+    return result
 
 
 class FinishCleaningBody(BaseModel):
     cleanerId: str = Field(..., example="CL-0001")
+    roomId: str = Field(..., example="RM-0001")
 
 @cleaning_router.post("/finish")
 async def finish_cleaning(request: FinishCleaningBody):
     """Cleaner finishes the job — generates a cleaning invoice for the resident."""
     try:
-        result = dorm.finish_cleaning_workflow(request.cleanerId)
+        result = dorm.finish_cleaning_workflow(request.cleanerId, request.roomId)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result
@@ -489,19 +490,16 @@ class BookShareFacilityBody(BaseModel):
     buildingId:  str = Field(..., example="A01")
     facilityId:  str = Field(..., example="SHARE-0001")
     bookingTime: str = Field(..., example="2026-03-15 14:00:00")
-    facilityName: str = Field(default="Meeting Room", example="Meeting Room")
 
 @facility_router.post("/book")
 async def book_share_facility(request: BookShareFacilityBody):
-    """Book a shared facility (meeting room, washing machine, etc.)."""
+    """Book a shared facility (meeting room, washing machine, etc.). Creates an invoice automatically."""
     try:
         result = dorm.booking_share_facility(
             request.residentId,
             request.facilityId,
             request.buildingId,
-            request.facilityId,
             request.bookingTime,
-            request.facilityName,
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

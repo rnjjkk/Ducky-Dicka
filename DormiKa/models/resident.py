@@ -165,8 +165,9 @@ class Resident:
         return None
     
     def check_status_cleaning_ticket(self,cleaning_ticket_list):
+        from .enum import CleaningStatus
         for ticket in cleaning_ticket_list:
-            if ticket.status == "Requested" or ticket.status == "Cleaning":
+            if ticket.status == CleaningStatus.REQUESTED or ticket.status == CleaningStatus.CLEANING:
                 raise ValueError("this room already has cleaning ticket with status Requested or Cleaning")    
         return True
         
