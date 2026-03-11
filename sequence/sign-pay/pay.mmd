@@ -1,0 +1,48 @@
+---
+config:
+theme: neo-dark
+---
+sequenceDiagram
+    autonumber
+    participant R as Resident
+    participant API as FastAPI
+    participant D as DormSystem
+    participant C as LeaseContract
+    participant I as Invoice
+
+    Note over R,API: API Pay Invoice
+
+    R->>+API: POST /pay(invoice_id)
+    API->>+D: pay_invoice(invoice_id)
+
+    D->>+I: get_invoice_by_id(invoice_id)
+    alt invoice not found
+        I-->>D: raise LookupError
+        D-->>API: raise LookupError
+        API-->>R: HTTP 400
+    else invoice found
+        I-->>-D: invoiceObj
+
+        D->>+I: validate_for_payment()
+        alt status == PAID
+            I-->>D: raise ValueError
+            D-->>API: raise ValueError
+            API-->>R: HTTP 400
+        else status == UNPAID
+            I-->>-D: pass
+
+            D->>+C: get contract by invoice_id
+            alt contract not found
+                C-->>D: raise LookupError
+                D-->>API: raise LookupError
+                API-->>R: HTTP 400
+            else contract found
+                C-->>-D: contractObj
+
+                D->>I: status = PAID
+                D->>C: status = ACTIVE
+                D-->>-API: contractObj
+                API-->>-R: contract_id, contract_status, message
+            end
+        end
+    end

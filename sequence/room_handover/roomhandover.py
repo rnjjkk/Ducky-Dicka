@@ -23,7 +23,6 @@ class ContractStatus(Enum):
     EXPIRED = "EXPIRED"
 
 
-
 class Building:
     def __init__(self, building_id):
         self.__id = building_id
@@ -111,7 +110,7 @@ class Dorm:
         for resident in self.__resident_list:
             if resident.has_contract(contract_id):
                 return resident
-        raise LookupError(f"ไม่พบผู้พักที่ถือครองสัญญา ID: {contract_id}")
+        raise LookupError(f"ไม่ผู้พักที่ถือครองสัญญา ID: {contract_id}")
 
     def complete_handover(self, contract_id: str):
 
