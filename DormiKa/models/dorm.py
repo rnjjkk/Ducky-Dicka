@@ -123,8 +123,43 @@ class Dorm:
             return self.show_error({"error": str(e)})
         
     def booking_share_facility(self, resident_id, facility_id, building_id, booking_time):
-        pass
-    
+        
+        # 1. search resident by id
+        resident = self.search_resident_by_id(resident_id)
+
+        # 2. search building by id
+        building = self.search_building_by_id(building_id)
+
+        # 3. search share facility in building
+        share_facility = building.get_share_facility_by_id(facility_id)
+
+        # 4. check all residents' booking list for time overlap
+        for r in self.__residents:
+            for booking in r.get_booking_share_facility_list():
+                if booking.check_booking_time(facility_id, booking_time):
+                    return self.show_error({"error": "this share facility already booking"})
+
+        # 5. create booking
+        booking = share_facility.create_booking(resident_id, facility_id, building_id, booking_time)
+
+        # 6. add booking to resident
+        resident.add_booking_share_facility(booking)
+
+        # 7. create invoice (fix cost)
+        invoice = share_facility.create_share_facility_invoice(resident_id, booking)
+
+        # 8. add invoice to resident
+        resident.add_invoice(invoice)
+
+        return self.show_success({
+            "booking_id": booking.id,
+            "share_facility_id": facility_id,
+            "building_id": building_id,
+            "booking_time": booking_time,
+            "invoice_id": invoice.id,
+            "cost": invoice.amount
+        })
+        
     def request_maintenance(self, resident_id, room_id, issue_category):
         resident = self.search_resident_by_id(resident_id)
 

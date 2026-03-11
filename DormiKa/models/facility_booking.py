@@ -20,3 +20,6 @@ class BookingShareFacility:
     @property
     def status(self):
         return self.__status
+    
+    def check_booking_time(self, facility_id, booking_time):
+        return self.share_facility_id == facility_id and self.booking_time == booking_time
