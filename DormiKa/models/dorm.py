@@ -1,6 +1,8 @@
+from .enum import *
 from .contract import *
 from .room import *
 from .resident import *
+
 class Dorm:
     def __init__(self, name: str):
         self.__name: str = name
@@ -60,7 +62,7 @@ class Dorm:
 
     def search_available_employee(self):
         for employee in self.__employees:
-            if employee.status == "AVAILABLE":
+            if employee.status == AvailabilityStatus.AVAILABLE:
                 return employee
         raise ValueError("No employee are available at the moment")
     
@@ -102,16 +104,10 @@ class Dorm:
     
     def request_maintenance(self, resident_id, room_id, issue_category):
         resident = self.search_resident_by_id(resident_id)
-        if resident is None:
-            return {"error": "resident not found!"}
 
         room = self.search_room_by_id(room_id)
-        if room is None:
-            return {"error": "room not found!"}
 
         employee = self.search_available_employee()
-        if employee is None:
-            return {"error": "no available staff!"}
         
         return employee.start_maintenance(
             resident, 
@@ -130,6 +126,7 @@ class Dorm:
                 resident.add_invoice(invoice)
         s = 'system_contract_invoice : success'
         self.show_success(s)
+        return s
 
     def select_payment_method_and_invoices(self, Resident_ID_input, payment_method_input, invoice_ids):
         resident = self.search_resident_by_id(Resident_ID_input)
@@ -138,6 +135,7 @@ class Dorm:
         net_amount = payment.net_amount
         s = f'select_payment_method_and_invoices : success\nAmount to be paid : {net_amount}\n{format}'
         self.show_success(s)
+        return s
 
     def payment_system(self, Resident_ID_input, paymentdata):
         resident = self.search_resident_by_id(Resident_ID_input)
@@ -145,6 +143,7 @@ class Dorm:
         receipt_id = receipt.id
         s = f'payment_system : success\nreceipt : {receipt_id}'
         self.show_success(s)
+        return s
 
     def change_contract(self, 
                             residentId,
@@ -174,7 +173,7 @@ class Dorm:
         if len(resident.invoices) > 0:
             return {"response": "please settle existing invoices before changing contract"}
 
-        invoice = current_contract.calculate_upgrade_amount(target_room.rental, moveDate)
+        invoice = current_contract.calculate_upgrade_amount(target_room.monthly_rent, moveDate)
         old_room = current_contract.room
         old_room.status = RoomStatus.AVAILABLE
         current_contract.room = target_room
@@ -203,6 +202,7 @@ class Dorm:
             print(invoice.id)
         s = f'display_invoice : success'
         self.show_success(s)
+        return s
 
     def display_receipt(self, resident_id_input):
         resident = self.search_resident_by_id(resident_id_input)
@@ -210,3 +210,14 @@ class Dorm:
             print(receipt.id)
         s = f'display_receipt : success'
         self.show_success(s)
+        return s
+
+    #type member expect : STANDARD_MEMBER, PLUS, PLATINUM พิมพ์ใหญ่พิมเล็กได้ทั้งหมด
+    def create_member(self, resident_id_input, type_member):
+        resident = self.search_resident_by_id(resident_id_input)
+        employee = self.search_available_employee()
+        invoice = employee.asign_member(resident, type_member)
+        resident.add_invoice(invoice)
+        s = f"create_member: success, ID: {invoice.id}, amount: {invoice.amount}"
+        self.show_success(s)
+        return s

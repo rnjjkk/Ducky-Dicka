@@ -1,6 +1,7 @@
 import datetime
-from .enum import ContractStatus
+from .enum import ContractStatus, InvoiceType, InvoiceStatus
 from .invoice import Invoice
+import calendar
 
 class Contract:
     ID = 1
@@ -29,4 +30,20 @@ class Contract:
     @property
     def room(self):
         return self.__room
-    
+
+    @room.setter    
+    def room(self, room):
+        self.__room = room
+
+    def calculate_upgrade_amount(self, target_room_cost, moveDate):
+        move_date = datetime.datetime.strptime(moveDate, "%Y-%m-%d").date()
+        days_in_month = calendar.monthrange(move_date.year, move_date.month)[1]
+
+        days_left = days_in_month - move_date.day + 1
+        avg_new_room_cost = target_room_cost / days_in_month
+        new_room_cost = avg_new_room_cost * days_left
+        
+        old_room_cost = (self.__room.monthly_rent / days_in_month) * days_left
+        cost_diff = new_room_cost - old_room_cost
+
+        return Invoice(InvoiceType.CONTRACT, self.__room.id, round(cost_diff, 2), InvoiceStatus.UNPAID)

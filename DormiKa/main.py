@@ -46,6 +46,9 @@ def create_employee_mock_data():
     employees = [
         Employee("Alice"),
         Employee("Bob"),
+        Employee("Charlie"),
+        Employee("Diana"),
+        Employee("Eve"),
     ]
     for e in employees:
         print(f"Created Employee: {e.fid} ({e.id})")
@@ -92,7 +95,7 @@ def create_building_mock_data():
 def create_contract_mock_data(resident, room, status: ContractStatus = ContractStatus.ACTIVE):
     """Create a simple lease contract pointing to a room and attach it to a resident."""
 
-    contract = Contract(resident.id, room.id, status=status)
+    contract = Contract(resident, room, status=status)
     # Mark the room as occupied when it's under contract.
     room.status = RoomStatus.OCCUPIED
     resident.add_contract(contract)
@@ -177,9 +180,11 @@ class RequestMaintenance(BaseModel):
 
 @app.post("/request-maintenance")
 async def request_maintenance(request: RequestMaintenance):
-    return dorm.request_maintenance(request.residentId, 
-                                   request.roomId, 
-                                   request.issueCategory)
+    try:
+        result = dorm.request_maintenance(request.residentId, request.roomId, request.issueCategory.value)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1",port=8000, log_level="info", reload=True)
