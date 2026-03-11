@@ -157,6 +157,63 @@ async def reset_mock_data():
 
 # ==================== Contract ====================
 
+class RequestBookingBody(BaseModel):
+    residentId: str = Field(..., example="RS-0001")
+    buildingId: str = Field(..., example="A01")
+    roomType: RoomType = Field(..., example=RoomType.STUDIO_ROOM)
+
+"""
+{
+  "residentId": "RS-0001",
+  "buildingId": "A01",
+  "roomType": "StudioRoom"
+}
+"""
+
+@contract_router.post("/request")
+async def request_booking(request: RequestBookingBody):
+    try:
+        result = dorm.request_booking(request.residentId, request.buildingId, request.roomType)
+    except (LookupError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    return result
+
+class SignContractBody(BaseModel):
+    contractId: str = Field(..., example="LC-0001")
+
+"""
+{
+  "contractId": "LC-0001"
+}
+"""
+
+@contract_router.post("/sign")
+async def sign_contract(request: SignContractBody):
+    try:
+        result = dorm.sign_contract(request.contractId)
+    except (LookupError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
+class PayContractInvoiceBody(BaseModel):
+    invoiceId: str = Field(..., example="INV-0001")
+
+"""
+{
+  "invoiceId": "INV-0001"
+}
+"""
+
+@contract_router.post("/pay")
+async def pay_contract_invoice(request: PayContractInvoiceBody):
+    try:
+        result = dorm.pay_contract_invoice(request.invoiceId)
+    except (LookupError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
 class ChangeContractRequest(BaseModel):
     residentId: str = Field(..., example="RS-0001")
     currentLeaseContractId: str = Field(..., example="LC-0001")

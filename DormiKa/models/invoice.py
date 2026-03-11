@@ -26,9 +26,17 @@ class Invoice:
     def status(self):
         return self.__status
 
+    @status.setter
+    def status(self, new_status: InvoiceStatus):
+        self.__status = new_status
+
     @property
-    def date_create(self):         
+    def date_create(self):
         return self.__date_create
+
+    def validate_for_payment(self):
+        if self.__status == InvoiceStatus.PAID:
+            raise ValueError(f"Invoice {self.__id} is already paid")
 
     def PAID(self):
         self.__status = InvoiceStatus.PAID
