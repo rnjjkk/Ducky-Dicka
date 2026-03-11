@@ -1,43 +1,30 @@
-from datetime import datetime
-
-class FacilityBooking:
+from .enum import *
+class BookingShareFacility:
     ID = 1
-    
-    def __init__(self, resident_id, building_id, facility_id, facility_name, booking_time):
-        self.__booking_id = f"FBOOK-{FacilityBooking.ID:04d}"
+    def __init__(self, resident_id, facility_id, building_id, booking_time):
+        self.__id = f"BOOKING-{BookingShareFacility.ID:04d}"
         self.__resident_id = resident_id
-        self.__building_id = building_id
         self.__facility_id = facility_id
-        self.__facility_name = facility_name
+        self.__building_id = building_id
         self.__booking_time = booking_time
-        self.__created_at = datetime.now()
-        
-        FacilityBooking.ID += 1
-    
+        self.__status = BookingShareFacilityStatus.BOOKED
+        BookingShareFacility.ID += 1
+
     @property
     def id(self):
-        return self.__booking_id
-    
-    @property
-    def resident_id(self):
-        return self.__resident_id
-    
-    @property
-    def building_id(self):
-        return self.__building_id
-    
+        return self.__id
+
     @property
     def facility_id(self):
         return self.__facility_id
-    
-    @property
-    def facility_name(self):
-        return self.__facility_name
-    
+
     @property
     def booking_time(self):
         return self.__booking_time
-    
+
     @property
-    def created_at(self):
-        return self.__created_at
+    def status(self):
+        return self.__status
+
+    def check_booking_time(self, facility_id, booking_time):
+        return self.__facility_id == facility_id and self.__booking_time == booking_time

@@ -5,72 +5,81 @@ config:
 sequenceDiagram
     autonumber
     participant R as Resident (Applicant)
-    participant D as Dorm (System)
-    participant U as User (System)
+    participant API as FastAPI
+    participant D as DormSystem
+    participant U as Resident
     participant B as Building
-    participant Rm as Room
+    participant RM as Room
+    participant C as Contract
 
+    Note over R,API: [1] Resident sends booking request
+    R->>API: POST /request_booking(user_id, building_id, room_type)
 
-    Note over R,D: [Step 1] ส่งคำขอจองห้อง
-    R->>D: requestBooking(user_id, buildingID, roomID, targetMoveInDate)
+    API->>D: request_booking(user_id, building_id, room_type)
     activate D
-    loop every user in system
-        D->>U: get_user(user_id)
-        activate U
-        U-->>D: return userObj
-        deactivate U
-    end
 
-    alt Not found user_id
-        D-->>R: error("Not found user_id")
-    else found user_id
-        Note over D: [Step 2-3] ตรวจสอบ Account & Time Policy
-        D->>D: validateUserStatus(userObj)
+    Note over D,U: [2] Find resident
+    D->>D: get_user_by_id(user_id)
+    D-->>D: residentObj
+
+    alt User not found
+        D-->>API: LookupError ไม่พบรหัสผู้ใช้งาน
+        API-->>R: HTTP 400 Error
+    else User found
         
-        alt Account is Suspended 
-            D-->>R: error("Account restricted")
-        else Validation Passed
-            D->>D: check_office_hours(08.00-17.00)
+        Note over D,U: [3] Validate account status
+        D->>U: get status
+        U-->>D: AccountStatus
+
+        alt Suspended or Pending
+            D-->>API: PermissionError บัญชีอยู่ระหว่างการตรวจสอบ
+            API-->>R: HTTP 403 Error
+        else Account active
             
-            alt Office hours not available
-                D-->>R: error("Office hours not available")
-            else Office hours available
-                Note over D,B: [Step 4] สั่งให้ตึกไปตรวจสอบและล็อกห้อง
-                D->>B: findAndHoldRoom(roomID)
-                activate B
+            Note over D: [4] Check office hours
+            D->>D: check current time
+
+            alt Outside office hours
+                D-->>API: ValueError ขณะนี้อยู่นอกเวลาทำการ (08:00-17:00)
+                API-->>R: HTTP 400 Error
+            else Office hours valid
                 
-                loop every room in building
-                    B->>Rm: checkAvailability(roomID)
-                    activate Rm
-                    Rm-->>B: status
-                    deactivate Rm
+                Note over D,B: [5] Find building
+                D->>D: get_building_by_id(building_id)
+                D-->>D: buildingObj
+
+                Note over B,RM: [6] Find and hold room
+                D->>B: find_and_hold_available_room_by_type(room_type)
+                activate B
+
+                loop for each room in building
+                    B->>RM: check_availability()
+                    RM-->>B: boolean
                 end
 
-                alt Room is Not Available/Maintenance 
-                    B-->>D: error("Room unavailable")
-                    D-->>R: notifyBookingFailed("Room is busy")
-                else Room is Available
-                    Note over B,Rm: [Step 5] เปลี่ยนสถานะห้องเป็น Reserved
-                    B->>Rm: updateStatus("Reserved")
-                    activate Rm
-                    B->>Rm: setHoldExpiration(48_HOURS) 
-                    Rm-->>B: return success
-                    deactivate Rm
+                alt No room available
+                    B-->>D: LookupError ไม่พบห้องว่าง
+                    D-->>API: error
+                    API-->>R: HTTP 400 Error
+                else Room found
                     
-                    B-->>D: roomObject
+                    B->>RM: set status RESERVED
+                    B->>RM: set hold_expiry +48h
+                    B-->>D: roomObj
                     deactivate B
-                    
-                    Note over D: [Step 6] ระบบสร้างร่างสัญญา (Draft)
-                    create participant C as Contract
-                D->>C: createContract(userObj, roomObj)
 
-                activate C
-                C-->>D: return contractObject 
-                deactivate C
+                    Note over D,C: [7] Create contract
+                    D->>C: Contract(resident, room)
+                    activate C
+                    C->>C: generate contract_id
+                    C-->>D: contractObj
+                    deactivate C
 
-                D-->>R: notifySuccess(leaseID)
+                    D-->>API: contractObj
+                    deactivate D
+
+                    API-->>R: success response
+                end
             end
         end
     end
-end
-deactivate D
