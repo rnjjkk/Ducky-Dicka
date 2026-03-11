@@ -35,12 +35,12 @@ def create_resident_mock_data(count: int = 3):
 
 def create_technician_mock_data():
     technicians = [
-        Technician(name="Tech A", phone_number="0800000001", capabilities=["PLUMBING"]),
-        Technician(name="Tech B", phone_number="0800000002", capabilities=["ELECTRICAL"]),
-        Technician(name="Tech C", phone_number="0800000003", capabilities=["AC"]),
+        PlumbingTech(name="Tech A", phone_number="0800000001", water_meter_tool="WM-001"),
+        ElectricalTech(name="Tech B", phone_number="0800000002", certification_no="CERT-ELEC-001"),
+        ACTech(name="Tech C", phone_number="0800000003", gas_level_refrigerant=100.0),
     ]
     for t in technicians:
-        print(f"Created Technician: {t.id} ({t.name})")
+        print(f"Created Technician: {t.id} ({t.name}) caps={t.capabilities}")
     return technicians
 
 def create_employee_mock_data():
