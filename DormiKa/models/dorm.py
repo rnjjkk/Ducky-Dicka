@@ -12,6 +12,7 @@ class Dorm:
         self.__employees: list = []
         self.__technicians: list = []
         self.__cleaner: list = []
+        self.__blacklist: list = []
 
     def show_success(self, success):
         print(success)
@@ -251,6 +252,7 @@ class Dorm:
 
     def display_receipt(self, resident_id_input):
         resident = self.search_resident_by_id(resident_id_input)
+        print(f"strike : {resident.strike}")
         for receipt in resident.receipts:
             print(receipt.id)
         s = f'display_receipt : success'
@@ -266,3 +268,44 @@ class Dorm:
         s = f"create_member: success, ID: {invoice.id}, amount: {invoice.amount}"
         self.show_success(s)
         return s
+    
+    def add_strike(self, employee_ID_input):
+            employee = self.search_employee_by_id(employee_ID_input)
+            now = datetime.datetime.now()
+            residents_to_blacklist = []
+
+            for resident in self.__residents:
+                max_strike = 0
+
+                for invoice in resident.invoices:  
+                    if invoice.status == InvoiceStatus.PAID:
+                        continue
+
+                    age = now - invoice.date_create
+                    months_old = age.days // 30  
+
+                    if months_old >= 3:
+                        strike = 3
+                    elif months_old >= 2:
+                        strike = 2
+                    elif months_old >= 1:
+                        strike = 1
+                    else:
+                        strike = 0
+
+                    if strike > max_strike:        
+                        max_strike = strike
+
+                if max_strike > 0:
+                    resident.add_strike(max_strike)
+
+                if resident.strike >= 3:      
+                    residents_to_blacklist.append(resident)
+
+            for resident in residents_to_blacklist:
+                self.__residents.remove(resident)
+                self.__blacklist.append(resident)
+
+            s = 'add_strike : success'
+            self.show_success(s)
+            return s
