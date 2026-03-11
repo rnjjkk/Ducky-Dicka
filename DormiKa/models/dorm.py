@@ -322,16 +322,43 @@ class Dorm:
         return technician.start_maintenance(notes)
 
     def finish_maintenance_workflow(self, technician_id):
-        technician = self.search_technician_by_id(technician_id)
+        return self.complete_task_workflow(technician_id)
 
-        ticket = technician.finish_maintenance()
+    def complete_task_workflow(self, staff_id):
+        # search cleaners first, then technicians
+        staff = None
+        for c in self.__cleaner:
+            if c.id == staff_id:
+                staff = c
+                break
+        if staff is None:
+            for t in self.__technicians:
+                if t.id == staff_id:
+                    staff = t
+                    break
+        if staff is None:
+            raise ValueError(f"Staff '{staff_id}' not found")
 
+        result = staff.complete_task()
+
+        # Technician case — result is a MaintenanceTicket
+        if isinstance(result, dict):
+            return {
+                "staff_id": staff.id,
+                "staff_name": staff.name,
+                "room_id": result["room_id"],
+                "staff_status": result["cleaner_status"],
+            }
+
+        # Technician case — result is a MaintenanceTicket
+        ticket = result
         invoice = Invoice(InvoiceType.MAINTENANCE, ticket.room_id, ticket.cost, InvoiceStatus.UNPAID)
-
         resident = self.search_resident_by_room_id(ticket.room_id)
         resident.add_invoice(invoice)
 
         return {
+            "staff_id": staff.id,
+            "staff_name": staff.name,
             "ticket_id": ticket.id,
             "room_id": ticket.room_id,
             "issue_category": ticket.issue_category,

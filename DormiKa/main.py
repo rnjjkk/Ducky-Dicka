@@ -147,6 +147,7 @@ contract_router    = APIRouter(prefix="/contract",  tags=["Contract"])
 maintenance_router = APIRouter(prefix="/maintenance", tags=["Maintenance"])
 cleaning_router    = APIRouter(prefix="/cleaning",  tags=["Cleaning"])
 facility_router    = APIRouter(prefix="/facility",  tags=["Facility"])
+staff_router       = APIRouter(prefix="/staff",     tags=["Staff"])
 
 # ==================== System ====================
 
@@ -389,6 +390,25 @@ async def book_share_facility(request: BookShareFacilityRequest):
         raise HTTPException(status_code=400, detail=str(e))
     return result
 
+# ==================== Staff ====================
+
+class CompleteTaskBody(BaseModel):
+    staffId: str = Field(..., example="TC-0001")
+
+"""
+{
+  "staffId": "CL-0001"
+}
+"""
+
+@staff_router.post("/complete-task")
+async def complete_task(request: CompleteTaskBody):
+    try:
+        result = dorm.complete_task_workflow(request.staffId)
+    except (ValueError, PermissionError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
 # ==================== Register Routers ====================
 
 app.include_router(system_router)
@@ -396,6 +416,7 @@ app.include_router(contract_router)
 app.include_router(maintenance_router)
 app.include_router(cleaning_router)
 app.include_router(facility_router)
+app.include_router(staff_router)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, log_level="info", reload=True)
