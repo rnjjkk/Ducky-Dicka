@@ -5,7 +5,10 @@ sequenceDiagram
     participant R as Resident
     participant B as Building
     participant SF as Share_Facility
+    participant WM as Washing_Machine
+    participant MR as Meeting_Room
     participant BSF as Booking_Share_Facility
+    participant I as Invoice
 
     User ->>+ D: booking_share_facility(resident_id, share_facility_id, building_id, booking_time)
 
@@ -38,6 +41,14 @@ sequenceDiagram
         D -->> User: return not found share_facility
     end
 
+    alt share_facility == Washing_Machine
+        D ->>+ WM: getShareFacilityID(share_facility_id)
+        WM -->>- D: return washing_machine instance
+    else share_facility == Meeting_Room
+        D ->>+ MR: getShareFacilityID(share_facility_id)
+        MR -->>- D: return meeting_room instance
+    end
+
     loop for resident in dorm.resident_list
         D ->>+ R: getBookingShareFacilityList()
         R -->>- D: return booking_share_facility_list
@@ -52,6 +63,7 @@ sequenceDiagram
         D -->> User: return this share facility already booking
     end
 
+    %% สร้าง Booking
     D ->>+ SF: createBooking(resident_id, share_facility_id, building_id, booking_time)
     SF ->>+ BSF: create_Booking_Share_Facility(resident_id, share_facility_id, building_id, booking_time)
     BSF -->>- SF: return booking_share_facility instance
@@ -59,6 +71,18 @@ sequenceDiagram
 
     D ->>+ R: addBookingShareFacility(booking_share_facility)
     R ->> R: add to booking_share_facility_list
+    R -->>- D: done
+
+    %% สร้าง Invoice อัตโนมัติ (fix cost)
+    D ->>+ SF: createShareFacilityInvoice(resident_id, booking_share_facility)
+    SF ->>+ I: create_Invoice(resident_id, booking_share_facility, invoice_type=share_facility_invoice)
+    I ->> I: set InvoiceType = share_facility_invoice
+    I -->>- SF: return invoice instance
+    SF -->>- D: return invoice instance
+
+    %% Add Invoice ไปที่ Resident
+    D ->>+ R: addInvoice(invoice)
+    R ->> R: add to invoice_list
     R -->>- D: done
 
     D -->> User: return booking share facility success

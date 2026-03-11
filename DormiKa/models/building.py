@@ -25,3 +25,18 @@ class Building:
 
     def __iter__(self):
         return iter(self.__rooms)
+    
+def get_share_facility_by_id(self, facility_id):
+    all_facilities = self.__washing_machines + self.__meeting_rooms
+    for sf in all_facilities:
+        if sf.id == facility_id:
+            return sf
+    raise ValueError("Share facility not found")
+
+# เพิ่ม method add สำหรับแต่ละประเภท
+def add_washing_machine(self, wm):
+    self.__washing_machines.append(wm)
+
+def add_meeting_room(self, mr):
+    self.__meeting_rooms.append(mr)
+
