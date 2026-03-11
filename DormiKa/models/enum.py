@@ -76,6 +76,7 @@ class BookingStatus(Enum):
 class ShareFacilityPrice(Enum):
     MeetingRoom = 100
     WashingMachine = 50
+    
 class MaintenanceStatus(Enum):
     REPORTED = "REPORTED"
     IN_PROGRESS = "IN_PROGRESS"
