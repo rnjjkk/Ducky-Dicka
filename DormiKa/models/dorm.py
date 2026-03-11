@@ -90,7 +90,31 @@ class Dorm:
         # 3. search room by contracts (room in resident contract)
         room_in_contract = self.search_room_by_contracts(resident,room_input.id)
 
+        # 4. get cleaning ticket list
+        cleaning_ticket_list = room_in_contract.cleaning_tickets
 
+        # 5. check status cleaning ticket
+        try:
+            if resident.check_status_cleaning_ticket(cleaning_ticket_list):
+                # 6. create cleaning ticket
+                cleaning_ticket = resident.create_cleaning_ticket(resident_id, room_id)
+                # 7. add cleaning ticket to room
+                resident.add_cleaning_ticket(room_in_contract, cleaning_ticket)
+                # 8. request success
+                s = {
+                    "reporter": resident.name,
+                    "room_id": cleaning_ticket.room_id,
+                    "ticket id": cleaning_ticket.id,
+                    "report_time": cleaning_ticket.report_time,
+                    "cost": cleaning_ticket.cost,
+                    "status": cleaning_ticket.status
+                }
+                return self.show_success(s)
+            else:
+                return self.show_error({"error": "Cleaning ticket already exists or invalid status"})
+
+        except Exception as e:
+            return self.show_error({"error": str(e)})
     
     def request_maintenance(self, resident_id, room_id, issue_category):
         resident = self.search_resident_by_id(resident_id)
@@ -147,6 +171,7 @@ class Dorm:
                 resident.add_invoice(invoice)
         s = 'system_contract_invoice : success'
         self.show_success(s)
+        return s
 
     def select_payment_method_and_invoices(self, Resident_ID_input, payment_method_input, invoice_ids):
         resident = self.search_resident_by_id(Resident_ID_input)
@@ -155,6 +180,7 @@ class Dorm:
         net_amount = payment.net_amount
         s = f'select_payment_method_and_invoices : success\nAmount to be paid : {net_amount}\n{format}'
         self.show_success(s)
+        return s
 
     def payment_system(self, Resident_ID_input, paymentdata):
         resident = self.search_resident_by_id(Resident_ID_input)
@@ -162,6 +188,7 @@ class Dorm:
         receipt_id = receipt.id
         s = f'payment_system : success\nreceipt : {receipt_id}'
         self.show_success(s)
+        return s
 
     def change_contract(self, 
                             residentId,
@@ -220,6 +247,7 @@ class Dorm:
             print(invoice.id)
         s = f'display_invoice : success'
         self.show_success(s)
+        return s
 
     def display_receipt(self, resident_id_input):
         resident = self.search_resident_by_id(resident_id_input)
@@ -227,3 +255,14 @@ class Dorm:
             print(receipt.id)
         s = f'display_receipt : success'
         self.show_success(s)
+        return s
+
+    #type member expect : STANDARD_MEMBER, PLUS, PLATINUM พิมพ์ใหญ่พิมเล็กได้ทั้งหมด
+    def create_member(self, resident_id_input, type_member):
+        resident = self.search_resident_by_id(resident_id_input)
+        employee = self.search_available_employee()
+        invoice = employee.asign_member(resident, type_member)
+        resident.add_invoice(invoice)
+        s = f"create_member: success, ID: {invoice.id}, amount: {invoice.amount}"
+        self.show_success(s)
+        return s
