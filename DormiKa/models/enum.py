@@ -61,6 +61,7 @@ class MemberPrice(Enum):
     STANDARD = 990
     PLUS = 2790
     PLATINUM = 9890
+
 class CleaningStatus(Enum):
     REQUESTED = "Requested"
     CLEANING = "Cleaning"
@@ -76,6 +77,14 @@ class BookingStatus(Enum):
 class ShareFacilityPrice(Enum):
     MeetingRoom = 100
     WashingMachine = 50
+
+class ShareFacilityStatus(Enum):
+    AVAILABLE = "AVAILABLE"
+    RESERVED = "RESERVED"
+    IN_USE = "IN_USE"
+    MAINTENANCE = "MAINTENANCE"
+    DISABLED = "DISABLED"
+
 class MaintenanceStatus(Enum):
     IN_PROGRESS = "IN_PROGRESS"
     RESOLVED = "RESOLVED"

@@ -1,6 +1,3 @@
-class FacilityStatus:
-    pass
-
 class ShareFacility:
     def __init__(self):
         pass
