@@ -12,7 +12,6 @@ from models.room import *
 from models.contract import *
 from models.building import *
 from models.enum import *
-from models.facility_booking import *
 
 # ==================== Mock Data ====================
 
@@ -60,8 +59,13 @@ def create_employee_mock_data():
 
 def create_room_mock_data(building):
     rooms = [
+        # STUDIO_ROOM — 2 ห้อง (ห้องแรกจะถูก Kenny occupy, ห้องที่ 2 ว่างสำหรับจอง)
         Room(building=building, floor=1, room_type=RoomType.STUDIO_ROOM,   status=RoomStatus.AVAILABLE, rental=6500),
+        Room(building=building, floor=1, room_type=RoomType.STUDIO_ROOM,   status=RoomStatus.AVAILABLE, rental=6500),
+        # STANDARD_ROOM — 2 ห้อง (ห้องแรกจะถูก Bob reserve สำหรับ handover)
         Room(building=building, floor=2, room_type=RoomType.STANDARD_ROOM, status=RoomStatus.AVAILABLE, rental=8200),
+        Room(building=building, floor=2, room_type=RoomType.STANDARD_ROOM, status=RoomStatus.AVAILABLE, rental=8200),
+        # ONE_BED_ROOM — 1 ห้อง
         Room(building=building, floor=3, room_type=RoomType.ONE_BED_ROOM,  status=RoomStatus.AVAILABLE, rental=10500),
     ]
     for r in rooms:
@@ -79,7 +83,7 @@ def create_contract_mock_data(resident, room, status: ContractStatus = ContractS
     contract = Contract(resident, room, status=status)
     room.status = RoomStatus.OCCUPIED
     resident.add_contract(contract)
-    print(f"Created Contract: {contract.id} → Room {room.id}")
+    print(f"Created Contract: {contract.id} -> Room {room.id}")
     return contract
 
 # ==================== App Init ====================
@@ -89,7 +93,6 @@ dorm = None
 def init_mock_data():
     global dorm
 
-    # Reset all counters
     Resident.ID          = 1
     Technician.ID        = 1
     Cleaner.ID           = 1
@@ -225,7 +228,7 @@ async def request_booking(request: RequestBookingBody):
 
 
 class SignContractBody(BaseModel):
-    contractId: str = Field(..., example="LC-0001")
+    contractId: str = Field(..., example="LC-0002")
 
 @contract_router.post("/sign")
 async def sign_contract(request: SignContractBody):
@@ -233,21 +236,6 @@ async def sign_contract(request: SignContractBody):
     try:
         result = dorm.sign_contract(request.contractId)
     except (LookupError, ValueError) as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    return result
-
-
-class HandoverBody(BaseModel):
-    contractId: str   = Field(..., example="LC-0001")
-    meterElect: float = Field(..., example=100.0)
-    meterWater: float = Field(..., example=50.0)
-
-@contract_router.post("/handover")
-async def complete_handover(request: HandoverBody):
-    """Record meter readings on room handover and activate the contract."""
-    try:
-        result = dorm.complete_handover(request.contractId, request.meterElect, request.meterWater)
-    except (LookupError, KeyError, ValueError) as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result
 
@@ -283,7 +271,27 @@ async def change_contract(request: ChangeContractBody):
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-    return result
+
+
+class HandoverBody(BaseModel):
+    contractId: str = Field(..., example="LC-0001")
+
+"""
+{
+  "contractId": "LC-0001"
+}
+"""
+
+@contract_router.post("/handover")
+async def complete_handover(request: HandoverBody):
+    try:
+        result = dorm.complete_handover(request.contractId)
+        return {
+            "status":  "success",
+            "message": result,
+        }
+    except (LookupError, KeyError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # ==================================================
@@ -357,14 +365,11 @@ class CleanRoomBody(BaseModel):
 
 @cleaning_router.post("/start")
 async def start_cleaning(request: CleanRoomBody):
-    """Cleaner begins cleaning their assigned room."""
     try:
-        # BUG FIX: old endpoint was /clean and called clean_room_workflow —
-        # renamed to /start to match maintenance pattern; update dorm method name accordingly.
         result = dorm.start_cleaning_workflow(request.cleanerId)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-    return result  # BUG FIX: original was missing return
+    return result
 
 
 class FinishCleaningBody(BaseModel):
@@ -467,10 +472,10 @@ async def display_receipt(resident_id: str):
 # ==================================================
 
 class BookShareFacilityBody(BaseModel):
-    residentId:  str = Field(..., example="RS-0001")
-    buildingId:  str = Field(..., example="A01")
-    facilityId:  str = Field(..., example="SHARE-0001")
-    bookingTime: str = Field(..., example="2026-03-15 14:00:00")
+    residentId:   str = Field(..., example="RS-0001")
+    buildingId:   str = Field(..., example="A01")
+    facilityId:   str = Field(..., example="SHARE-0001")
+    bookingTime:  str = Field(..., example="2026-03-15 14:00:00")
     facilityName: str = Field(default="Meeting Room", example="Meeting Room")
 
 @facility_router.post("/book")

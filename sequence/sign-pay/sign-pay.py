@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from enum import Enum
 from datetime import datetime, timedelta
 from typing import List
@@ -358,12 +358,12 @@ system = DormSystem()
 
 
 class BookingRequest(BaseModel):
-    resident_id: str
-    building_id: str
-    room_type:   RoomType
+    resident_id: str  = Field(..., example="U6801")
+    building_id: str  = Field(..., example="A01")
+    room_type:   RoomType  = Field(..., example="StandardRoom")
 
 class SignContractRequest(BaseModel):
-    contract_id: str
+    contract_id: str  = Field(..., example="LC-0001")
 
 class PayRequest(BaseModel):
     invoice_id: str

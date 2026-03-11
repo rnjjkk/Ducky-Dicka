@@ -21,7 +21,6 @@ class Building:
 
     def add_room(self, room):
         self.__rooms.append(room)
-        return self.__rooms
 
     def find_and_hold_available_room_by_type(self, room_type):
         from .enum import RoomStatus
