@@ -142,9 +142,13 @@ app = FastAPI(lifespan=lifespan)
 
 # ==================== Routers ====================
 
-system_router      = APIRouter(prefix="",           tags=["System"])
-contract_router    = APIRouter(prefix="/contract",  tags=["Contract"])
+system_router      = APIRouter(prefix="",             tags=["System"])
+contract_router    = APIRouter(prefix="/contract",    tags=["Contract"])
 maintenance_router = APIRouter(prefix="/maintenance", tags=["Maintenance"])
+invoice_router     = APIRouter(prefix="/invoice",     tags=["Invoice"])
+receipt_router     = APIRouter(prefix="/receipt",     tags=["Receipt"])
+payment_router     = APIRouter(prefix="/payment",     tags=["Payment"])
+member_router      = APIRouter(prefix="/member",      tags=["Member"])
 cleaning_router    = APIRouter(prefix="/cleaning",  tags=["Cleaning"])
 facility_router    = APIRouter(prefix="/facility",  tags=["Facility"])
 staff_router       = APIRouter(prefix="/staff",     tags=["Staff"])
@@ -155,6 +159,40 @@ staff_router       = APIRouter(prefix="/staff",     tags=["Staff"])
 async def reset_mock_data():
     init_mock_data()
     return {"message": "Mock data has been reset successfully"}
+
+class AddStrikeBody(BaseModel):
+    employeeId: str = Field(..., example="EM-0001")
+
+"""
+{
+  "employeeId": "EM-0001"
+}
+"""
+
+@system_router.post("/add-strike")
+async def add_strike(request: AddStrikeBody):
+    try:
+        result = dorm.add_strike(request.employeeId)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
+class SystemContractInvoiceBody(BaseModel):
+    employeeId: str = Field(..., example="EM-0001")
+
+"""
+{
+  "employeeId": "EM-0001"
+}
+"""
+
+@system_router.post("/system-contract-invoice")
+async def system_contract_invoice(request: SystemContractInvoiceBody):
+    try:
+        result = dorm.system_contract_invoice(request.employeeId)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
 
 class SignInBody(BaseModel):
     name: str = Field(..., example="kenny")
@@ -340,6 +378,25 @@ async def finish_maintenance(request: FinishMaintenanceBody):
         raise HTTPException(status_code=400, detail=str(e))
     return result
 
+# ==================== Invoice ====================
+
+@invoice_router.get("/{resident_id}")
+async def display_invoice(resident_id: str):
+    try:
+        result = dorm.display_invoice(resident_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
+# ==================== Receipt ====================
+
+@receipt_router.get("/{resident_id}")
+async def display_receipt(resident_id: str):
+    try:
+        result = dorm.display_receipt(resident_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
 # ==================== Cleaning ====================
 
 class RequestCleaningRoomBody(BaseModel):
@@ -361,6 +418,32 @@ async def request_cleaning_room(request: RequestCleaningRoomBody):
         raise HTTPException(status_code=400, detail=str(e))
     return result
 
+# ==================== Payment ====================
+
+class SelectPaymentBody(BaseModel):
+    residentId: str = Field(..., example="RS-0001")
+    paymentMethod: str = Field(..., example="PROMPTPAY")
+    invoiceIds: str = Field(..., example="INV-0001, INV-0002")
+
+"""
+{
+  "residentId": "RS-0001",
+  "paymentMethod": "PROMPTPAY",
+  "invoiceIds": "INV-0001, INV-0002"
+}
+"""
+
+@payment_router.post("/select")
+async def select_payment(request: SelectPaymentBody):
+    try:
+        result = dorm.select_payment_method_and_invoices(request.residentId, request.paymentMethod, request.invoiceIds)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
+class PayBody(BaseModel):
+    residentId: str = Field(..., example="RS-0001")
+    paymentData: str = Field(..., example="1234-5678-9012-3456")
 class CleanRoomBody(BaseModel):
     cleanerId: str = Field(..., example="CL-0001")
     roomId: str = Field(..., example="RM-0001")
@@ -390,6 +473,20 @@ class BookShareFacilityRequest(BaseModel):
 """
 {
   "residentId": "RS-0001",
+  "paymentData": "1234-5678-9012-3456"
+}
+"""
+
+@payment_router.post("/pay")
+async def pay(request: PayBody):
+    try:
+        result = dorm.payment_system(request.residentId, request.paymentData)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
+"""
+{
   "buildingId": "A01",
   "facilityId": "MR-001",
   "bookingTime": "2026-03-15 14:00:00",
@@ -411,6 +508,26 @@ async def book_share_facility(request: BookShareFacilityRequest):
         raise HTTPException(status_code=400, detail=str(e))
     return result
 
+# ==================== Member ====================
+
+class CreateMemberBody(BaseModel):
+    residentId: str = Field(..., example="RS-0001")
+    memberType: str = Field(..., example="STANDARD")
+
+"""
+{
+  "residentId": "RS-0001",
+  "memberType": "STANDARD"
+}
+"""
+
+@member_router.post("/create")
+async def create_member(request: CreateMemberBody):
+    try:
+        result = dorm.create_member(request.residentId, request.memberType)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
 # ==================== Staff ====================
 
 class CompleteTaskBody(BaseModel):
@@ -435,6 +552,10 @@ async def complete_task(request: CompleteTaskBody):
 app.include_router(system_router)
 app.include_router(contract_router)
 app.include_router(maintenance_router)
+app.include_router(invoice_router)
+app.include_router(receipt_router)
+app.include_router(payment_router)
+app.include_router(member_router)
 app.include_router(cleaning_router)
 app.include_router(facility_router)
 app.include_router(staff_router)
