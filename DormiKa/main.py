@@ -33,6 +33,15 @@ def create_resident_mock_data(count: int = 3):
 
     return residents
 
+def create_cleaner_mock_data():
+    cleaners = [
+        Cleaner(id="CL-0001", name="Cleaner A", phone_number="0900000001"),
+        Cleaner(id="CL-0002", name="Cleaner B", phone_number="0900000002"),
+    ]
+    for c in cleaners:
+        print(f"Created Cleaner: {c.id} ({c.name})")
+    return cleaners
+
 def create_technician_mock_data():
     technicians = [
         PlumbingTech(name="Tech A", phone_number="0800000001", water_meter_tool="WM-001"),
@@ -113,6 +122,10 @@ def init_mock_data():
     mock_employees = create_employee_mock_data()
     for e in mock_employees:
         dorm.add_operation_staff(e)
+
+    mock_cleaners = create_cleaner_mock_data()
+    for c in mock_cleaners:
+        dorm.add_cleaner(c)
 
     mock_technicians = create_technician_mock_data()
     for t in mock_technicians:
@@ -241,6 +254,25 @@ class RequestCleaningRoomBody(BaseModel):
 async def request_cleaning_room(request: RequestCleaningRoomBody):
     try:
         result = dorm.request_cleaning_room(request.residentId, request.roomId)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
+class CleanRoomBody(BaseModel):
+    cleanerId: str = Field(..., example="CL-0001")
+    roomId: str = Field(..., example="RM-0001")
+
+"""
+{
+  "cleanerId": "CL-0001",
+  "roomId": "RM-0001"
+}
+"""
+
+@cleaning_router.post("/clean")
+async def clean_room(request: CleanRoomBody):
+    try:
+        result = dorm.clean_room_workflow(request.cleanerId, request.roomId)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result

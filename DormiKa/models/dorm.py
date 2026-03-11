@@ -36,6 +36,9 @@ class Dorm:
     def add_technician(self, technician):
         self.__technicians.append(technician)
 
+    def add_cleaner(self, cleaner):
+        self.__cleaner.append(cleaner)
+
     def add_building(self, building):
         self.__buildings.append(building)
 
@@ -69,6 +72,22 @@ class Dorm:
             if technician.id == technician_id:
                 return technician
         raise ValueError(f"Technician '{technician_id}' not found")
+
+    def search_cleaner_by_id(self, cleaner_id):
+        for cleaner in self.__cleaner:
+            if cleaner.id == cleaner_id:
+                return cleaner
+        raise ValueError(f"Cleaner '{cleaner_id}' not found")
+
+    def clean_room_workflow(self, cleaner_id, room_id):
+        cleaner = self.search_cleaner_by_id(cleaner_id)
+        result = cleaner.clean_room(room_id)
+        return {
+            "cleaner_id": cleaner.id,
+            "cleaner_name": cleaner.name,
+            "room_id": result["room"],
+            "status": result["status"],
+        }
 
     def search_resident_by_room_id(self, room_id):
         for resident in self.__residents:
