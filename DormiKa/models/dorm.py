@@ -114,7 +114,13 @@ class Dorm:
         # 1. find resident
         resident = self.search_resident_by_id(resident_id)
 
-        # 2. check business hours
+        # 2. check account status
+        if resident.status == AccountStatus.SUSPEND:
+            raise PermissionError("Account is suspended")
+        if resident.status == AccountStatus.CLOSED:
+            raise PermissionError("Account is closed")
+
+        # 3. check business hours
         if not (8 <= datetime.datetime.now().hour <= 17):
             raise ValueError("Outside business hours (08:00–17:00)")
 

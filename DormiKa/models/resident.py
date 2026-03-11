@@ -4,6 +4,7 @@ from .payment import Payment
 from .receipt import Receipt
 from .cleaning_ticket import *
 from .room import *
+from .enum import AccountStatus
 # import sqlite3
 
 
@@ -24,11 +25,13 @@ from .room import *
 class Resident:
     ID = 1
     
-    def __init__(self, name: str, email: str=None, phone_number: str=None):
+    def __init__(self, name: str, email: str=None, phone_number: str=None,
+                 status: AccountStatus = AccountStatus.ACTIVE):
         self.__id = f"RS-{Resident.ID:04d}"
         self.__name = name
         self.__email = email
         self.__phone_number = phone_number
+        self.__status = status
         self.__strike = 0
         self.__date_create = datetime.now()
         self.__payment = None
@@ -76,6 +79,10 @@ class Resident:
     @property
     def status(self):
         return self.__status
+
+    @status.setter
+    def status(self, new_status: AccountStatus):
+        self.__status = new_status
 
     @property
     def contracts(self):
