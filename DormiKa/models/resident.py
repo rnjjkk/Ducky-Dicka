@@ -24,14 +24,13 @@ from .room import *
 class Resident:
     ID = 1
     
-    def __init__(self, name: str, email: str=None, phone_number: str=None, status: str="ACTIVE"):
+    def __init__(self, name: str, email: str=None, phone_number: str=None):
         self.__id = f"RS-{Resident.ID:04d}"
         self.__name = name
         self.__email = email
         self.__phone_number = phone_number
         self.__strike = 0
         self.__date_create = datetime.datetime.now()
-        self.__status = status
         self.__payment = None
         self.__member = None
         self.__room_bookings = []
@@ -49,8 +48,26 @@ class Resident:
         Resident.ID += 1
 
     @property
+    def email(self):
+        return self.__email
+
+    @property
+    def phone_number(self):
+        return self.__phone_number
+
+    @property
     def id(self):
         return self.__id
+    
+    @property
+    def strike(self):              
+        return self.__strike
+
+    def add_strike(self, amount: int):   
+        self.__strike += amount
+
+    def reset_strike(self):             
+        self.__strike = 0
 
     @property
     def status(self):
