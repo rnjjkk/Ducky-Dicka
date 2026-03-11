@@ -134,8 +134,9 @@ class Dorm:
         share_facility = building.get_share_facility_by_id(facility_id)
 
         # 4. check all residents' booking list for time overlap
+        # แก้ใน booking_share_facility method
         for r in self.__residents:
-            for booking in r.get_booking_share_facility_list():
+            for booking in r.booking_share_facility_list:  # ลบ () ออก
                 if booking.check_booking_time(facility_id, booking_time):
                     return self.show_error({"error": "this share facility already booking"})
 
