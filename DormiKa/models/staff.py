@@ -61,7 +61,7 @@ class Staff:
 class Cleaner(Staff):
     ID = 1
 
-    def __init__(self, id: str, name: str, phone_number: str, cleaning_supplies_list=None, assigned_rooms=None, status: str = "ACTIVE"):
+    def __init__(self, name: str, phone_number: str, cleaning_supplies_list=None, assigned_rooms=None, status: str = "ACTIVE"):
         cl_id = f"CL-{Cleaner.ID:04d}"
         super().__init__(id=cl_id, 
                          name=name, 
