@@ -1,6 +1,7 @@
 from .contract import *
 from .room import *
 from .resident import *
+
 class Dorm:
     def __init__(self, name: str):
         self.__name: str = name
@@ -95,7 +96,7 @@ class Dorm:
                 }
                 return self.show_success(s)
             else:
-                return self.show_error({"error": "this room already has cleaning ticket with status Requested or Cleaning"})
+                return self.show_error({"error": "Cleaning ticket already exists or invalid status"})
 
         except Exception as e:
             return self.show_error({"error": str(e)})
@@ -211,33 +212,6 @@ class Dorm:
         s = f'display_receipt : success'
         self.show_success(s)
 
-# -------------------------------------------------------
-# function จริงที่ test
-# -------------------------------------------------------
-def request_cleaning_room(self, resident_id, room_id):
-    resident = self.search_resident_by_id(resident_id)
-    room_input = self.search_room_by_id(room_id)
-    room_in_contract = self.search_room_by_contracts(resident, room_input.id)
-    cleaning_ticket_list = room_in_contract.cleaning_tickets
-
-    try:
-        if resident.check_status_cleaning_ticket(cleaning_ticket_list):
-            cleaning_ticket = resident.create_cleaning_ticket(resident_id, room_id)
-            resident.add_cleaning_ticket(room_in_contract, cleaning_ticket)
-            s = {
-                "reporter": resident.name,
-                "room_id": cleaning_ticket.room_id,
-                "ticket id": cleaning_ticket.id,
-                "report_time": cleaning_ticket.report_time,
-                "cost": cleaning_ticket.cost,
-                "status": cleaning_ticket.status
-            }
-            return self.show_success(s)
-        else:
-            return self.show_error({"error": "Cleaning ticket already exists or invalid status"})
-    except Exception as e:
-        return self.show_error({"error": str(e)})
-
 
 # -------------------------------------------------------
 # Stub classes แทน Mock library
@@ -289,8 +263,7 @@ class StubDorm:
     def search_room_by_id(self, room_id):
         if self._room_fail:
             raise Exception("Room not found")
-        room = StubRoomInContract()
-        return room
+        return StubRoomInContract()
 
     def search_room_by_contracts(self, resident, room_id):
         if self._contract_fail:
@@ -302,7 +275,42 @@ class StubDorm:
 
     def show_error(self, e):
         return {"success": False, "data": e}
+    
+    def request_cleaning_room(self,resident_id,room_id):
+        # 1.search resident by id
+        resident = self.search_resident_by_id(resident_id)
 
+        # 2. serach room by id (room resident input)
+        room_input = self.search_room_by_id(room_id)
+
+        # 3. search room by contracts (room in resident contract)
+        room_in_contract = self.search_room_by_contracts(resident,room_input.id)
+
+        # 4. get cleaning ticket list
+        cleaning_ticket_list = room_in_contract.cleaning_tickets
+
+        # 5. check status cleaning ticket
+        try:
+            if resident.check_status_cleaning_ticket(cleaning_ticket_list):
+                # 6. create cleaning ticket
+                cleaning_ticket = resident.create_cleaning_ticket(resident_id, room_id)
+                # 7. add cleaning ticket to room
+                resident.add_cleaning_ticket(room_in_contract, cleaning_ticket)
+                # 8. request success
+                s = {
+                    "reporter": resident.name,
+                    "room_id": cleaning_ticket.room_id,
+                    "ticket id": cleaning_ticket.id,
+                    "report_time": cleaning_ticket.report_time,
+                    "cost": cleaning_ticket.cost,
+                    "status": cleaning_ticket.status
+                }
+                return self.show_success(s)
+            else:
+                return self.show_error({"error": "Cleaning ticket already exists or invalid status"})
+
+        except Exception as e:
+            return self.show_error({"error": str(e)})
 
 # -------------------------------------------------------
 # helper รัน test
@@ -314,7 +322,7 @@ def run_test(name, dorm, expect_success, expect_message=None):
     global passed, failed
     print(f"\n{'='*50}")
     print(f"TEST: {name}")
-    result = request_cleaning_room(dorm, "RES001", "R101")
+    result = dorm.request_cleaning_room("RES001", "R101")
     print(f"RESULT: {result}")
 
     ok = result["success"] == expect_success
@@ -329,78 +337,14 @@ def run_test(name, dorm, expect_success, expect_message=None):
         failed += 1
 
 
-# -------------------------------------------------------
-# case 1: success
-# -------------------------------------------------------
-run_test(
-    "Case 1: Success",
-    StubDorm(),
-    expect_success=True
-)
+run_test("Case 1: Success", StubDorm(), expect_success=True)
+run_test("Case 2: Already has ticket", StubDorm(resident=StubResident(check_status=False)), expect_success=False, expect_message="already exists")
+run_test("Case 3: Resident not found", StubDorm(resident_fail=True), expect_success=False, expect_message="Resident not found")
+run_test("Case 4: Room not found", StubDorm(room_fail=True), expect_success=False, expect_message="Room not found")
+run_test("Case 5: Room not in contract", StubDorm(contract_fail=True), expect_success=False, expect_message="Room not in contract")
+run_test("Case 6: Create ticket fails", StubDorm(resident=StubResident(create_fail=True)), expect_success=False, expect_message="Failed to create ticket")
+run_test("Case 7: Add ticket fails", StubDorm(resident=StubResident(add_fail=True)), expect_success=False, expect_message="Failed to add ticket")
 
-# -------------------------------------------------------
-# case 2: check_status return False
-# -------------------------------------------------------
-run_test(
-    "Case 2: Already has ticket",
-    StubDorm(resident=StubResident(check_status=False)),
-    expect_success=False,
-    expect_message="already exists"
-)
-
-# -------------------------------------------------------
-# case 3: resident not found
-# -------------------------------------------------------
-run_test(
-    "Case 3: Resident not found",
-    StubDorm(resident_fail=True),
-    expect_success=False,
-    expect_message="Resident not found"
-)
-
-# -------------------------------------------------------
-# case 4: room not found
-# -------------------------------------------------------
-run_test(
-    "Case 4: Room not found",
-    StubDorm(room_fail=True),
-    expect_success=False,
-    expect_message="Room not found"
-)
-
-# -------------------------------------------------------
-# case 5: room not in contract
-# -------------------------------------------------------
-run_test(
-    "Case 5: Room not in contract",
-    StubDorm(contract_fail=True),
-    expect_success=False,
-    expect_message="Room not in contract"
-)
-
-# -------------------------------------------------------
-# case 6: create_cleaning_ticket fails
-# -------------------------------------------------------
-run_test(
-    "Case 6: Create ticket fails",
-    StubDorm(resident=StubResident(create_fail=True)),
-    expect_success=False,
-    expect_message="Failed to create ticket"
-)
-
-# -------------------------------------------------------
-# case 7: add_cleaning_ticket fails
-# -------------------------------------------------------
-run_test(
-    "Case 7: Add ticket fails",
-    StubDorm(resident=StubResident(add_fail=True)),
-    expect_success=False,
-    expect_message="Failed to add ticket"
-)
-
-# -------------------------------------------------------
-# summary
-# -------------------------------------------------------
 print(f"\n{'='*50}")
 print(f"SUMMARY: {passed} passed, {failed} failed")
 print(f"{'='*50}")
