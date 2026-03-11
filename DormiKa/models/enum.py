@@ -86,5 +86,11 @@ class ShareFacilityStatus(Enum):
     DISABLED = "DISABLED"
 
 class MaintenanceStatus(Enum):
+    REPORTED = "REPORTED"
     IN_PROGRESS = "IN_PROGRESS"
     RESOLVED = "RESOLVED"
+
+class MaintenanceCost(Enum):
+    ELECTRICAL = 750
+    PLUMBING = 1000
+    AC = 500

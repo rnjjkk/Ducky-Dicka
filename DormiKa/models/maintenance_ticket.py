@@ -1,4 +1,5 @@
 from datetime import datetime
+from .enum import MaintenanceStatus
 
 class MaintenanceTicket:
     ID = 1
@@ -11,7 +12,10 @@ class MaintenanceTicket:
         self.__report_time = datetime.now()
         self.__responsible_technician = responsible_technician
         self.__approve_employee = None
-        self.__evidence_before_after = None
+        self.__notes = None
+        self.__start_time = None
+        self.__end_time = None
+        self.__cost = None
         self.__status = "IDLE"
 
         MaintenanceTicket.ID += 1
@@ -33,8 +37,28 @@ class MaintenanceTicket:
         return self.__room_id
 
     @property
+    def issue_category(self):
+        return self.__issue_category
+
+    @property
     def responsible_technician(self):
         return self.__responsible_technician
+
+    @property
+    def start_time(self):
+        return self.__start_time
+
+    @property
+    def end_time(self):
+        return self.__end_time
+
+    @property
+    def notes(self):
+        return self.__notes
+
+    @property
+    def cost(self):
+        return self.__cost
 
     @property
     def status(self):
@@ -46,6 +70,22 @@ class MaintenanceTicket:
 
     def update_maintenance_status(self, status):
         self.__status = status
+
+    def begin_work(self, notes: str = None):
+        if self.__status == MaintenanceStatus.IN_PROGRESS:
+            raise ValueError(f"Ticket {self.__id} is already in progress")
+        if self.__status == MaintenanceStatus.RESOLVED:
+            raise ValueError(f"Ticket {self.__id} is already resolved")
+        self.__start_time = datetime.now()
+        self.__notes = notes
+        self.__status = MaintenanceStatus.IN_PROGRESS
+
+    def finish_work(self, cost: float):
+        if self.__status != MaintenanceStatus.IN_PROGRESS:
+            raise ValueError(f"Ticket {self.__id} is not in progress, cannot finish")
+        self.__end_time = datetime.now()
+        self.__cost = cost
+        self.__status = MaintenanceStatus.RESOLVED
 
     def approve_maintenance(self, employee, status):
         self.__approve_employee = employee.id

@@ -6,6 +6,8 @@ from typing import List
 import uvicorn
 
 
+
+
 class RoomType(Enum):
     STUDIOROOM      = "StudioRoom"
     STANDARDROOM    = "StandardRoom"
@@ -39,15 +41,19 @@ class ContractStatus(Enum):
     EXPIRED      = "EXPIRED"
 
 
-class User:
-    def __init__(self, user_id: str, name: str, phone: str):
-        self.__user_id = user_id
-        self.__name    = name
-        self.__phone   = phone
+
+
+class Resident:
+    def __init__(self, resident_id: str, name: str, phone: str,
+                status: AccountStatus = AccountStatus.ACTIVE):
+        self.__resident_id = resident_id
+        self.__name        = name
+        self.__phone       = phone
+        self.__status      = status
 
     @property
-    def user_id(self):
-        return self.__user_id
+    def resident_id(self):
+        return self.__resident_id
 
     @property
     def name(self):
@@ -56,13 +62,6 @@ class User:
     @property
     def phone(self):
         return self.__phone
-
-
-class Resident(User):
-    def __init__(self, user_id: str, name: str, phone: str,
-                status: AccountStatus = AccountStatus.ACTIVE):
-        super().__init__(user_id, name, phone)
-        self.__status = status
 
     @property
     def status(self):
@@ -139,13 +138,15 @@ class Building:
 class Contract:
     ID = 1
 
-    def __init__(self, resident, room, status=ContractStatus.DRAFT):
+    def __init__(self, resident: Resident, room: Room,
+                status: ContractStatus = ContractStatus.DRAFT):
         self.__contract_id = f"LC-{Contract.ID:04d}"
-        Contract.ID += 1
         self.__resident    = resident
         self.__room        = room
         self.__status      = status
         self.__created_at  = datetime.now()
+
+        Contract.ID += 1
 
     @property
     def contract_id(self):
@@ -174,13 +175,13 @@ class Contract:
 
 class DormSystem:
     def __init__(self):
-        self.__users:     List[User]          = []
+        self.__residents: List[Resident]      = []
         self.__buildings: List[Building]      = []
         self.__contracts: List[Contract] = []
 
     @property
-    def users(self):
-        return self.__users
+    def residents(self):
+        return self.__residents
 
     @property
     def buildings(self):
@@ -190,11 +191,11 @@ class DormSystem:
     def contracts(self):
         return self.__contracts
 
-    def get_user_by_id(self, user_id: str) -> User:
-        for user in self.__users:
-            if user.user_id == user_id:
-                return user
-        raise LookupError(f"ไม่พบรหัสผู้ใช้งาน: {user_id}")
+    def get_resident_by_id(self, resident_id: str) -> Resident:
+        for resident in self.__residents:
+            if resident.resident_id == resident_id:
+                return resident
+        raise LookupError(f"ไม่พบรหัสผู้พัก: {resident_id}")
 
     def get_building_by_id(self, building_id: str) -> Building:
         for b in self.__buildings:
@@ -202,28 +203,26 @@ class DormSystem:
                 return b
         raise LookupError(f"ไม่พบตึก: {building_id}")
 
-    def request_booking(self, user_id: str, building_id: str,
+    def request_booking(self, resident_id: str, building_id: str,
                         room_type: RoomType) -> Contract:
 
-        user = self.get_user_by_id(user_id)
+        resident = self.get_resident_by_id(resident_id)
 
-        if not isinstance(user, Resident):
-            raise PermissionError("ประเภทผู้ใช้งานไม่ถูกต้อง")
-
-        if user.status == AccountStatus.SUSPENDED:
+        if resident.status == AccountStatus.SUSPENDED:
             raise PermissionError("บัญชีถูกระงับการใช้งาน")
 
-        if user.status == AccountStatus.PENDING_VERIFICATION:
+        if resident.status == AccountStatus.PENDING_VERIFICATION:
             raise PermissionError("บัญชีอยู่ระหว่างการตรวจสอบ")
 
+
         if not (8 <= datetime.now().hour <= 17):
-            raise ValueError("ขณะนี้อยู่นอกเวลาทำการ (08:00-17:00)")
+            raise ValueError("ขณะนี้อยู่นอกเวลาทำการ (08:00–17:00)")
 
         building = self.get_building_by_id(building_id)
         room     = building.find_and_hold_available_room_by_type(room_type)
 
-        contract_id  = f"LC-{datetime.now().strftime('%Y%m')}-{len(self.__contracts)+1:04d}"
-        new_contract = Contract(user, room)
+
+        new_contract = Contract(resident, room)
         self.__contracts.append(new_contract)
 
         return new_contract
@@ -235,7 +234,7 @@ system = DormSystem()
 
 
 class BookingRequest(BaseModel):
-    user_id:     str
+    resident_id: str
     building_id: str
     room_type:   RoomType
 
@@ -248,13 +247,13 @@ def startup_event():
     b1.add_room(Room(RoomType.ONEBEDROOMROOM, "A01", "07", "0701", RoomPrice.ONEBEDROOMROOM.value))
     system.buildings.append(b1)
 
-    system.users.append(Resident("U6801", "Tanawit", "081-XXX-XXXX"))
+    system.residents.append(Resident("U6801", "Tanawit", "081-XXX-XXXX"))
 
 
 @app.post("/request_booking", tags=["Booking"])
 async def api_request_booking(req: BookingRequest):
     try:
-        contract = system.request_booking(req.user_id, req.building_id, req.room_type)
+        contract = system.request_booking(req.resident_id, req.building_id, req.room_type)
         return {
             "status":           "success",
             "lease_id":         contract.contract_id,

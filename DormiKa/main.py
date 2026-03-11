@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
+from contextlib import asynccontextmanager
 import uvicorn
 from pydantic import BaseModel, Field
 from datetime import datetime, timedelta
@@ -12,9 +13,10 @@ from models.contract import *
 from models.building import *
 from models.enum import *
 
+# ==================== Mock Data ====================
+
 def create_resident_mock_data(count: int = 3):
-    """Generate a list of mock Resident objects."""
-    Resident.ID = 1  # Reset ID counter for consistent testing
+    Resident.ID = 1
 
     names = ["Kenny", "John", "Alice", "Mary", "Bob"]
     residents = []
@@ -34,12 +36,12 @@ def create_resident_mock_data(count: int = 3):
 
 def create_technician_mock_data():
     technicians = [
-        Technician(name="Tech A", phone_number="0800000001", capabilities=["PLUMBING"]),
-        Technician(name="Tech B", phone_number="0800000002", capabilities=["ELECTRICAL"]),
-        Technician(name="Tech C", phone_number="0800000003", capabilities=["AC"]),
+        PlumbingTech(name="Tech A", phone_number="0800000001", water_meter_tool="WM-001"),
+        ElectricalTech(name="Tech B", phone_number="0800000002", certification_no="CERT-ELEC-001"),
+        ACTech(name="Tech C", phone_number="0800000003", gas_level_refrigerant=100.0),
     ]
     for t in technicians:
-        print(f"Created Technician: {t.id} ({t.name})")
+        print(f"Created Technician: {t.id} ({t.name}) caps={t.capabilities}")
     return technicians
 
 def create_employee_mock_data():
@@ -56,35 +58,15 @@ def create_employee_mock_data():
 
 def create_room_mock_data(building):
     rooms = [
-        Room(
-            building=building,
-            floor=1,
-            room_type=RoomType.STUDIO_ROOM,
-            status=RoomStatus.AVAILABLE,
-            rental=6500,
-        ),
-        Room(
-            building=building,
-            floor=2,
-            room_type=RoomType.STANDARD_ROOM,
-            status=RoomStatus.AVAILABLE,
-            rental=8200,
-        ),
-        Room(
-            building=building,
-            floor=3,
-            room_type=RoomType.ONE_BED_ROOM,
-            status=RoomStatus.AVAILABLE,
-            rental=10500,
-        ),
+        Room(building=building, floor=1, room_type=RoomType.STUDIO_ROOM,   status=RoomStatus.AVAILABLE, rental=6500),
+        Room(building=building, floor=2, room_type=RoomType.STANDARD_ROOM, status=RoomStatus.AVAILABLE, rental=8200),
+        Room(building=building, floor=3, room_type=RoomType.ONE_BED_ROOM,  status=RoomStatus.AVAILABLE, rental=10500),
     ]
     for r in rooms:
         print(f"Created Room: {r.id} ({r.type.value}) {r.status.value}")
     return rooms
 
 def create_building_mock_data():
-    # Building requires both floor and zone (used for building ID generation).
-    # Zone is used as a prefix for building IDs; keep it consistent with room IDs.
     building = Building(floor_count=5, zone="A")
     print(f"Created Building: {building.id}")
     rooms = create_room_mock_data(building)
@@ -93,30 +75,32 @@ def create_building_mock_data():
     return building
 
 def create_contract_mock_data(resident, room, status: ContractStatus = ContractStatus.ACTIVE):
-    """Create a simple lease contract pointing to a room and attach it to a resident."""
-
     contract = Contract(resident, room, status=status)
-    # Mark the room as occupied when it's under contract.
     room.status = RoomStatus.OCCUPIED
     resident.add_contract(contract)
-    
     print(resident.contracts[0].id)
     print(room.id)
     return contract
 
-"""==============================================================================="""
+# ==================== App Init ====================
 
 dorm = None
 
-app = FastAPI()
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize in-memory mock data when the API starts."""
+def init_mock_data():
     global dorm
+
+    Resident.ID = 1
+    Technician.ID = 1
+    Cleaner.ID = 1
+    Employee.ID = 1
+    Contract.ID = 1
+    Building.ID = 1
+    Room.ID = 1
+    MaintenanceTicket.ID = 1
+    Invoice._running_number = 1
+
     dorm = Dorm("Ducka")
 
-    # Mock room/building data (needed for room lookup during maintenance requests)
     mock_building = create_building_mock_data()
     dorm.add_building(mock_building)
 
@@ -124,7 +108,6 @@ async def startup_event():
     for r in mock_residents:
         dorm.add_resident(r)
 
-    # Create a sample lease contract for the first resident using the first available room
     if mock_residents and mock_building.rooms:
         create_contract_mock_data(mock_residents[0], mock_building.rooms[0])
 
@@ -135,6 +118,28 @@ async def startup_event():
     mock_technicians = create_technician_mock_data()
     for t in mock_technicians:
         dorm.add_technician(t)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_mock_data()
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+# ==================== Routers ====================
+
+system_router      = APIRouter(prefix="",           tags=["System"])
+contract_router    = APIRouter(prefix="/contract",  tags=["Contract"])
+maintenance_router = APIRouter(prefix="/maintenance", tags=["Maintenance"])
+
+# ==================== System ====================
+
+@system_router.post("/reset")
+async def reset_mock_data():
+    init_mock_data()
+    return {"message": "Mock data has been reset successfully"}
+
+# ==================== Contract ====================
 
 class ChangeContractRequest(BaseModel):
     residentId: str = Field(..., example="RS-0001")
@@ -151,7 +156,7 @@ class ChangeContractRequest(BaseModel):
 }
 """
 
-@app.post("/change-contract")
+@contract_router.post("/change")
 async def change_contract(request: ChangeContractRequest):
     return dorm.change_contract(
         request.residentId,
@@ -160,12 +165,14 @@ async def change_contract(request: ChangeContractRequest):
         request.moveDate,
     )
 
+# ==================== Maintenance ====================
+
+class RequestMaintenanceBody(BaseModel):
+    residentId: str = Field(..., example="RS-0001")
+    roomId: str = Field(..., example="RM-0001")
+    issueCategory: IssueCategory = Field(..., example=IssueCategory.PLUMBING)
+
 """
-{
-  "residentId": "RS-0001",
-  "roomId": "RM-0002",
-  "issueCategory": "PLUMBING"
-}
 {
   "residentId": "RS-0001",
   "roomId": "RM-0001",
@@ -173,18 +180,55 @@ async def change_contract(request: ChangeContractRequest):
 }
 """
 
-class RequestMaintenance(BaseModel):
-    residentId: str = Field(..., example="RS-0001")
-    roomId: str = Field(..., example="RM-0001")
-    issueCategory: IssueCategory = Field(..., example=IssueCategory.PLUMBING)
-
-@app.post("/request-maintenance")
-async def request_maintenance(request: RequestMaintenance):
+@maintenance_router.post("/request")
+async def request_maintenance(request: RequestMaintenanceBody):
     try:
         result = dorm.request_maintenance(request.residentId, request.roomId, request.issueCategory.value)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result
 
+class StartMaintenanceBody(BaseModel):
+    technicianId: str = Field(..., example="TC-0001")
+    notes: str = Field(None, example="Pipe leaking under the sink")
+
+"""
+{
+  "technicianId": "TC-0001",
+  "notes": "Pipe leaking under the sink"
+}
+"""
+
+@maintenance_router.post("/start")
+async def start_maintenance(request: StartMaintenanceBody):
+    try:
+        result = dorm.start_maintenance_workflow(request.technicianId, request.notes)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
+class FinishMaintenanceBody(BaseModel):
+    technicianId: str = Field(..., example="TC-0001")
+
+"""
+{
+  "technicianId": "TC-0001"
+}
+"""
+
+@maintenance_router.post("/finish")
+async def finish_maintenance(request: FinishMaintenanceBody):
+    try:
+        result = dorm.finish_maintenance_workflow(request.technicianId)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
+# ==================== Register Routers ====================
+
+app.include_router(system_router)
+app.include_router(contract_router)
+app.include_router(maintenance_router)
+
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1",port=8000, log_level="info", reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, log_level="info", reload=True)
