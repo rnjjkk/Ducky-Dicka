@@ -12,7 +12,6 @@ from models.room import *
 from models.contract import *
 from models.building import *
 from models.enum import *
-from models.facility_booking import *
 
 # ==================== Mock Data ====================
 
@@ -33,15 +32,6 @@ def create_resident_mock_data(count: int = 3):
         residents.append(resident)
 
     return residents
-
-def create_cleaner_mock_data():
-    cleaners = [
-        Cleaner(id="CL-0001", name="Cleaner A", phone_number="0900000001"),
-        Cleaner(id="CL-0002", name="Cleaner B", phone_number="0900000002"),
-    ]
-    for c in cleaners:
-        print(f"Created Cleaner: {c.id} ({c.name})")
-    return cleaners
 
 def create_technician_mock_data():
     technicians = [
@@ -65,10 +55,16 @@ def create_employee_mock_data():
         print(f"Created Employee: {e.fid} ({e.id})")
     return employees
 
+
 def create_room_mock_data(building):
     rooms = [
+        # STUDIO_ROOM — 2 ห้อง (ห้องแรกจะถูก Kenny occupy, ห้องที่ 2 ว่างสำหรับจอง)
         Room(building=building, floor=1, room_type=RoomType.STUDIO_ROOM,   status=RoomStatus.AVAILABLE, rental=6500),
+        Room(building=building, floor=1, room_type=RoomType.STUDIO_ROOM,   status=RoomStatus.AVAILABLE, rental=6500),
+        # STANDARD_ROOM — 2 ห้อง (ห้องแรกจะถูก Bob reserve สำหรับ handover)
         Room(building=building, floor=2, room_type=RoomType.STANDARD_ROOM, status=RoomStatus.AVAILABLE, rental=8200),
+        Room(building=building, floor=2, room_type=RoomType.STANDARD_ROOM, status=RoomStatus.AVAILABLE, rental=8200),
+        # ONE_BED_ROOM — 1 ห้อง
         Room(building=building, floor=3, room_type=RoomType.ONE_BED_ROOM,  status=RoomStatus.AVAILABLE, rental=10500),
     ]
     for r in rooms:
@@ -107,7 +103,6 @@ def init_mock_data():
     Room.ID = 1
     MaintenanceTicket.ID = 1
     Invoice._running_number = 1
-    BookingShareFacility.ID = 1
 
     dorm = Dorm("Ducka")
 
@@ -124,10 +119,6 @@ def init_mock_data():
     mock_employees = create_employee_mock_data()
     for e in mock_employees:
         dorm.add_operation_staff(e)
-
-    mock_cleaners = create_cleaner_mock_data()
-    for c in mock_cleaners:
-        dorm.add_cleaner(c)
 
     mock_technicians = create_technician_mock_data()
     for t in mock_technicians:
@@ -146,7 +137,6 @@ system_router      = APIRouter(prefix="",           tags=["System"])
 contract_router    = APIRouter(prefix="/contract",  tags=["Contract"])
 maintenance_router = APIRouter(prefix="/maintenance", tags=["Maintenance"])
 cleaning_router    = APIRouter(prefix="/cleaning",  tags=["Cleaning"])
-facility_router    = APIRouter(prefix="/facility",  tags=["Facility"])
 
 # ==================== System ====================
 
@@ -180,12 +170,13 @@ async def request_booking(request: RequestBookingBody):
         raise HTTPException(status_code=403, detail=str(e))
     return result
 
+
 class SignContractBody(BaseModel):
-    contractId: str = Field(..., example="LC-0001")
+    contractId: str = Field(..., example="LC-0002")
 
 """
 {
-  "contractId": "LC-0001"
+  "contractId": "LC-0002"
 }
 """
 
@@ -196,6 +187,7 @@ async def sign_contract(request: SignContractBody):
     except (LookupError, ValueError) as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result
+
 
 class PayContractInvoiceBody(BaseModel):
     invoiceId: str = Field(..., example="INV-0001")
@@ -214,26 +206,6 @@ async def pay_contract_invoice(request: PayContractInvoiceBody):
         raise HTTPException(status_code=400, detail=str(e))
     return result
 
-class HandoverBody(BaseModel):
-    contractId: str = Field(..., example="LC-0001")
-    meterElect: float = Field(..., example=100.0)
-    meterWater: float = Field(..., example=50.0)
-
-"""
-{
-  "contractId": "LC-0001",
-  "meterElect": 100.0,
-  "meterWater": 50.0
-}
-"""
-
-@contract_router.post("/handover")
-async def complete_handover(request: HandoverBody):
-    try:
-        result = dorm.complete_handover(request.contractId, request.meterElect, request.meterWater)
-    except (LookupError, KeyError, ValueError) as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    return result
 
 class ChangeContractRequest(BaseModel):
     residentId: str = Field(..., example="RS-0001")
@@ -258,6 +230,58 @@ async def change_contract(request: ChangeContractRequest):
         request.targetRoomId,
         request.moveDate,
     )
+
+# ==================== Handover ====================
+
+class SelectHandoverBody(BaseModel):
+    contractId: str = Field(..., example="LC-0001")
+
+"""
+{
+  "contractId": "LC-0001"
+}
+"""
+
+@contract_router.post("/select_handover")
+async def select_contract_for_handover(request: SelectHandoverBody):
+    try:
+        contract = dorm.get_contract_for_handover(request.contractId)
+        return {
+            "status":           "success",
+            "contract_id":      contract.id,
+            "resident_id":      contract.resident.id,
+            "room_id":          contract.room.id,
+            "contract_status":  contract.status.value,
+            "message":          "เลือกสัญญาสำเร็จ พร้อมดำเนินการส่งมอบห้อง",
+        }
+    except (LookupError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="เกิดข้อผิดพลาดภายในระบบ")
+
+
+class HandoverBody(BaseModel):
+    contractId: str = Field(..., example="LC-0001")
+
+"""
+{
+  "contractId": "LC-0001"
+}
+"""
+
+@contract_router.post("/handover")
+async def handover_room(request: HandoverBody):
+    try:
+        result = dorm.complete_handover(request.contractId)
+        return {
+            "status":  "success",
+            "message": result,
+        }
+    except (LookupError, KeyError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="เกิดข้อผิดพลาดภายในระบบ")
+
 
 # ==================== Maintenance ====================
 
@@ -339,63 +363,12 @@ async def request_cleaning_room(request: RequestCleaningRoomBody):
         raise HTTPException(status_code=400, detail=str(e))
     return result
 
-class CleanRoomBody(BaseModel):
-    cleanerId: str = Field(..., example="CL-0001")
-    roomId: str = Field(..., example="RM-0001")
-
-"""
-{
-  "cleanerId": "CL-0001",
-  "roomId": "RM-0001"
-}
-"""
-
-@cleaning_router.post("/clean")
-async def clean_room(request: CleanRoomBody):
-    try:
-        result = dorm.clean_room_workflow(request.cleanerId, request.roomId)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-# ==================== Facility Booking ====================
-
-class BookShareFacilityRequest(BaseModel):
-    residentId: str = Field(..., example="RS-0001")
-    buildingId: str = Field(..., example="A01")
-    facilityId: str = Field(..., example="MR-001")
-    bookingTime: str = Field(..., example="2026-03-15 14:00:00")
-    facilityName: str = Field(default="Shared Facility", example="Meeting Room")
-
-"""
-{
-  "residentId": "RS-0001",
-  "buildingId": "A01",
-  "facilityId": "MR-001",
-  "bookingTime": "2026-03-15 14:00:00",
-  "facilityName": "Meeting Room"
-}
-"""
-
-@facility_router.post("/book")
-async def book_share_facility(request: BookShareFacilityRequest):
-    try:
-        result = dorm.booking_share_facility(
-            request.residentId,
-            request.buildingId,
-            request.facilityId,
-            request.bookingTime,
-            request.facilityName
-        )
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    return result
-
 # ==================== Register Routers ====================
 
 app.include_router(system_router)
 app.include_router(contract_router)
 app.include_router(maintenance_router)
 app.include_router(cleaning_router)
-app.include_router(facility_router)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, log_level="info", reload=True)
