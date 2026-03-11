@@ -12,6 +12,7 @@ from models.room import *
 from models.contract import *
 from models.building import *
 from models.enum import *
+from models.facility_booking import *
 
 # ==================== Mock Data ====================
 
@@ -27,12 +28,20 @@ def create_resident_mock_data(count: int = 3):
             name,
             18 + i,
             f"080000000{i}",
-            status=AccountStatus.ACTIVE.value,
         )
         print(f"Created Resident: {resident.id}")
         residents.append(resident)
 
     return residents
+
+def create_cleaner_mock_data():
+    cleaners = [
+        Cleaner(id="CL-0001", name="Cleaner A", phone_number="0900000001"),
+        Cleaner(id="CL-0002", name="Cleaner B", phone_number="0900000002"),
+    ]
+    for c in cleaners:
+        print(f"Created Cleaner: {c.id} ({c.name})")
+    return cleaners
 
 def create_technician_mock_data():
     technicians = [
@@ -98,6 +107,7 @@ def init_mock_data():
     Room.ID = 1
     MaintenanceTicket.ID = 1
     Invoice._running_number = 1
+    BookingShareFacility.ID = 1
 
     dorm = Dorm("Ducka")
 
@@ -114,6 +124,10 @@ def init_mock_data():
     mock_employees = create_employee_mock_data()
     for e in mock_employees:
         dorm.add_operation_staff(e)
+
+    mock_cleaners = create_cleaner_mock_data()
+    for c in mock_cleaners:
+        dorm.add_cleaner(c)
 
     mock_technicians = create_technician_mock_data()
     for t in mock_technicians:
@@ -135,6 +149,9 @@ invoice_router     = APIRouter(prefix="/invoice",     tags=["Invoice"])
 receipt_router     = APIRouter(prefix="/receipt",     tags=["Receipt"])
 payment_router     = APIRouter(prefix="/payment",     tags=["Payment"])
 member_router      = APIRouter(prefix="/member",      tags=["Member"])
+cleaning_router    = APIRouter(prefix="/cleaning",  tags=["Cleaning"])
+facility_router    = APIRouter(prefix="/facility",  tags=["Facility"])
+staff_router       = APIRouter(prefix="/staff",     tags=["Staff"])
 
 # ==================== System ====================
 
@@ -178,6 +195,84 @@ async def system_contract_invoice(request: SystemContractInvoiceBody):
     return result
 
 # ==================== Contract ====================
+
+class RequestBookingBody(BaseModel):
+    residentId: str = Field(..., example="RS-0001")
+    buildingId: str = Field(..., example="A01")
+    roomType: RoomType = Field(..., example=RoomType.STUDIO_ROOM)
+
+"""
+{
+  "residentId": "RS-0001",
+  "buildingId": "A01",
+  "roomType": "StudioRoom"
+}
+"""
+
+@contract_router.post("/request")
+async def request_booking(request: RequestBookingBody):
+    try:
+        result = dorm.request_booking(request.residentId, request.buildingId, request.roomType)
+    except (LookupError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    return result
+
+class SignContractBody(BaseModel):
+    contractId: str = Field(..., example="LC-0001")
+
+"""
+{
+  "contractId": "LC-0001"
+}
+"""
+
+@contract_router.post("/sign")
+async def sign_contract(request: SignContractBody):
+    try:
+        result = dorm.sign_contract(request.contractId)
+    except (LookupError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
+class PayContractInvoiceBody(BaseModel):
+    invoiceId: str = Field(..., example="INV-0001")
+
+"""
+{
+  "invoiceId": "INV-0001"
+}
+"""
+
+@contract_router.post("/pay")
+async def pay_contract_invoice(request: PayContractInvoiceBody):
+    try:
+        result = dorm.pay_contract_invoice(request.invoiceId)
+    except (LookupError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
+class HandoverBody(BaseModel):
+    contractId: str = Field(..., example="LC-0001")
+    meterElect: float = Field(..., example=100.0)
+    meterWater: float = Field(..., example=50.0)
+
+"""
+{
+  "contractId": "LC-0001",
+  "meterElect": 100.0,
+  "meterWater": 50.0
+}
+"""
+
+@contract_router.post("/handover")
+async def complete_handover(request: HandoverBody):
+    try:
+        result = dorm.complete_handover(request.contractId, request.meterElect, request.meterWater)
+    except (LookupError, KeyError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
 
 class ChangeContractRequest(BaseModel):
     residentId: str = Field(..., example="RS-0001")
@@ -278,6 +373,23 @@ async def display_invoice(resident_id: str):
 async def display_receipt(resident_id: str):
     try:
         result = dorm.display_receipt(resident_id)
+# ==================== Cleaning ====================
+
+class RequestCleaningRoomBody(BaseModel):
+    residentId: str = Field(..., example="RS-0001")
+    roomId: str = Field(..., example="RM-0001")
+
+"""
+{
+  "residentId": "RS-0001",
+  "roomId": "RM-0001"
+}
+"""
+
+@cleaning_router.post("/request")
+async def request_cleaning_room(request: RequestCleaningRoomBody):
+    try:
+        result = dorm.request_cleaning_room(request.residentId, request.roomId)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result
@@ -308,6 +420,31 @@ async def select_payment(request: SelectPaymentBody):
 class PayBody(BaseModel):
     residentId: str = Field(..., example="RS-0001")
     paymentData: str = Field(..., example="1234-5678-9012-3456")
+class CleanRoomBody(BaseModel):
+    cleanerId: str = Field(..., example="CL-0001")
+    roomId: str = Field(..., example="RM-0001")
+
+"""
+{
+  "cleanerId": "CL-0001",
+  "roomId": "RM-0001"
+}
+"""
+
+@cleaning_router.post("/clean")
+async def clean_room(request: CleanRoomBody):
+    try:
+        result = dorm.clean_room_workflow(request.cleanerId, request.roomId)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+# ==================== Facility Booking ====================
+
+class BookShareFacilityRequest(BaseModel):
+    residentId: str = Field(..., example="RS-0001")
+    buildingId: str = Field(..., example="A01")
+    facilityId: str = Field(..., example="MR-001")
+    bookingTime: str = Field(..., example="2026-03-15 14:00:00")
+    facilityName: str = Field(default="Shared Facility", example="Meeting Room")
 
 """
 {
@@ -320,6 +457,23 @@ class PayBody(BaseModel):
 async def pay(request: PayBody):
     try:
         result = dorm.payment_system(request.residentId, request.paymentData)
+  "buildingId": "A01",
+  "facilityId": "MR-001",
+  "bookingTime": "2026-03-15 14:00:00",
+  "facilityName": "Meeting Room"
+}
+"""
+
+@facility_router.post("/book")
+async def book_share_facility(request: BookShareFacilityRequest):
+    try:
+        result = dorm.booking_share_facility(
+            request.residentId,
+            request.buildingId,
+            request.facilityId,
+            request.bookingTime,
+            request.facilityName
+        )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result
@@ -342,6 +496,22 @@ async def create_member(request: CreateMemberBody):
     try:
         result = dorm.create_member(request.residentId, request.memberType)
     except Exception as e:
+# ==================== Staff ====================
+
+class CompleteTaskBody(BaseModel):
+    staffId: str = Field(..., example="TC-0001")
+
+"""
+{
+  "staffId": "CL-0001"
+}
+"""
+
+@staff_router.post("/complete-task")
+async def complete_task(request: CompleteTaskBody):
+    try:
+        result = dorm.complete_task_workflow(request.staffId)
+    except (ValueError, PermissionError) as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result
 
@@ -354,6 +524,9 @@ app.include_router(invoice_router)
 app.include_router(receipt_router)
 app.include_router(payment_router)
 app.include_router(member_router)
+app.include_router(cleaning_router)
+app.include_router(facility_router)
+app.include_router(staff_router)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, log_level="info", reload=True)

@@ -4,6 +4,7 @@ from .payment import Payment
 from .receipt import Receipt
 from .cleaning_ticket import *
 from .room import *
+from .enum import AccountStatus
 # import sqlite3
 
 
@@ -24,17 +25,18 @@ from .room import *
 class Resident:
     ID = 1
     
-    def __init__(self, name: str, email: str=None, phone_number: str=None):
+    def __init__(self, name: str, email: str=None, phone_number: str=None,
+                 status: AccountStatus = AccountStatus.ACTIVE):
         self.__id = f"RS-{Resident.ID:04d}"
         self.__name = name
         self.__email = email
         self.__phone_number = phone_number
+        self.__status = status
         self.__strike = 0
-        self.__date_create = datetime.datetime.now()
+        self.__date_create = datetime.now()
         self.__payment = None
         self.__member = None
         self.__room_bookings = []
-        self.__facility_bookings = []
         self.__contracts = []
         self.__invoices = []
         self.__receipts = []
@@ -48,6 +50,10 @@ class Resident:
 
         Resident.ID += 1
 
+    @property
+    def name(self): 
+        return self.__name
+    
     @property
     def email(self):
         return self.__email
@@ -74,6 +80,10 @@ class Resident:
     def status(self):
         return self.__status
 
+    @status.setter
+    def status(self, new_status: AccountStatus):
+        self.__status = new_status
+
     @property
     def contracts(self):
         return self.__contracts
@@ -85,6 +95,10 @@ class Resident:
     @property
     def receipts(self):
         return self.__receipts
+    
+    @property
+    def booking_share_facility_list(self):
+        return self.__booking_share_facility_list
 			
     def set_member(self, member):
         self.__member = member
@@ -94,6 +108,9 @@ class Resident:
 
     def add_invoice(self, invoice):
         self.__invoices.append(invoice)
+
+    def add_booking_share_facility(self, booking):
+        self.__booking_share_facility_list.append(booking)
 
     def calculate_net_amount(self, amount, discount):
         discount = 1 - discount
@@ -160,3 +177,12 @@ class Resident:
     def add_cleaning_ticket(self,room,cleaning_ticket):
         room.cleaning_tickets.append(cleaning_ticket)
         return f"add to room success"
+    
+    def add_facility_booking(self, facility_booking):
+        """Add a facility booking to the resident's booking list"""
+        self.__booking_share_facility_list.append(facility_booking)
+        return facility_booking
+    
+    def get_facility_bookings(self):
+        """Get all facility bookings for this resident"""
+        return self.__booking_share_facility_list

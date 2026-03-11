@@ -16,6 +16,7 @@ class Contract:
         self.__status: ContractStatus = status
         self.__rental_time = None
         self.__monthly_rent = None
+        self.__invoice_id = None
 
         Contract.ID += 1
 
@@ -24,16 +25,47 @@ class Contract:
         return self.__id
 
     @property
+    def resident(self):
+        return self.__resident
+
+    @property
     def status(self) -> ContractStatus:
         return self.__status
+
+    @status.setter
+    def status(self, new_status: ContractStatus):
+        self.__status = new_status
+
+    @property
+    def invoice_id(self):
+        return self.__invoice_id
+
+    @invoice_id.setter
+    def invoice_id(self, inv_id: str):
+        self.__invoice_id = inv_id
 
     @property
     def room(self):
         return self.__room
 
-    @room.setter    
+    @room.setter
     def room(self, room):
         self.__room = room
+
+    def validate_contract_status_for_handover(self):
+        valid_statuses = [ContractStatus.ACTIVE, ContractStatus.PENDING_SIGN]
+        if self.__status not in valid_statuses:
+            raise ValueError(
+                f"Contract {self.__id} cannot be handed over "
+                f"(current status: {self.__status.value} — must be ACTIVE or PENDING_SIGN)"
+            )
+
+    def validate_for_signing(self):
+        if self.__status != ContractStatus.DRAFT:
+            raise ValueError(
+                f"Contract {self.__id} cannot be signed "
+                f"(current status: {self.__status.value} — must be DRAFT)"
+            )
 
     def calculate_upgrade_amount(self, target_room_cost, moveDate):
         move_date = datetime.datetime.strptime(moveDate, "%Y-%m-%d").date()
