@@ -91,12 +91,13 @@ class Dorm:
             cleaner = self.search_cleaner_by_id(cleaner_id)
             # search cleaning ticket by room id and check status
             ticket = cleaner.search_cleaning_ticket_by_room_id(room_id)
-            result = cleaner.clean_room(room_id)
+            cleaner.clean_room(ticket)
+            cleaner.finished_cleaning(ticket)
             return {
                 "cleaner_id": cleaner.id,
                 "cleaner_name": cleaner.name,
-                "room_id": result["room"],
-                "status": result["status"],
+                "room_id": ticket.room_id,
+                "status": ticket.status,
             }
         except ValueError as e:
             return self.show_error({"error": str(e)})

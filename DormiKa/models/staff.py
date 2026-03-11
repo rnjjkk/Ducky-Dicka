@@ -84,12 +84,20 @@ class Cleaner(Staff):
                 return ticket
         raise ValueError(f"No active cleaning ticket found for room {room_id}")
 
-    def clean_room(self, room):
-        if room not in self.__assigned_rooms:
-            self.__assigned_rooms.append(room)
+    def clean_room(self, ticket):
+        if ticket not in self.__assigned_rooms:
+            self.__assigned_rooms.append(ticket)
         self.status = "WORKING"
-        room.status = "Cleaning"
-        return {"room": room, "status": "cleaning"}
+        ticket.status = ticket.status.CLEANING
+        return {"room_id": ticket.room_id, "status": "cleaning"}
+    
+    def finished_cleaning(self, ticket):
+        if ticket not in self.__assigned_rooms:
+            raise ValueError(f"Room {ticket.room_id} is not assigned to cleaner {self.id}")
+        self.status = "AVAILABLE"
+        self.__assigned_rooms.remove(ticket)
+        ticket.status = ticket.status.FINISHED
+        return {"room_id": ticket.room_id, "status": "available"}
 
 
 class Technician(Staff):
