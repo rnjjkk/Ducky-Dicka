@@ -2,6 +2,8 @@ import datetime
 from .payment_gateway import Payment_Method
 from .payment import Payment
 from .receipt import Receipt
+from .cleaning_ticket import *
+from .room import *
 # import sqlite3
 
 
@@ -127,3 +129,17 @@ class Resident:
             if contract.id == contractId:
                 return contract
         return None
+    
+    def check_status_cleaning_ticket(self,cleaning_ticket_list):
+        for ticket in cleaning_ticket_list:
+            if ticket.status == "Requested" or ticket.status == "Cleaning":
+                raise ValueError("this room already has cleaning ticket with status Requested or Cleaning")    
+        return True
+        
+    def create_cleaning_ticket(self,resident_id,room_id):
+        cleaning_ticket = CleaningTicket(resident_id,room_id)
+        return cleaning_ticket
+    
+    def add_cleaning_ticket(self,room,cleaning_ticket):
+        room.cleaning_tickets.append(cleaning_ticket)
+        return f"add to room success"

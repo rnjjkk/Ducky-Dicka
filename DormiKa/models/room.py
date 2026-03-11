@@ -23,7 +23,9 @@ class Room:
         self.__room_log: list = []
         self.__maintenance_tickets: list = []
         self.__monthly_rent = self.define_monthly_rent(room_type)
+        self.__cleaning_tickets: list = []
         self.__hold_expiry = None  # used when a room is temporarily reserved/held
+        
         Room.ID += 1
 
     def define_monthly_rent(self, room_type):
@@ -77,8 +79,11 @@ class Room:
     @property
     def water_cost(self):
         return self.__water_cost
-
+    
     @property
+    def cleaning_tickets(self):
+        return self.__cleaning_tickets
+    
     def monthly_rent(self):
         return self.__monthly_rent
 

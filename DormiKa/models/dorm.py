@@ -76,7 +76,31 @@ class Dorm:
         # 3. search room by contracts (room in resident contract)
         room_in_contract = self.search_room_by_contracts(resident,room_input.id)
 
+        # 4. get cleaning ticket list
+        cleaning_ticket_list = room_in_contract.cleaning_tickets
 
+        # 5. check status cleaning ticket
+        try:
+            if resident.check_status_cleaning_ticket(cleaning_ticket_list):
+                # 6. create cleaning ticket
+                cleaning_ticket = resident.create_cleaning_ticket(resident_id, room_id)
+                # 7. add cleaning ticket to room
+                resident.add_cleaning_ticket(room_in_contract, cleaning_ticket)
+                # 8. request success
+                s = {
+                    "reporter": resident.name,
+                    "room_id": cleaning_ticket.room_id,
+                    "ticket id": cleaning_ticket.id,
+                    "report_time": cleaning_ticket.report_time,
+                    "cost": cleaning_ticket.cost,
+                    "status": cleaning_ticket.status
+                }
+                return self.show_success(s)
+            else:
+                return self.show_error({"error": "Cleaning ticket already exists or invalid status"})
+
+        except Exception as e:
+            return self.show_error({"error": str(e)})
     
     def request_maintenance(self, resident_id, room_id, issue_category):
         resident = self.search_resident_by_id(resident_id)
