@@ -79,19 +79,13 @@ class Room:
     @property
     def water_cost(self):
         return self.__water_cost
-
-    @property
-<<<<<<< HEAD
-    def rental(self):
-        return self.__rental
     
     @property
     def cleaning_tickets(self):
         return self.__cleaning_tickets
-=======
+    
     def monthly_rent(self):
         return self.__monthly_rent
->>>>>>> 142382e993a17cf07d600b6697e4ad9c514c8d85
 
     def add_maintenance_ticket(self, ticket):
         """Attach a maintenance ticket to this room."""
