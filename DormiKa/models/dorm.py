@@ -2,7 +2,7 @@ from .enum import *
 from .contract import *
 from .room import *
 from .resident import *
-from .facility_booking import FacilityBooking
+from .facility_booking import *
 from .invoice import Invoice
 import re
 import datetime
@@ -36,6 +36,9 @@ class Dorm:
 
     def add_technician(self, technician):
         self.__technicians.append(technician)
+
+    def add_cleaner(self, cleaner):
+        self.__cleaner.append(cleaner)
 
     def add_building(self, building):
         self.__buildings.append(building)
@@ -76,6 +79,115 @@ class Dorm:
             if technician.id == technician_id:
                 return technician
         raise ValueError(f"Technician '{technician_id}' not found")
+
+    def search_cleaner_by_id(self, cleaner_id):
+        for cleaner in self.__cleaner:
+            if cleaner.id == cleaner_id:
+                return cleaner
+        raise ValueError(f"Cleaner '{cleaner_id}' not found")
+
+    def clean_room_workflow(self, cleaner_id, room_id):
+        try:
+            cleaner = self.search_cleaner_by_id(cleaner_id)
+            # search cleaning ticket by room id and check status
+            ticket = cleaner.search_cleaning_ticket_by_room_id(room_id)
+            result = cleaner.clean_room(room_id)
+            return {
+                "cleaner_id": cleaner.id,
+                "cleaner_name": cleaner.name,
+                "room_id": result["room"],
+                "status": result["status"],
+            }
+        except ValueError as e:
+            return self.show_error({"error": str(e)})
+
+    def search_contract_by_id(self, contract_id):
+        for resident in self.__residents:
+            for contract in resident.contracts:
+                if contract.id == contract_id:
+                    return resident, contract
+        raise ValueError(f"Contract '{contract_id}' not found")
+
+    def search_invoice_by_id(self, invoice_id):
+        for resident in self.__residents:
+            for invoice in resident.invoices:
+                if invoice.id == invoice_id:
+                    return resident, invoice
+        raise ValueError(f"Invoice '{invoice_id}' not found")
+
+    def request_booking(self, resident_id, building_id, room_type):
+        # 1. find resident
+        resident = self.search_resident_by_id(resident_id)
+
+        # 2. check business hours
+        if not (8 <= datetime.datetime.now().hour <= 17):
+            raise ValueError("Outside business hours (08:00–17:00)")
+
+        # 3. find building and hold an available room
+        building = self.search_building_by_id(building_id)
+        room = building.find_and_hold_available_room_by_type(room_type)
+
+        # 4. create contract (DRAFT)
+        contract = Contract(resident, room, status=ContractStatus.DRAFT)
+        resident.add_contract(contract)
+
+        return {
+            "contract_id": contract.id,
+            "resident_id": resident.id,
+            "room_id": room.id,
+            "room_type": room.type.value,
+            "room_status": room.status.value,
+            "contract_status": contract.status.value,
+        }
+
+    def sign_contract(self, contract_id):
+        # 1. find contract
+        resident, contract = self.search_contract_by_id(contract_id)
+
+        # 2. validate — must be DRAFT
+        contract.validate_for_signing()
+
+        # 3. create contract invoice from room price
+        invoice = Invoice(InvoiceType.CONTRACT, contract.room.id, contract.room.monthly_rent, InvoiceStatus.UNPAID)
+        resident.add_invoice(invoice)
+
+        # 4. link invoice to contract and advance status
+        contract.invoice_id = invoice.id
+        contract.status = ContractStatus.PENDING_SIGN
+
+        return {
+            "invoice_id": invoice.id,
+            "contract_id": contract.id,
+            "amount": invoice.amount,
+            "contract_status": contract.status.value,
+        }
+
+    def pay_contract_invoice(self, invoice_id):
+        # 1. find invoice
+        resident, invoice = self.search_invoice_by_id(invoice_id)
+
+        # 2. validate not already paid
+        invoice.validate_for_payment()
+
+        # 3. find the contract linked to this invoice
+        contract = next(
+            (c for c in resident.contracts if c.invoice_id == invoice_id), None
+        )
+        if contract is None:
+            raise ValueError(f"No contract linked to invoice '{invoice_id}'")
+
+        # 4. mark paid and activate contract + room
+        invoice.status = InvoiceStatus.PAID
+        contract.status = ContractStatus.ACTIVE
+        contract.room.status = RoomStatus.OCCUPIED
+
+        return {
+            "invoice_id": invoice.id,
+            "contract_id": contract.id,
+            "contract_status": contract.status.value,
+            "room_id": contract.room.id,
+            "room_status": contract.room.status.value,
+        }
 
     def search_resident_by_room_id(self, room_id):
         for resident in self.__residents:

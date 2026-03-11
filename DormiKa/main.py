@@ -12,7 +12,7 @@ from models.room import *
 from models.contract import *
 from models.building import *
 from models.enum import *
-from models.facility_booking import BookingShareFacility
+from models.facility_booking import *
 
 # ==================== Mock Data ====================
 
@@ -33,6 +33,15 @@ def create_resident_mock_data(count: int = 3):
         residents.append(resident)
 
     return residents
+
+def create_cleaner_mock_data():
+    cleaners = [
+        Cleaner(id="CL-0001", name="Cleaner A", phone_number="0900000001"),
+        Cleaner(id="CL-0002", name="Cleaner B", phone_number="0900000002"),
+    ]
+    for c in cleaners:
+        print(f"Created Cleaner: {c.id} ({c.name})")
+    return cleaners
 
 def create_technician_mock_data():
     technicians = [
@@ -98,7 +107,7 @@ def init_mock_data():
     Room.ID = 1
     MaintenanceTicket.ID = 1
     Invoice._running_number = 1
-    FacilityBooking.ID = 1
+    BookingShareFacility.ID = 1
 
     dorm = Dorm("Ducka")
 
@@ -115,6 +124,10 @@ def init_mock_data():
     mock_employees = create_employee_mock_data()
     for e in mock_employees:
         dorm.add_operation_staff(e)
+
+    mock_cleaners = create_cleaner_mock_data()
+    for c in mock_cleaners:
+        dorm.add_cleaner(c)
 
     mock_technicians = create_technician_mock_data()
     for t in mock_technicians:
@@ -143,6 +156,63 @@ async def reset_mock_data():
     return {"message": "Mock data has been reset successfully"}
 
 # ==================== Contract ====================
+
+class RequestBookingBody(BaseModel):
+    residentId: str = Field(..., example="RS-0001")
+    buildingId: str = Field(..., example="A01")
+    roomType: RoomType = Field(..., example=RoomType.STUDIO_ROOM)
+
+"""
+{
+  "residentId": "RS-0001",
+  "buildingId": "A01",
+  "roomType": "StudioRoom"
+}
+"""
+
+@contract_router.post("/request")
+async def request_booking(request: RequestBookingBody):
+    try:
+        result = dorm.request_booking(request.residentId, request.buildingId, request.roomType)
+    except (LookupError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    return result
+
+class SignContractBody(BaseModel):
+    contractId: str = Field(..., example="LC-0001")
+
+"""
+{
+  "contractId": "LC-0001"
+}
+"""
+
+@contract_router.post("/sign")
+async def sign_contract(request: SignContractBody):
+    try:
+        result = dorm.sign_contract(request.contractId)
+    except (LookupError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
+class PayContractInvoiceBody(BaseModel):
+    invoiceId: str = Field(..., example="INV-0001")
+
+"""
+{
+  "invoiceId": "INV-0001"
+}
+"""
+
+@contract_router.post("/pay")
+async def pay_contract_invoice(request: PayContractInvoiceBody):
+    try:
+        result = dorm.pay_contract_invoice(request.invoiceId)
+    except (LookupError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
 
 class ChangeContractRequest(BaseModel):
     residentId: str = Field(..., example="RS-0001")
@@ -248,6 +318,23 @@ async def request_cleaning_room(request: RequestCleaningRoomBody):
         raise HTTPException(status_code=400, detail=str(e))
     return result
 
+class CleanRoomBody(BaseModel):
+    cleanerId: str = Field(..., example="CL-0001")
+    roomId: str = Field(..., example="RM-0001")
+
+"""
+{
+  "cleanerId": "CL-0001",
+  "roomId": "RM-0001"
+}
+"""
+
+@cleaning_router.post("/clean")
+async def clean_room(request: CleanRoomBody):
+    try:
+        result = dorm.clean_room_workflow(request.cleanerId, request.roomId)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 # ==================== Facility Booking ====================
 
 class BookShareFacilityRequest(BaseModel):

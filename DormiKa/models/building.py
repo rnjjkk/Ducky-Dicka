@@ -23,6 +23,14 @@ class Building:
         self.__rooms.append(room)
         return self.__rooms
 
+    def find_and_hold_available_room_by_type(self, room_type):
+        from .enum import RoomStatus
+        for room in self.__rooms:
+            if room.type == room_type and room.status == RoomStatus.AVAILABLE:
+                room.hold(48)
+                return room
+        raise LookupError(f"No available room of type '{room_type.value}' in building {self.__id}")
+
     def __iter__(self):
         return iter(self.__rooms)
     

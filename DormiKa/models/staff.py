@@ -77,12 +77,19 @@ class Cleaner(Staff):
     @property
     def assigned_rooms(self):
         return self.__assigned_rooms
+    
+    def search_cleaning_ticket_by_room_id(self, room_id):
+        for ticket in self.__assigned_rooms:
+            if ticket.room_id == room_id and ticket.status != "Finished":
+                return ticket
+        raise ValueError(f"No active cleaning ticket found for room {room_id}")
 
-    def clean_room(self, room_id):
-        if room_id not in self.__assigned_rooms:
-            self.__assigned_rooms.append(room_id)
+    def clean_room(self, room):
+        if room not in self.__assigned_rooms:
+            self.__assigned_rooms.append(room)
         self.status = "WORKING"
-        return {"room": room_id, "status": "cleaning"}
+        room.status = "Cleaning"
+        return {"room": room, "status": "cleaning"}
 
 
 class Technician(Staff):
