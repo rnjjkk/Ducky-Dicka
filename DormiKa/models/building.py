@@ -33,7 +33,7 @@ class Building:
 
     def __iter__(self):
         return iter(self.__rooms)
-    
+
     def get_share_facility_by_id(self, facility_id):
         all_facilities = self.__washing_machines + self.__meeting_rooms
         for sf in all_facilities:
