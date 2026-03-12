@@ -1,6 +1,7 @@
 from .enum import *
 from .facility_booking import *
 from .invoice import *
+
 class ShareFacility:
     ID = 1
     def __init__(self):
@@ -8,6 +9,7 @@ class ShareFacility:
         self.__status = ShareFacilityStatus.AVAILABLE
         self.__facility_log = []
         ShareFacility.ID += 1
+
     # getter attribute ShareFacility
     @property
     def id(self):
@@ -24,13 +26,9 @@ class ShareFacility:
     def create_booking(self, resident_id, facility_id, building_id, booking_time):
         booking = BookingShareFacility(resident_id, facility_id, building_id, booking_time)
         return booking
-    
-    def create_booking(self, resident_id, facility_id, building_id, booking_time):
-        booking = BookingShareFacility(resident_id, facility_id, building_id, booking_time)
-        return booking
 
     def create_share_facility_invoice(self, resident_id, booking):
-        return Invoice(InvoiceType.SHARE_FACILITY, booking.id, self.cost, InvoiceStatus.UNPAID)
+        return Invoice(InvoiceType.SHARE_FACILITY, self.cost, InvoiceStatus.UNPAID, booking.id)
     
 class WashingMachine(ShareFacility):
     def __init__(self):
@@ -51,4 +49,3 @@ class MeetingRoom(ShareFacility):
     @property
     def cost(self):
         return self.__cost
-
