@@ -2,20 +2,25 @@ from fastmcp import FastMCP
 from pydantic import BaseModel, Field
 from typing import Optional
 
-from models.dorm import Dorm
-from models.employee import Employee
-from models.staff import Cleaner, Technician, PlumbingTech, ElectricalTech, ACTech
-from models.resident import Resident
-from models.room import Room
-from models.contract import Contract
-from models.building import Building
-from models.enum import (
-    RoomType, RoomStatus, ContractStatus, AccountStatus,
-    IssueCategory, InvoiceStatus,
-)
-from models.maintenance_ticket import MaintenanceTicket
-from models.facility_booking import BookingShareFacility
-from models.invoice import Invoice
+from models.dorm import *
+from models.enum import *
+from models.invoice import *
+from models.member import *
+from models.maintenance_ticket import *
+from models.payment import *
+from models.payment_gateway import *
+from models.receipt import *
+from models.room import *
+from models.building import *
+from models.room_booking import *
+from models.cleaning_ticket import *
+from models.facility_booking import *
+from models.share_facility import *
+from models.staff import *
+from models.contract import *
+from models.employee import *
+from models.resident import *
+
 
 # ==================== Mock Data ====================
 
@@ -86,8 +91,13 @@ def init_mock_data():
     BookingShareFacility.ID  = 1
 
     dorm = Dorm("Ducka")
+    
+    faci1 = WashingMachine()
+    faci2 = MeetingRoom()
 
     building = create_building_mock_data()
+    building.add_washing_machine(faci1)
+    building.add_meeting_room(faci2)
     dorm.add_building(building)
 
     residents = create_resident_mock_data(3)
@@ -226,6 +236,8 @@ class RequestBookingRequest(BaseModel):
 @mcp.tool()
 def request_booking(request: RequestBookingRequest) -> dict:
     """
+    !!ignore time closed for testing
+
     Request to book an available room for a resident.
     Holds the room for 48 hours and creates a DRAFT contract.
     Only works during business hours (08:00–17:00).
@@ -285,13 +297,15 @@ def complete_handover(request: HandoverRequest) -> dict:
     Use when:
     - The resident is physically moving in and receiving the room
     - Recording starting meter values for future billing
+    
+    assume electricity initial is 150.0 and water initial is 60.0
 
     Example prompt:
         "Complete handover for contract LC-0001 with electricity meter 100.0 and water meter 50.0."
         "Record room handover: contract LC-0002, electricity reading 250.5, water reading 80.0."
     """
     try:
-        result = dorm.complete_handover(request.contractId, request.meterElect, request.meterWater)
+        result = dorm.complete_handover(request.contractId)
     except (LookupError, KeyError, ValueError) as e:
         return {"error": str(e)}
     return result
@@ -478,6 +492,7 @@ def request_cleaning(request: RequestCleaningRequest) -> dict:
 
 class StartCleaningRequest(BaseModel):
     cleanerId: str = Field(..., description="Cleaner ID, e.g. CL-0001")
+    roomId:   Optional[str] = Field(None, description="Room ID to clean, e.g. RM-0001 (optional if cleaner is already assigned a ticket)")
 
 @mcp.tool()
 def start_cleaning(request: StartCleaningRequest) -> dict:
@@ -494,7 +509,7 @@ def start_cleaning(request: StartCleaningRequest) -> dict:
         "CL-0002 begins cleaning now."
     """
     try:
-        result = dorm.clean_room_workflow(request.cleanerId, None)
+        result = dorm.clean_room_workflow(request.cleanerId, room_id=request.roomId)
     except Exception as e:
         return {"error": str(e)}
     return result
