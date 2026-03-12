@@ -6,33 +6,43 @@ sequenceDiagram
     participant R as Resident
     participant I as Invoice
 
-    User ->>+ D: add_strike(employee_ID_input)
+    User ->> D: add_strike(employee_id)
 
-    %% 1. ตรวจสอบ Employee
-    D ->>+ E: search_employee_by_id(employee_ID_input)
-    E -->>- D: return employee instance
-
-    opt not found employee
-        D -->> User: raise PermissionError
+    D ->> D: search_employee_by_id(employee_id)
+    loop for employee in employee_list
+        D ->> E: getEmployeeID(employee_id)
+        E -->> D: return employee_id
+        alt found employee
+            E -->> D: return employee instance
+        else not found employee
+            E -->> D: loop find until found employee
+        end 
     end
 
-    %% 2. วนทุก Resident
-    loop for resident in residents
-        D ->> D: max_strike = 0
+    opt not found employee
+        D -->> User: return not found employee
+    end
 
-        %% 3. วนทุก Invoice ของ Resident
-        loop for invoice in resident.invoices
-            D ->>+ I: check invoice.status
-            I -->>- D: return status
+    Note over D:current_date = today's date
+    Note over D:residents_to_blacklist_list = []
+
+
+    loop for resident in resident_list
+        Note over D: max_strike = 0
+
+        loop for invoice in resident.invoice_list
+            D ->> I: get_invoice_status()
+            I -->> D: return status
 
             opt status == PAID
                 D ->> D: continue
             end
 
-            D ->>+ I: get date_create
-            I -->>- D: return date_create
+            D ->> I: get_date_create()
+            I -->> D: return date_create
 
-            D ->> D: calculate months_old
+            D ->> D: calculate_months_old(date_create, current_date)
+            Note over D: months_old = (current_date - date_create)//30 find the difference time
 
             alt months_old >= 3
                 D ->> D: strike = 3
@@ -49,23 +59,23 @@ sequenceDiagram
             end
         end
 
-        %% 4. add strike ให้ resident
         opt max_strike > 0
-            D ->>+ R: add_strike(max_strike)
-            R ->> R: update strike
-            R -->>- D: done
+            D ->> R: add_strike(max_strike)
+            R ->> R: update_strike
+            R -->> D: done
         end
 
-        %% 5. เช็ค blacklist
+        D ->> R: get_strike()
+        R -->> D: return strike
+
         opt resident.strike >= 3
-            D ->> D: add to residents_to_blacklist
+            D ->> D: add_resident_to_residents_to_blacklist_list(resident)
         end
     end
 
-    %% 6. ย้าย resident ไป blacklist
-    loop for resident in residents_to_blacklist
-        D ->> D: remove from residents
-        D ->> D: add to blacklist
+    loop for resident in residents_to_blacklist_list
+        D ->> D: remove_from_residents(resident)
+        D ->> D: add_to_blacklist(resident)
     end
 
-    D -->>- User: return add_strike success
+    D -->> User: return add_strike success
