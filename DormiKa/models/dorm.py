@@ -17,6 +17,14 @@ class Dorm:
         self.__cleaner: list = []
         self.__blacklist: list = []
 
+    @property
+    def residents(self):
+        return self.__residents
+
+    @property
+    def buildings(self):
+        return self.__buildings
+
     def show_success(self, success):
         print(success)
         return success

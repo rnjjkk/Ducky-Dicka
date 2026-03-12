@@ -10,7 +10,6 @@ class Room:
         building: object,
         floor: int,
         room_type: RoomType = RoomType.STANDARD_ROOM,
-        basic_amenities: list | None = None,
         status: RoomStatus = RoomStatus.AVAILABLE,
         rental: int = RoomPrice.STANDARD_ROOM,
     ):
@@ -18,7 +17,6 @@ class Room:
         self.__building = building
         self.__floor = floor
         self.__type = room_type
-        self.__basic_amenities = basic_amenities or []
         self.__status = RoomStatus.AVAILABLE
         self.__room_log: list = []
         self.__maintenance_tickets: list = []
