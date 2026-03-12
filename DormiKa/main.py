@@ -12,6 +12,12 @@ from models.room import *
 from models.contract import *
 from models.building import *
 from models.enum import *
+from models.maintenance_ticket import *
+from models.cleaning_ticket import *
+from models.invoice import *
+from models.payment import *
+from models.receipt import *
+from models.share_facility import *
 
 # ==================== Mock Data ====================
 
