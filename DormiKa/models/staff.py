@@ -173,10 +173,7 @@ class Technician(Staff):
     def assign_ticket(self, ticket):
         self.status = AvailabilityStatus.UNAVAILABLE
         self._current_task = ticket
-
-        ticket.update_maintenance_status("FINISH")
-        self.status = AvailabilityStatus.AVAILABLE
-        return "done"
+        return "assigned"
 
 
 class ElectricalTech(Technician):
@@ -237,4 +234,4 @@ class ACTech(Technician):
 
     def complete_task(self):
         self.__gas_level_refrigerant = max(0.0, self.__gas_level_refrigerant - 10.0)
-        return super().finish_maintenance()
+        return super().complete_task()
