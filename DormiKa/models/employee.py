@@ -77,4 +77,3 @@ class Employee:
         resident.set_member(member)
         price = MemberPrice[member_type.name].value
         return Invoice(InvoiceType.MEMBER, price, InvoiceStatus.UNPAID)
-        

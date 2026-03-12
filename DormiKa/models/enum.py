@@ -87,7 +87,7 @@ class ShareFacilityStatus(Enum):
     DISABLED = "DISABLED"
 
 class BookingShareFacilityStatus(Enum):
-    BOOK = "BOOKED"
+    BOOKED = "BOOKED"
     IN_USE = "IN_USE"
     COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"

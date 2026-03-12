@@ -18,6 +18,22 @@ class Building:
     @property
     def rooms(self):
         return self.__rooms
+    
+    @property
+    def washing_machines(self):
+        return self.__washing_machines
+    
+    @washing_machines.setter
+    def washing_machines(self, new_washing_machines):
+        self.__washing_machines.append(new_washing_machines)
+
+    @property
+    def meeting_rooms(self):
+        return self.__meeting_rooms
+    
+    @meeting_rooms.setter
+    def meeting_rooms(self, new_meeting_room):
+        self.__meeting_rooms.append(new_meeting_room)
 
     def add_room(self, room):
         self.__rooms.append(room)
@@ -45,4 +61,3 @@ class Building:
 
     def add_meeting_room(self, mr):
         self.__meeting_rooms.append(mr)
-

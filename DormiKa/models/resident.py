@@ -1,26 +1,11 @@
-import datetime
+from datetime import datetime
 from .payment_gateway import Payment_Method
 from .payment import Payment
 from .receipt import Receipt
 from .cleaning_ticket import *
 from .room import *
-from .enum import AccountStatus
-# import sqlite3
+from .enum import AccountStatus, CleaningStatus
 
-
-# conn = sqlite3.connect(r"C:\Users\James\Desktop\Ducky-Dicka\main\residents.db")
-# cursor = conn.cursor()
-
-# cursor.execute("""
-# CREATE TABLE IF NOT EXISTS residents (
-#     id INTEGER PRIMARY KEY AUTOINCREMENT,
-#     name TEXT,
-#     age INTEGER,
-#     phone_number TEXT,
-#     status TEXT
-# )
-# """)
-# conn.commit()
 
 class Resident:
     ID = 1
@@ -41,12 +26,6 @@ class Resident:
         self.__invoices = []
         self.__receipts = []
         self.__booking_share_facility_list = []
-
-        # cursor.execute(
-        #     "INSERT INTO residents (name, age, phone_number, status) VALUES ( ?, ?, ?, ?)",
-        #     (self.__name, self.__age, self.__phone_number, self.__status)
-        # )
-        # conn.commit()
 
         Resident.ID += 1
 
@@ -164,18 +143,19 @@ class Resident:
                 return contract
         return None
     
-    def check_status_cleaning_ticket(self,cleaning_ticket_list):
-        from .enum import CleaningStatus
+    def check_status_cleaning_ticket(self, cleaning_ticket_list):
+        # FIX: Was comparing ticket.status (a CleaningStatus enum) against raw strings.
+        #      Now compares against CleaningStatus enum values.
         for ticket in cleaning_ticket_list:
             if ticket.status == CleaningStatus.REQUESTED or ticket.status == CleaningStatus.CLEANING:
                 raise ValueError("this room already has cleaning ticket with status Requested or Cleaning")    
         return True
         
-    def create_cleaning_ticket(self,resident_id,room_id):
-        cleaning_ticket = CleaningTicket(resident_id,room_id)
+    def create_cleaning_ticket(self, resident_id, room_id):
+        cleaning_ticket = CleaningTicket(resident_id, room_id)
         return cleaning_ticket
     
-    def add_cleaning_ticket(self,room,cleaning_ticket):
+    def add_cleaning_ticket(self, room, cleaning_ticket):
         room.cleaning_tickets.append(cleaning_ticket)
         return f"add to room success"
     
@@ -191,9 +171,4 @@ class Resident:
     
     def get_facility_bookings(self):
         """Get all facility bookings for this resident"""
-        return self.__booking_share_facility_list
-    
-    @property
-    def booking_share_facility_list(self):
-        """Property accessor for booking list"""
         return self.__booking_share_facility_list

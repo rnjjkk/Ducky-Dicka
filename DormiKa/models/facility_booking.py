@@ -1,4 +1,5 @@
 from .enum import *
+
 class BookingShareFacility:
     ID = 1
     def __init__(self, resident_id, facility_id, building_id, booking_time):

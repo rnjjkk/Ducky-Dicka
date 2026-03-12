@@ -1,10 +1,9 @@
 from datetime import datetime
-from enum import Enum
-from .staff import *
 from .enum import CleaningStatus
+
 class CleaningTicket:
     ID = 1
-    def __init__(self,resident_id,room_id):
+    def __init__(self, resident_id, room_id):
         self.__ticket_id = f"CLTICKET-{CleaningTicket.ID:04d}"
         self.__resident_id = resident_id
         self.__room_id = room_id
@@ -14,7 +13,6 @@ class CleaningTicket:
         
         CleaningTicket.ID += 1
 
-    # getter artibute CleaningTicket
     @property
     def id(self):
         return self.__ticket_id

@@ -62,4 +62,3 @@ class Card(Payment_Method):
         if not (cvv.isdigit() and len(cvv) == 3):
             raise ValueError("Format payment data : invalid")
         return True
-

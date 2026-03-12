@@ -78,4 +78,4 @@ class Contract:
         old_room_cost = (self.__room.monthly_rent / days_in_month) * days_left
         cost_diff = new_room_cost - old_room_cost
 
-        return Invoice(InvoiceType.CONTRACT, self.__room.id, round(cost_diff, 2), InvoiceStatus.UNPAID)
+        return Invoice(InvoiceType.CONTRACT, round(cost_diff, 2), InvoiceStatus.UNPAID, self.__room.id)
