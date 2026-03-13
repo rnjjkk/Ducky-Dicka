@@ -18,7 +18,7 @@ class Dorm:
         self.__residents: list = []
         self.__employees: list = []
         self.__technicians: list = []
-        self.__cleaner: list = []
+        self.__cleaners: list = []
         self.__blacklist: list = []
 
     @property
@@ -26,12 +26,24 @@ class Dorm:
         return self.__name
 
     @property
+    def buildings(self):
+        return self.__buildings
+
+    @property
     def residents(self):
         return self.__residents
 
     @property
-    def buildings(self):
-        return self.__buildings
+    def employees(self):
+        return self.__employees
+
+    @property
+    def technicians(self):
+        return self.__technicians
+
+    @property
+    def cleaners(self):
+        return self.__cleaners
 
     def show_success(self, success):
         pprint(success)
@@ -54,7 +66,7 @@ class Dorm:
         self.__technicians.append(technician)
 
     def add_cleaner(self, cleaner):
-        self.__cleaner.append(cleaner)
+        self.__cleaners.append(cleaner)
 
     def add_building(self, building):
         self.__buildings.append(building)
@@ -97,7 +109,7 @@ class Dorm:
         raise ValueError(f"Technician '{technician_id}' not found")
 
     def search_cleaner_by_id(self, cleaner_id):
-        for cleaner in self.__cleaner:
+        for cleaner in self.__cleaners:
             if cleaner.id == cleaner_id:
                 return cleaner
         raise ValueError(f"Cleaner '{cleaner_id}' not found")
@@ -246,8 +258,8 @@ class Dorm:
             raise PermissionError("Account is closed")
 
         # 3. check business hours
-        if not (8 <= datetime.datetime.now().hour <= 17):
-            raise ValueError("Outside business hours (08:00–17:00)")
+        # if not (8 <= datetime.datetime.now().hour <= 17):
+        #     raise ValueError("Outside business hours (08:00–17:00)")
 
         # 3. find building and hold an available room
         building = self.search_building_by_id(building_id)
@@ -455,7 +467,7 @@ class Dorm:
     def complete_task_workflow(self, staff_id):
         # search cleaners first, then technicians
         staff = None
-        for c in self.__cleaner:
+        for c in self.__cleaners:
             if c.id == staff_id:
                 staff = c
                 break
@@ -511,7 +523,9 @@ class Dorm:
                 monthly_rent = contract.room.monthly_rent
                 room_id = contract.room.id
                 invoice = employee.create_contract_invoice(
-                    monthly_rent, room_id)
+                    monthly_rent,
+                    room_id,
+                )
                 resident.add_invoice(invoice)
         res = {"system_contract_invoice": "success"}
         return self.show_success(res)
