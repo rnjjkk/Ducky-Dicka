@@ -127,14 +127,20 @@ res = dorm.request_booking(
 )
 pprint(res)
 
+print("\n=== Sign Contract ===")
 res = dorm.sign_contract(
     "LC-0002"
 )
 pprint(res)
-pprint(dorm.search_resident_by_id("RS-0001").invoices[0])
-pprint(dorm.search_resident_by_id("RS-0001").contracts[0].invoice_id)
 
+print("\n=== Pay Contract Invoice ===")
 res = dorm.pay_contract_invoice(
     "INV-0002",
+)
+pprint(res)
+
+print("\n=== Complete Hand Over ===")
+res = dorm.complete_handover(
+    "LC-0002"
 )
 pprint(res)
