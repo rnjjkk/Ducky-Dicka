@@ -1,6 +1,7 @@
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field
 from typing import Optional
+import tester as tester_data
 
 from models.dorm import *
 from models.enum import *
@@ -22,99 +23,13 @@ from models.employee import *
 from models.resident import *
 
 
-# ==================== Mock Data ====================
-
-def create_resident_mock_data(count: int = 3):
-    names  = ["Kenny", "John",  "Alice",  "Mary",  "Bob"]
-    emails = ["kenny", "john",  "alice",  "mary",  "bob"]
-    residents = []
-    for i in range(min(count, len(names))):
-        resident = Resident(
-            name=names[i],
-            email=f"{emails[i]}@example.com",
-            phone_number=f"080000000{i}",
-        )
-        residents.append(resident)
-    return residents
-
-def create_technician_mock_data():
-    return [
-        PlumbingTech(name="Tech A", phone_number="0800000001", water_meter_tool="WM-001"),
-        ElectricalTech(name="Tech B", phone_number="0800000002", certification_no="CERT-ELEC-001"),
-        ACTech(name="Tech C", phone_number="0800000003", gas_level_refrigerant=100.0),
-    ]
-
-def create_employee_mock_data():
-    return [Employee(name) for name in ["Alice", "Bob", "Charlie", "Diana", "Eve"]]
-
-def create_cleaner_mock_data():
-    return [
-        Cleaner(name="Cleaner A", phone_number="0900000001"),
-        Cleaner(name="Cleaner B", phone_number="0900000002"),
-    ]
-
-def create_room_mock_data(building):
-    return [
-        Room(building=building, floor=1, room_type=RoomType.STUDIO_ROOM,   status=RoomStatus.AVAILABLE, rental=6500),
-        Room(building=building, floor=2, room_type=RoomType.STANDARD_ROOM, status=RoomStatus.AVAILABLE, rental=8200),
-        Room(building=building, floor=3, room_type=RoomType.ONE_BED_ROOM,  status=RoomStatus.AVAILABLE, rental=10500),
-    ]
-
-def create_building_mock_data():
-    building = Building(floor_count=5, zone="A")
-    for room in create_room_mock_data(building):
-        building.add_room(room)
-    return building
-
-def create_contract_mock_data(resident, room, status: ContractStatus = ContractStatus.ACTIVE):
-    contract = Contract(resident, room, status=status)
-    room.status = RoomStatus.OCCUPIED
-    resident.add_contract(contract)
-    return contract
-
 # ==================== Global Dorm State ====================
 
 dorm: Dorm = None
 
 def init_mock_data():
     global dorm
-
-    Resident.ID              = 1
-    Technician.ID            = 1
-    Cleaner.ID               = 1
-    Employee.ID              = 1
-    Contract.ID              = 1
-    Building.ID              = 1
-    Room.ID                  = 1
-    MaintenanceTicket.ID     = 1
-    Invoice._running_number  = 1
-    BookingShareFacility.ID  = 1
-
-    dorm = Dorm("Ducka")
-    
-    faci1 = WashingMachine()
-    faci2 = MeetingRoom()
-
-    building = create_building_mock_data()
-    building.add_washing_machine(faci1)
-    building.add_meeting_room(faci2)
-    dorm.add_building(building)
-
-    residents = create_resident_mock_data(3)
-    for r in residents:
-        dorm.add_resident(r)
-
-    if residents and building.rooms:
-        create_contract_mock_data(residents[0], building.rooms[0])
-
-    for e in create_employee_mock_data():
-        dorm.add_operation_staff(e)
-
-    for c in create_cleaner_mock_data():
-        dorm.add_cleaner(c)
-
-    for t in create_technician_mock_data():
-        dorm.add_technician(t)
+    dorm = tester_data.init_mock_data()
 
 # ==================== FastMCP ====================
 
@@ -284,25 +199,20 @@ def sign_contract(request: SignContractRequest) -> dict:
 
 
 class HandoverRequest(BaseModel):
-    contractId: str   = Field(..., description="Contract ID, e.g. LC-0001")
-    meterElect: float = Field(..., description="Initial electricity meter reading, e.g. 100.0")
-    meterWater: float = Field(..., description="Initial water meter reading, e.g. 50.0")
+    contractId: str = Field(..., description="Contract ID, e.g. LC-0001")
 
 @mcp.tool()
 def complete_handover(request: HandoverRequest) -> dict:
     """
-    Record initial meter readings when handing over a room to a resident.
-    Sets the room status to OCCUPIED and logs the handover data.
+    Complete room handover for a contract.
+    Sets the room status to OCCUPIED.
 
     Use when:
     - The resident is physically moving in and receiving the room
-    - Recording starting meter values for future billing
-    
-    assume electricity initial is 150.0 and water initial is 60.0
 
     Example prompt:
-        "Complete handover for contract LC-0001 with electricity meter 100.0 and water meter 50.0."
-        "Record room handover: contract LC-0002, electricity reading 250.5, water reading 80.0."
+        "Complete handover for contract LC-0001."
+        "Mark handover complete for contract LC-0002."
     """
     try:
         result = dorm.complete_handover(request.contractId)
@@ -492,7 +402,7 @@ def request_cleaning(request: RequestCleaningRequest) -> dict:
 
 class StartCleaningRequest(BaseModel):
     cleanerId: str = Field(..., description="Cleaner ID, e.g. CL-0001")
-    roomId:   Optional[str] = Field(None, description="Room ID to clean, e.g. RM-0001 (optional if cleaner is already assigned a ticket)")
+    roomId: str = Field(..., description="Room ID to clean, e.g. RM-0001")
 
 @mcp.tool()
 def start_cleaning(request: StartCleaningRequest) -> dict:
