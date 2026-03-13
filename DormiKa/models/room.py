@@ -11,18 +11,16 @@ class Room:
         floor: int,
         room_type: RoomType = RoomType.STANDARD_ROOM,
         status: RoomStatus = RoomStatus.AVAILABLE,
-        rental: int = RoomPrice.STANDARD_ROOM,
     ):
         self.__room_id = f"RM-{Room.ID:04d}"
         self.__building = building
         self.__floor = floor
         self.__type = room_type
-        self.__status = RoomStatus.AVAILABLE
-        self.__room_log: list = []
-        self.__maintenance_tickets: list = []
+        self.__status = status
         self.__monthly_rent = self.define_monthly_rent(room_type)
+        self.__maintenance_tickets: list = []
         self.__cleaning_tickets: list = []
-        self.__hold_expiry = None  # used when a room is temporarily reserved/held
+        self.__hold_expiry = None
         
         Room.ID += 1
 
