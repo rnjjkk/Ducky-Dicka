@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from pydantic import BaseModel, Field
 from typing import Optional
+import tester as tester_data
 
 from models.dorm import *
 from models.employee import *
@@ -134,38 +135,7 @@ dorm = None
 
 def init_mock_data():
     global dorm
-
-    Resident.ID = 1
-    Technician.ID = 1
-    Cleaner.ID = 1
-    Employee.ID = 1
-    Contract.ID = 1
-    Building.ID = 1
-    Room.ID = 1
-    MaintenanceTicket.ID = 1
-    Invoice._running_number = 1
-    BookingShareFacility.ID = 1
-
-    dorm = Dorm("Ducka")
-
-    building = create_building_mock_data()
-    dorm.add_building(building)
-
-    residents = create_resident_mock_data(3)
-    for r in residents:
-        dorm.add_resident(r)
-
-    if residents and building.rooms:
-        create_contract_mock_data(residents[0], building.rooms[0])
-
-    for e in create_employee_mock_data():
-        dorm.add_operation_staff(e)
-
-    for c in create_cleaner_mock_data():
-        dorm.add_cleaner(c)
-
-    for t in create_technician_mock_data():
-        dorm.add_technician(t)
+    dorm = tester_data.init_mock_data()
 
 
 @asynccontextmanager
