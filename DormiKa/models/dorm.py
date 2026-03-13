@@ -273,8 +273,8 @@ class Dorm:
             "contract_id": contract.id,
             "resident_id": resident.id,
             "room_id": room.id,
-            "room_type": room.type.value,
             "room_status": room.status.value,
+            "room_type": room.type.value,
             "contract_status": contract.status.value,
         }
 
@@ -286,8 +286,11 @@ class Dorm:
         contract.validate_for_signing()
 
         # 3. create contract invoice from room price
-        invoice = Invoice(InvoiceType.CONTRACT, contract.room.id,
-                          contract.room.monthly_rent, InvoiceStatus.UNPAID)
+        invoice = Invoice(
+            InvoiceType.CONTRACT,
+            contract.room.id,
+            contract.room.monthly_rent, InvoiceStatus.UNPAID
+        )
         resident.add_invoice(invoice)
 
         # 4. link invoice to contract and advance status
@@ -340,10 +343,10 @@ class Dorm:
         room.status = RoomStatus.OCCUPIED
 
         return {
-            "contract_id":     contract.id,
-            "resident_id":     resident.id,
-            "room_id":         room.id,
-            "room_status":     room.status.value,
+            "contract_id": contract.id,
+            "resident_id": resident.id,
+            "room_id": room.id,
+            "room_status": room.status.value,
             "contract_status": contract.status.value,
         }
 
@@ -454,7 +457,7 @@ class Dorm:
             resident,
             self.__technicians,
             room,
-            issue_category
+            issue_category.upper()
         )
 
     def start_maintenance_workflow(self, technician_id, notes=None):
@@ -626,7 +629,6 @@ class Dorm:
         self.show_success(s)
         return s
 
-    # type member expect : STANDARD_MEMBER, PLUS, PLATINUM พิมพ์ใหญ่พิมเล็กได้ทั้งหมด
     def create_member(self, resident_id_input, type_member):
         resident = self.search_resident_by_id(resident_id_input)
         employee = self.search_available_employee()
@@ -634,7 +636,11 @@ class Dorm:
         resident.add_invoice(invoice)
         s = f"create_member: success, ID: {invoice.id}, amount: {invoice.amount}"
         self.show_success(s)
-        return s
+        return {
+            "response": "success",
+            "invoice_id": invoice.id,
+            "amount": invoice.amount,
+        }
 
     def add_strike(self, employee_ID_input):
         employee = self.search_employee_by_id(employee_ID_input)
