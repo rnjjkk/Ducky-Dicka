@@ -509,7 +509,7 @@ def start_cleaning(request: StartCleaningRequest) -> dict:
         "CL-0002 begins cleaning now."
     """
     try:
-        result = dorm.clean_room_workflow(request.cleanerId, room_id=request.roomId)
+        result = dorm.start_cleaning_workflow(request.cleanerId, room_id=request.roomId)
     except Exception as e:
         return {"error": str(e)}
     return result
@@ -517,6 +517,7 @@ def start_cleaning(request: StartCleaningRequest) -> dict:
 
 class FinishCleaningRequest(BaseModel):
     cleanerId: str = Field(..., description="Cleaner ID, e.g. CL-0001")
+    roomId: str = Field(..., description="Room ID to finish cleaning, e.g. RM-0001")
 
 @mcp.tool()
 def finish_cleaning(request: FinishCleaningRequest) -> dict:
@@ -533,7 +534,7 @@ def finish_cleaning(request: FinishCleaningRequest) -> dict:
         "CL-0002 is done — complete the task and issue the invoice."
     """
     try:
-        result = dorm.complete_task_workflow(request.cleanerId)
+        result = dorm.finish_cleaning_workflow(request.cleanerId, request.roomId)
     except Exception as e:
         return {"error": str(e)}
     return result
@@ -605,7 +606,7 @@ def select_payment(request: SelectPaymentRequest) -> dict:
         )
     except Exception as e:
         return {"error": str(e)}
-    return {"message": result}
+    return result
 
 
 class PayRequest(BaseModel):
@@ -666,7 +667,7 @@ def display_invoice(request: DisplayInvoiceRequest) -> dict:
         result = dorm.display_invoice(request.residentId)
     except Exception as e:
         return {"error": str(e)}
-    return {"message": result}
+    return result
 
 # ==================================================
 # RECEIPT
@@ -693,7 +694,7 @@ def display_receipt(request: DisplayReceiptRequest) -> dict:
         result = dorm.display_receipt(request.residentId)
     except Exception as e:
         return {"error": str(e)}
-    return {"message": result}
+    return result
 
 # ==================================================
 # FACILITY
