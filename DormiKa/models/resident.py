@@ -4,7 +4,7 @@ from .payment import Payment
 from .receipt import Receipt
 from .cleaning_ticket import *
 from .room import *
-from .enum import AccountStatus, CleaningStatus
+from .enum import AccountStatus, CleaningStatus, InvoiceStatus
 
 
 class Resident:
@@ -103,18 +103,31 @@ class Resident:
             raise ValueError("Invoice : format error")
         if len(list_invoice_id) != len(set(list_invoice_id)):
             raise ValueError("Invoice : format error")
-        count = 0
-        total_amount = 0
+
+        # Keep previously selected invoices so repeated calls can build a basket.
         list_selected_invoice = []
+        existing_ids = set()
+        if self.__payment is not None:
+            if type(self.__payment.payment_method) != type(payment_method):
+                raise ValueError("Payment method already selected; complete payment first")
+            list_selected_invoice.extend(self.__payment.invoice_list)
+            existing_ids = {invoice.id for invoice in self.__payment.invoice_list}
+
+        count = 0
         for invoice_id in list_invoice_id:
+            if invoice_id in existing_ids:
+                count += 1
+                continue
             for invoice in self.__invoices:
-                if invoice_id == invoice.id:
+                if invoice_id == invoice.id and invoice.status == InvoiceStatus.UNPAID:
                     count += 1
-                    total_amount += invoice.amount
                     list_selected_invoice.append(invoice)
+                    existing_ids.add(invoice.id)
                     break
         if count != len(list_invoice_id):
-            raise ValueError("Invoice : format error")
+            raise ValueError("Invoice : invalid id or already paid")
+
+        total_amount = sum(invoice.amount for invoice in list_selected_invoice)
         discount = 0
         if self.__member is not None:
             discount = self.__member.discount
