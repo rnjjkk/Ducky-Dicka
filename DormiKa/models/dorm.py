@@ -114,42 +114,6 @@ class Dorm:
                 return cleaner
         raise ValueError(f"Cleaner '{cleaner_id}' not found")
 
-    def clean_room_workflow(self, cleaner_id, room_id):
-        try:
-            from .enum import CleaningStatus
-            cleaner = self.search_cleaner_by_id(cleaner_id)
-            # search cleaning ticket by room id and check status
-            room = self.search_room_by_id(room_id)
-
-            # find the cleaning ticket for this room
-            ticket = None
-            for t in room.cleaning_tickets:
-                if t.room_id == room_id and t.status != CleaningStatus.FINISHED:
-                    ticket = t
-                    break
-
-            if ticket is None:
-                raise ValueError(
-                    f"No active cleaning ticket found for room {room_id}")
-
-            # Add room to assigned rooms
-            if room not in cleaner.assigned_rooms:
-                cleaner.assigned_rooms.append(room)
-
-            # Clean the room
-            cleaner.clean_room(room, ticket)
-            cleaner.finished_cleaning(room)
-
-            return {
-                "cleaner_id": cleaner.id,
-                "cleaner_name": cleaner.name,
-                "ticket_id": ticket.id,
-                "room_id": ticket.room_id,
-                "status": "Finished",
-            }
-        except ValueError as e:
-            return self.show_error({"error": str(e)})
-
     def start_cleaning_workflow(self, cleaner_id, room_id):
         try:
             from .enum import CleaningStatus
