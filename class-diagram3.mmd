@@ -38,6 +38,8 @@ classDiagram
         -str id
         -ShareFacilityStatus status
         -list facility_log
+        -float cost
+        +cost()
         +create_booking(resident_id, facility_id, building_id, time)
         +create_share_facility_invoice(resident_id, booking)
     }
@@ -81,11 +83,14 @@ classDiagram
     class Cleaner {
         -list cleaning_supplies_list
         -list assigned_rooms
-        +clean_room(room_id)
+        +search_cleaning_ticket_by_room_id(room_id)
+        +clean_room(room, ticket)
+        +finished_cleaning(room)
         +complete_task()
     }
     class Technician {
         -list capabilities
+        +show_all_mt(building_id)
         +assign_ticket(ticket)
         +start_maintenance(notes)
         +complete_task()
@@ -134,6 +139,28 @@ classDiagram
         -list cleaner
         -list blacklist
         +sign_in(name, email, phone)
+        +show_success(success)
+        +show_error(error)
+        +add_employee(employee)
+        +add_resident(resident)
+        +add_operation_staff(employee)
+        +add_technician(technician)
+        +add_cleaner(cleaner)
+        +add_building(building)
+        +search_employee_by_id(employee_id)
+        +search_resident_by_id(resident_id)
+        +search_room_by_id(room_id)
+        +search_room_by_contracts(resident, room_id)
+        +search_building_by_id(building_id)
+        +search_technician_by_id(technician_id)
+        +search_cleaner_by_id(cleaner_id)
+        +clean_room_workflow(cleaner_id, room_id)
+        +start_cleaning_workflow(cleaner_id, room_id)
+        +finish_cleaning_workflow(cleaner_id, room_id)
+        +search_contract_by_id(contract_id)
+        +search_invoice_by_id(invoice_id)
+        +search_resident_by_room_id(room_id)
+        +search_available_employee()
         +request_booking(resident_id, building_id, room_type)
         +sign_contract(contract_id)
         +pay_contract_invoice(invoice_id)
@@ -142,6 +169,7 @@ classDiagram
         +request_maintenance(resident_id, room_id, issue_category)
         +start_maintenance_workflow(technician_id, notes)
         +finish_maintenance_workflow(technician_id)
+        +complete_task_workflow(staff_id)
         +request_cleaning_room(resident_id, room_id)
         +booking_share_facility(...)
         +system_contract_invoice(employee_id)
@@ -159,24 +187,33 @@ classDiagram
         -list rooms
         -list washing_machines
         -list meeting_rooms
+        -list lockers
         +add_room(room)
+        +add_washing_machine(wm)
+        +add_meeting_room(mr)
         +find_and_hold_available_room_by_type(room_type)
         +get_share_facility_by_id(facility_id)
     }
 
     class Room {
         -str id
+        -Building building
         -int floor
         -RoomType type
         -RoomStatus status
         -float monthly_rent
         -list maintenance_tickets
         -list cleaning_tickets
+        -list room_log
+        -float electric_cost
+        -float water_cost
         -datetime hold_expiry
+        +define_monthly_rent(room_type)
         +add_maintenance_ticket(ticket)
+        +update_meter(elect, water)
+        +record_handover(elect, water)
         +hold(hours)
         +is_hold_expired()
-        +update_meter(elect, water)
     }
 
     class Resident {
@@ -188,28 +225,43 @@ classDiagram
         -int strike
         -Member member
         -Payment payment
+        -datetime date_create
+        -list room_bookings
         -list contracts
         -list invoices
         -list receipts
         -list booking_share_facility_list
         +add_contract(contract)
         +add_invoice(invoice)
+        +add_facility_booking(facility_booking)
+        +add_booking_share_facility(booking)
+        +get_facility_bookings()
         +set_member(member)
         +set_payment(method, invoice_ids)
         +payment(raw_payment)
+        +calculate_net_amount(amount, discount)
         +add_strike(amount)
         +reset_strike()
-        +create_cleaning_ticket(resident_id, room_id)
+        +search_contract_by_id(contractId)
         +check_status_cleaning_ticket(list)
+        +create_cleaning_ticket(resident_id, room_id)
+        +add_cleaning_ticket(room, cleaning_ticket)
     }
 
     class Contract {
         -str id
-        -ContractStatus status
-        -str invoice_id
         -datetime date_create
+        -Resident resident
+        -Room room
+        -str cancel_rent_condition
+        -datetime move_in_date
+        -ContractStatus status
+        -int rental_time
+        -float monthly_rent
+        -str invoice_id
         +room()
         +resident()
+        +invoice_id()
         +validate_for_signing()
         +validate_contract_status_for_handover()
         +calculate_upgrade_amount(target_cost, moveDate)
@@ -248,11 +300,15 @@ classDiagram
         -str reporter
         -str room_id
         -IssueCategory issue_category
+        -datetime report_time
+        -str responsible_technician
+        -str approve_employee
         -MaintenanceStatus status
         -datetime start_time
         -datetime end_time
         -float cost
         -str notes
+        +update_maintenance_status(status)
         +begin_work(notes)
         +finish_work(cost)
         +approve_maintenance(employee, status)
@@ -284,10 +340,18 @@ classDiagram
         -str name
         -AvailabilityStatus status
         -datetime date_create
-        +fid()
+        +id()
         +start_maintenance(reporter, technicians, room, category)
+        +find_available_technician(technicians)
+        +create_maintenance_ticket(reporter, room_id, issue_category, technician)
         +create_contract_invoice(monthly_rent, room_id)
         +asign_member(resident, type)
+    }
+
+    class RoomBooking {
+        -str id
+        -Room room
+        -str detail
     }
 
     %% ========== RELATIONSHIPS ==========
@@ -307,6 +371,7 @@ classDiagram
     Resident "1" *-- "0..*" Receipt                : has
     Resident "1" *-- "0..*" CleaningTicket         : requests
     Resident "1" *-- "0..*" BookingShareFacility   : books
+    Resident "1" *-- "0..*" RoomBooking            : has
     Resident "1" o-- "0..1" Member                 : subscribes
     Resident "1" o-- "0..1" Payment                : pending
 
