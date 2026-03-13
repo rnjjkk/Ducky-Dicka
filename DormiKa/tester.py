@@ -126,7 +126,8 @@ def print_all_data():
 
 def run_tests():
     print("\n=== System Contract Invoice ===")
-    dorm.system_contract_invoice("EM-0001")
+    res = dorm.system_contract_invoice("EM-0001")
+    pprint(res)
 
     print("\n=== Sign Contract ===")
     dorm.sign_in(
@@ -137,9 +138,9 @@ def run_tests():
 
     print("\n=== Request Booking ===")
     res = dorm.request_booking(
-        "RS-0001",
+        "RS-0002",
         "A01",
-        RoomType.STUDIO_ROOM,
+        RoomType.STANDARD_ROOM,
     )
     pprint(res)
 
