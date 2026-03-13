@@ -1,0 +1,77 @@
+sequenceDiagram
+actor User
+participant Dorm
+participant Resident
+participant Payment
+participant BankAccount
+participant Invoice
+participant Receipt
+
+User->>Dorm: Payment(input_resident_id, paymentdata)
+activate Dorm
+
+loop for resident in resident_list
+    Dorm->>Resident: getterID()
+    activate Resident
+    Resident-->>Dorm: return resident_id
+
+    alt input_resident_id == resident_id
+        Note over Dorm, Resident: พบ resident -> ได้ instance
+    else input_resident_id != resident_id
+        Note over Dorm, Resident: ยังไม่ใช่ -> วนต่อ
+    end
+    deactivate Resident
+end
+
+opt resident == None
+    Dorm-->>User: showLoginError()
+end
+
+    Dorm->>Resident: payment(paymentdata)
+    activate Resident
+
+    Resident->>Payment: getter : PaymentGateway
+    activate Payment
+    Payment-->>Resident: return BankAccount(instance)/ Card(instance) / None
+    deactivate Payment
+    Note over Resident: paymentMethod = BankAccount หรือ Card หรือ None
+
+opt  paymentMethod == None
+        Resident-->>Dorm: return getPaymentGatewayFail
+        Dorm-->>User: showSystemHasNoPayment()
+end
+
+    alt paymentMethod == BankAccount 
+        Resident->>BankAccount: override : checkFormat(paymentdata)
+        activate BankAccount
+        BankAccount-->>Resident: return formatSuccess / formatFail
+        deactivate BankAccount
+
+        opt format == error
+            Resident-->>Dorm: return formatFail
+            Dorm-->>User: showFormatPaymentdataFail()
+        end
+
+
+            loop for invoice in invoice_list from Payment
+                Resident->>Invoice: setInvoiceStatus(Paid)
+                activate Invoice
+                Invoice-->>Resident: done
+                deactivate Invoice
+                Note over Resident : ลบ Invoice นั้นออกจาก invoice_list ของ Resident
+            end
+
+            Resident->>Receipt: createReceipt(Payment)
+            activate Receipt
+            Receipt-->>Resident: return receipt
+            deactivate Receipt
+
+            Resident-->>Dorm: return receipt
+            Dorm-->>User: showPaymentSuccess(receipt)
+
+
+    end
+
+    deactivate Resident
+
+deactivate Dorm
