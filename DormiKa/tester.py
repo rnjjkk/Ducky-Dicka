@@ -104,43 +104,67 @@ def init_mock_data():
         print(f"Added Technician: {t.name}".ljust(25), end="")
         print(f"{t.id}")
 
+def print_all_data():
+    print("\n=== All Residents ===")
+    for resident in dorm.residents:
+        print(f"{resident.id}: {resident.name}")
+        if (resident.contracts):
+            for contract in resident.contracts:
+                print(f"  - Contract ID: {contract.id}, Room: {contract.room.id}, Status: {contract.status.value}")
+
+    print("\n=== All Employees ===")
+    for employee in dorm.employees:
+        print(f"{employee.id}: {employee.name}")
+
+    print("\n=== All Cleaners ===")
+    for cleaner in dorm.cleaners:
+        print(f"{cleaner.id}: {cleaner.name} - {cleaner.phone_number}")
+
+    print("\n=== All Technicians ===")
+    for tech in dorm.technicians:
+        print(f"{tech.id}: {tech.name} - {tech.phone_number} - Capabilities: {', '.join(tech.capabilities)}")
+
+def run_tests():
+    print("\n=== System Contract Invoice ===")
+    dorm.system_contract_invoice("EM-0001")
+
+    print("\n=== Sign Contract ===")
+    dorm.sign_in(
+        "Fill",
+        "fill@gmail.com",
+        "123-456-7890"
+    )
+
+    print("\n=== Request Booking ===")
+    res = dorm.request_booking(
+        "RS-0001",
+        "A01",
+        RoomType.STUDIO_ROOM,
+    )
+    pprint(res)
+
+    print("\n=== Sign Contract ===")
+    res = dorm.sign_contract(
+        "LC-0002"
+    )
+    pprint(res)
+
+    print("\n=== Pay Contract Invoice ===")
+    res = dorm.pay_contract_invoice(
+        "INV-0002",
+    )
+    pprint(res)
+
+    print("\n=== Complete Hand Over ===")
+    res = dorm.complete_handover(
+        "LC-0002"
+    )
+    pprint(res)
 
 """======================================="""
 
 init_mock_data()
 
-print("\n=== System Contract Invoice ===")
-dorm.system_contract_invoice("EM-0001")
+run_tests()
 
-print("\n=== Sign Contract ===")
-dorm.sign_in(
-    "Fill",
-    "fill@gmail.com",
-    "123-456-7890"
-)
-
-print("\n=== Request Booking ===")
-res = dorm.request_booking(
-    "RS-0001",
-    "A01",
-    RoomType.STUDIO_ROOM,
-)
-pprint(res)
-
-print("\n=== Sign Contract ===")
-res = dorm.sign_contract(
-    "LC-0002"
-)
-pprint(res)
-
-print("\n=== Pay Contract Invoice ===")
-res = dorm.pay_contract_invoice(
-    "INV-0002",
-)
-pprint(res)
-
-print("\n=== Complete Hand Over ===")
-res = dorm.complete_handover(
-    "LC-0002"
-)
-pprint(res)
+print_all_data()
