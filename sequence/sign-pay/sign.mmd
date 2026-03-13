@@ -1,50 +1,43 @@
+---
+config:
+  theme: neo-dark
+---
 sequenceDiagram
-autonumber
+    autonumber
+    participant R as Resident
+    participant API as FastAPI
+    participant D as DormSystem
+    participant C as Contract
 
-participant R as Resident
-participant API as FastAPI
-participant D as DormSystem
-participant C as LeaseContract
-participant I as Invoice
 
-R->>API: POST /sign_contract\n(contract_id)
-activate API
+    Note over R,API: API Sign Contract
 
-API->>D: sign_contract(contract_id)
-activate D
+    R->>+API: POST /sign_contract(contract_id)
+    API->>+D: sign_contract(contract_id)
 
-D->>D: get_contract_by_id()
+    D->>D: get_contract_by_id(contract_id)
+    alt contract not found
+        D-->>API: raise LookupError
+        API-->>R: HTTP 400
+    else contract found
 
-alt contract not found
-    D-->>API: LookupError
-    API-->>R: 400 error
-else contract found
+        D->>+C: validate_for_signing()
+        alt status != DRAFT
+            C-->>D: raise ValueError
+            D-->>API: raise ValueError
+            API-->>R: HTTP 400
+        else status == DRAFT
+            C-->>-D: pass
+        end
 
-    D->>C: validate_for_signing()
-    activate C
+        D->>+C: get_amount()
+        C-->>-D: room.price
 
-    alt status != DRAFT
-        C-->>D: ValueError
-        D-->>API: error
-        API-->>R: cannot sign
-    else status valid
-        C-->>D: validation OK
+        D->>D: Invoice(amount, InvoiceType.CONTRACT)
+
+        D->>C: contract.invoice_id = invoice.invoice_id
+        D->>C: contract.status = PENDING_SIGN
+
+        D-->>-API: invoiceObj
+        API-->>-R: invoice_id, amount, invoice_type
     end
-
-    deactivate C
-
-    D->>C: get_amount()
-    C-->>D: room.price
-
-    D->>I: create_invoice(amount, CONTRACT)
-    activate I
-    I-->>D: invoiceObj
-    deactivate I
-
-    D->>C: set status = PENDING_SIGN
-
-    D-->>API: invoiceObj
-end
-
-API-->>R: invoice_id, amount, invoice_type
-deactivate API
