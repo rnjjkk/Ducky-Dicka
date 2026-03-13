@@ -142,7 +142,6 @@ class Technician(Staff):
         return self.__schedule
 
     def show_all_mt(self, building_id):
-        # Placeholder: return maintenance tasks for a building
         return []
 
     def start_maintenance(self, notes: str = None):
@@ -162,7 +161,6 @@ class Technician(Staff):
 
         return {
             "technician_id": self.id,
-            "technician_name": self.name,
             "ticket_id": ticket.id,
             "room_id": ticket.room_id,
             "issue_category": ticket.issue_category,
