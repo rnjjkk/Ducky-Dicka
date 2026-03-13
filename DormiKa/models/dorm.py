@@ -18,6 +18,10 @@ class Dorm:
         self.__blacklist: list = []
 
     @property
+    def name(self):
+        return self.__name
+
+    @property
     def residents(self):
         return self.__residents
 
