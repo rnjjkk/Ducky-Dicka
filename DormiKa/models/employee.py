@@ -34,9 +34,9 @@ class Employee:
         technician = self.find_available_technician(technicians)
 
         ticket = self.create_maintenance_ticket(
-            reporter, 
-            room.id, 
-            issue_category, 
+            reporter,
+            room.id,
+            issue_category,
             technician.id)
         technician.assign_ticket(ticket)
         room.add_maintenance_ticket(ticket)
@@ -90,4 +90,8 @@ class Employee:
                 raise ValueError("type_member : format error")
         resident.set_member(member)
         price = MemberPrice[member_type.name].value
-        return Invoice(InvoiceType.MEMBER, price, InvoiceStatus.UNPAID)
+        return Invoice(
+            InvoiceType.MEMBER,
+            price,
+            InvoiceStatus.UNPAID,
+        )
