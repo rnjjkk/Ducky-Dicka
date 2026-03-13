@@ -7,7 +7,7 @@ sequenceDiagram
     participant R as Resident
     participant API as FastAPI
     participant D as DormSystem
-    participant C as LeaseContract
+    participant C as Contract
     participant I as Invoice
 
     Note over R,API: API Pay Invoice
@@ -15,13 +15,11 @@ sequenceDiagram
     R->>+API: POST /pay(invoice_id)
     API->>+D: pay_invoice(invoice_id)
 
-    D->>+I: get_invoice_by_id(invoice_id)
+    D->>D: get_invoice_by_id(invoice_id)
     alt invoice not found
-        I-->>D: raise LookupError
         D-->>API: raise LookupError
         API-->>R: HTTP 400
     else invoice found
-        I-->>-D: invoiceObj
 
         D->>+I: validate_for_payment()
         alt status == PAID
@@ -30,19 +28,18 @@ sequenceDiagram
             API-->>R: HTTP 400
         else status == UNPAID
             I-->>-D: pass
+        end
 
-            D->>+C: get contract by invoice_id
-            alt contract not found
-                C-->>D: raise LookupError
-                D-->>API: raise LookupError
-                API-->>R: HTTP 400
-            else contract found
-                C-->>-D: contractObj
+        D->>D: find contract where c.invoice_id == invoice_id
+        alt contract not found
+            D-->>API: raise LookupError
+            API-->>R: HTTP 400
+        else contract found
 
-                D->>I: status = PAID
-                D->>C: status = ACTIVE
-                D-->>-API: contractObj
-                API-->>-R: contract_id, contract_status, message
-            end
+            D->>I: invoice.status = PAID
+            D->>C: contract.status = ACTIVE
+
+            D-->>-API: contractObj
+            API-->>-R: contract_id, contract_status
         end
     end
