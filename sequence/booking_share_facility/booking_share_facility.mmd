@@ -8,54 +8,76 @@ sequenceDiagram
     participant WM as Washing_Machine
     participant MR as Meeting_Room
     participant BSF as Booking_Share_Facility
+    participant E as Employee
     participant I as Invoice
+    
 
-    User ->>+ D: booking_share_facility(resident_id, share_facility_id, building_id, booking_time)
+    User ->> D: booking_share_facility(resident_id, share_facility_id, building_id, booking_time)
+
+    D ->> D: search_resident_by_id(resident_id)
 
     loop for rs in resident_list
-        D ->>+ R: getResidentID(resident_id)
-        R -->>- D: return resident instance
+        D ->> R: getResidentID(resident_id)
+        R -->> D: return resident
+        alt found resident
+            R -->> D: return resident instance
+        else not found resident
+            R -->> D: loop find until found resident
+        end
     end
 
     opt not found resident
         D -->> User: return not found resident
     end
 
+    D ->> D: search_building_by_id(building_id)
+    
     loop for building in building_list
-        D ->>+ B: getBuildingID(building_id)
-        B -->>- D: return building instance
+        D ->> B: getBuildingID(building_id)
+        B -->> D: return building
+        alt found building
+            B -->> D: return building instance
+        else not found building
+            B -->> D: loop find until found building
+        end
     end
 
     opt not found building
         D -->> User: return not found building
     end
 
+    D ->> B: getShareFacility_list(share_facility_id)
+    B -->> D: return share_facility_list
+
     loop for sf in building.share_facility_list
-        D ->>+ B: getShareFacilityID(share_facility_id)
-        B ->>+ SF: getShareFacilityID(share_facility_id)
-        SF -->>- B: return share_facility instance
-        B -->>- D: return share_facility instance
+        D ->> SF: getShareFacilityID()
+        SF -->> D: return share_facility_id
+        alt sf.id == share_facility_id
+            SF -->> D: return share_facility instance
+        else sf.id != share_facility_id
+            SF -->> D: return meeting_room instance
+        end
     end
 
     opt not found share_facility
         D -->> User: return not found share_facility
     end
 
-    alt share_facility == Washing_Machine
-        D ->>+ WM: getShareFacilityID(share_facility_id)
-        WM -->>- D: return washing_machine instance
-    else share_facility == Meeting_Room
-        D ->>+ MR: getShareFacilityID(share_facility_id)
-        MR -->>- D: return meeting_room instance
-    end
+    D ->> D: check overlap booking time(share_facility_id, booking_time)
 
     loop for resident in dorm.resident_list
-        D ->>+ R: getBookingShareFacilityList()
-        R -->>- D: return booking_share_facility_list
+        D ->> R: getBookingShareFacilityList()
+        R -->> D: return booking_share_facility_list
 
         loop for booking in booking_share_facility_list
-            D ->>+ BSF: checkBookingTime(share_facility_id, booking_time)
-            BSF -->>- D: return status
+            D ->> BSF: checkBookingTime(share_facility_id, booking_time)
+            BSF -->> D: return Booking_Share_Facility instance
+            D ->> BSF: getBookingTime()
+            BSF -->> D: return booking_time()
+
+            opt overlap found
+                BSF -->> D: This share facility already booking
+            end
         end
     end
 
@@ -64,27 +86,21 @@ sequenceDiagram
     end
 
     %% สร้าง Booking
-    D ->>+ SF: createBooking(resident_id, share_facility_id, building_id, booking_time)
-    SF ->>+ BSF: create_Booking_Share_Facility(resident_id, share_facility_id, building_id, booking_time)
-    BSF -->>- SF: return booking_share_facility instance
-    SF -->>- D: return booking_share_facility instance
-
-    D ->>+ R: addBookingShareFacility(booking_share_facility)
-    R ->> R: add to booking_share_facility_list
-    R -->>- D: done
+    D ->> R: createBooking(resident_id, share_facility_id, building_id, booking_time)
+    R ->> BSF: create_Booking_Share_Facility(resident_id, share_facility_id, building_id, booking_time)
+    BSF -->> R: return booking_share_facility instance
+    Note over R: add booking_share_facility to resident's booking_share_facility_list
+    R -->> D: return booking_share_facility instance
 
     %% สร้าง Invoice อัตโนมัติ (fix cost)
-    D ->>+ SF: createShareFacilityInvoice(resident_id, booking_share_facility)
-    SF ->>+ I: create_Invoice(resident_id, booking_share_facility, invoice_type=share_facility_invoice)
-    I ->> I: set InvoiceType = share_facility_invoice
-    I -->>- SF: return invoice instance
-    SF -->>- D: return invoice instance
+    D ->> E: createShareFacilityInvoice(resident_id, booking_share_facility)
+    E ->> I: createShareFacilityInvoice(resident_id, booking_share_facility)
+    I -->> E: return invoice instance
+    E -->> D: return invoice instance
 
     %% Add Invoice ไปที่ Resident
-    D ->>+ R: addInvoice(invoice)
-    R ->> R: add to invoice_list
-    R -->>- D: done
+    D ->> R: addInvoice(invoice)
+    Note over R: add invoice to resident's invoice_list
+    R -->> D: done
 
     D -->> User: return booking share facility success
-
-    deactivate D

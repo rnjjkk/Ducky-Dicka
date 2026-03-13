@@ -83,6 +83,24 @@ def create_building_mock_data():
     print(f"Created Building: {building.id}")
     for room in create_room_mock_data(building):
         building.add_room(room)
+    
+    # Add share facilities
+    from models.share_facility import MeetingRoom, WashingMachine
+    meeting_rooms = [
+        MeetingRoom(),
+        MeetingRoom(),
+    ]
+    washing_machines = [
+        WashingMachine(),
+        WashingMachine(),
+    ]
+    for mr in meeting_rooms:
+        building.add_meeting_room(mr)
+        print(f"Created Meeting Room: {mr.id}")
+    for wm in washing_machines:
+        building.add_washing_machine(wm)
+        print(f"Created Washing Machine: {wm.id}")
+    
     return building
 
 def create_contract_mock_data(resident, room, status: ContractStatus = ContractStatus.ACTIVE):
@@ -144,9 +162,9 @@ app = FastAPI(
 
 # ==================== Routers ====================
 
-system_router      = APIRouter(prefix="",             tags=["System"])
+system_router      = APIRouter(prefix="",           tags=["System"])
 resident_router    = APIRouter(prefix="/resident",    tags=["Resident"])
-contract_router    = APIRouter(prefix="/contract",    tags=["Contract"])
+contract_router    = APIRouter(prefix="/contract",  tags=["Contract"])
 maintenance_router = APIRouter(prefix="/maintenance", tags=["Maintenance"])
 cleaning_router    = APIRouter(prefix="/cleaning",    tags=["Cleaning"])
 member_router      = APIRouter(prefix="/member",      tags=["Member"])
@@ -368,11 +386,13 @@ async def request_cleaning(request: RequestCleaningBody):
 
 class CleanRoomBody(BaseModel):
     cleanerId: str = Field(..., example="CL-0001")
+    roomId: str = Field(..., example="RM-0001")
 
 @cleaning_router.post("/start")
 async def start_cleaning(request: CleanRoomBody):
     try:
-        result = dorm.start_cleaning_workflow(request.cleanerId)
+        # First assign the room to the cleaner, then start cleaning
+        result = dorm.start_cleaning_workflow(request.cleanerId, request.roomId)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result
@@ -380,12 +400,13 @@ async def start_cleaning(request: CleanRoomBody):
 
 class FinishCleaningBody(BaseModel):
     cleanerId: str = Field(..., example="CL-0001")
+    roomId: str = Field(..., example="RM-0001")
 
 @cleaning_router.post("/finish")
 async def finish_cleaning(request: FinishCleaningBody):
     """Cleaner finishes the job — generates a cleaning invoice for the resident."""
     try:
-        result = dorm.finish_cleaning_workflow(request.cleanerId)
+        result = dorm.finish_cleaning_workflow(request.cleanerId, request.roomId)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result
@@ -486,14 +507,13 @@ class BookShareFacilityBody(BaseModel):
 
 @facility_router.post("/book")
 async def book_share_facility(request: BookShareFacilityBody):
-    """Book a shared facility (meeting room, washing machine, etc.)."""
+    """Book a shared facility (meeting room, washing machine, etc.). Creates an invoice automatically."""
     try:
         result = dorm.booking_share_facility(
             request.residentId,
-            request.buildingId,
             request.facilityId,
+            request.buildingId,
             request.bookingTime,
-            request.facilityName,
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

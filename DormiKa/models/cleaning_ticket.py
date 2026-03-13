@@ -32,3 +32,8 @@ class CleaningTicket:
     @property
     def status(self):
         return self.__status
+    
+    @status.setter
+    def status(self, new_status: CleaningStatus):
+        self.__status = new_status
+
