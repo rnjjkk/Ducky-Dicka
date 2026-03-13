@@ -1,3 +1,5 @@
+from encodings.punycode import digits
+
 from .enum import *
 from .contract import *
 from .room import *
@@ -6,6 +8,8 @@ from .facility_booking import *
 from .invoice import Invoice
 import re
 import datetime
+from pprint import pprint
+
 
 class Dorm:
     def __init__(self, name: str):
@@ -30,11 +34,11 @@ class Dorm:
         return self.__buildings
 
     def show_success(self, success):
-        print(success)
+        pprint(success)
         return success
 
     def show_error(self, error):
-        print(error)
+        pprint(error)
         return error
 
     def add_employee(self, employee):
@@ -56,11 +60,11 @@ class Dorm:
         self.__buildings.append(building)
 
     def search_employee_by_id(self, employee_id):
-        for employee in self.__employees :
+        for employee in self.__employees:
             if employee.id == employee_id:
                 return employee
         raise PermissionError("Employee id : not found")
-    
+
     def search_resident_by_id(self, resident_id):
         for resident in self.__residents:
             if resident.id == resident_id:
@@ -73,8 +77,8 @@ class Dorm:
                 if room.id == room_id:
                     return room
         raise PermissionError("Room id : not found")
-    
-    def search_room_by_contracts(self,resident,room_id):
+
+    def search_room_by_contracts(self, resident, room_id):
         for contract in resident.contracts:
             if contract.room.id == room_id:
                 return contract.room
@@ -85,7 +89,7 @@ class Dorm:
             if building.id == building_id:
                 return building
         raise PermissionError("Building id : not found")
-    
+
     def search_technician_by_id(self, technician_id):
         for technician in self.__technicians:
             if technician.id == technician_id:
@@ -104,25 +108,26 @@ class Dorm:
             cleaner = self.search_cleaner_by_id(cleaner_id)
             # search cleaning ticket by room id and check status
             room = self.search_room_by_id(room_id)
-            
+
             # find the cleaning ticket for this room
             ticket = None
             for t in room.cleaning_tickets:
                 if t.room_id == room_id and t.status != CleaningStatus.FINISHED:
                     ticket = t
                     break
-            
+
             if ticket is None:
-                raise ValueError(f"No active cleaning ticket found for room {room_id}")
-            
+                raise ValueError(
+                    f"No active cleaning ticket found for room {room_id}")
+
             # Add room to assigned rooms
             if room not in cleaner.assigned_rooms:
                 cleaner.assigned_rooms.append(room)
-            
+
             # Clean the room
             cleaner.clean_room(room, ticket)
             cleaner.finished_cleaning(room)
-            
+
             return {
                 "cleaner_id": cleaner.id,
                 "cleaner_name": cleaner.name,
@@ -139,25 +144,26 @@ class Dorm:
             from .enum import CleaningStatus
             cleaner = self.search_cleaner_by_id(cleaner_id)
             room = self.search_room_by_id(room_id)
-            
+
             # Add room to assigned rooms if not already there
             if room not in cleaner.assigned_rooms:
                 cleaner.assigned_rooms.append(room)
-            
+
             # Find the cleaning ticket for this room
             ticket = None
             for t in room.cleaning_tickets:
                 if t.room_id == room_id and t.status != CleaningStatus.FINISHED:
                     ticket = t
                     break
-            
+
             if ticket is None:
-                raise ValueError(f"No active cleaning ticket found for room {room_id}")
-            
+                raise ValueError(
+                    f"No active cleaning ticket found for room {room_id}")
+
             # Update status to CLEANING
             ticket.status = CleaningStatus.CLEANING
             cleaner.status = "WORKING"
-            
+
             return {
                 "cleaner_id": cleaner.id,
                 "cleaner_name": cleaner.name,
@@ -174,23 +180,24 @@ class Dorm:
             from .enum import CleaningStatus
             cleaner = self.search_cleaner_by_id(cleaner_id)
             room = self.search_room_by_id(room_id)
-            
+
             # Find the cleaning ticket for this room
             ticket = None
             for t in room.cleaning_tickets:
                 if t.room_id == room_id and t.status != CleaningStatus.FINISHED:
                     ticket = t
                     break
-            
+
             if ticket is None:
-                raise ValueError(f"No active cleaning ticket found for room {room_id}")
-            
+                raise ValueError(
+                    f"No active cleaning ticket found for room {room_id}")
+
             # Update status to FINISHED
             ticket.status = CleaningStatus.FINISHED
             if room in cleaner.assigned_rooms:
                 cleaner.assigned_rooms.remove(room)
             cleaner.status = "AVAILABLE"
-            
+
             # Find resident for this room and create cleaning invoice
             resident = self.search_resident_by_room_id(room_id)
             if resident:
@@ -201,7 +208,7 @@ class Dorm:
                     InvoiceStatus.UNPAID
                 )
                 resident.add_invoice(cleaning_invoice)
-            
+
             return {
                 "cleaner_id": cleaner.id,
                 "cleaner_name": cleaner.name,
@@ -267,7 +274,8 @@ class Dorm:
         contract.validate_for_signing()
 
         # 3. create contract invoice from room price
-        invoice = Invoice(InvoiceType.CONTRACT, contract.room.id, contract.room.monthly_rent, InvoiceStatus.UNPAID)
+        invoice = Invoice(InvoiceType.CONTRACT, contract.room.id,
+                          contract.room.monthly_rent, InvoiceStatus.UNPAID)
         resident.add_invoice(invoice)
 
         # 4. link invoice to contract and advance status
@@ -339,8 +347,8 @@ class Dorm:
             if employee.status == AvailabilityStatus.AVAILABLE:
                 return employee
         raise ValueError("No employee are available at the moment")
-    
-    def request_cleaning_room(self,resident_id,room_id):
+
+    def request_cleaning_room(self, resident_id, room_id):
         # 1.search resident by id
         resident = self.search_resident_by_id(resident_id)
 
@@ -348,7 +356,8 @@ class Dorm:
         room_input = self.search_room_by_id(room_id)
 
         # 3. search room by contracts (room in resident contract)
-        room_in_contract = self.search_room_by_contracts(resident,room_input.id)
+        room_in_contract = self.search_room_by_contracts(
+            resident, room_input.id)
 
         # 4. get cleaning ticket list
         cleaning_ticket_list = room_in_contract.cleaning_tickets
@@ -357,7 +366,8 @@ class Dorm:
         try:
             if resident.check_status_cleaning_ticket(cleaning_ticket_list):
                 # 6. create cleaning ticket
-                cleaning_ticket = resident.create_cleaning_ticket(resident_id, room_id)
+                cleaning_ticket = resident.create_cleaning_ticket(
+                    resident_id, room_id)
                 # 7. add cleaning ticket to room
                 resident.add_cleaning_ticket(room_in_contract, cleaning_ticket)
                 # 8. request success
@@ -375,7 +385,7 @@ class Dorm:
 
         except Exception as e:
             return self.show_error({"error": str(e)})
-        
+
     def booking_share_facility(self, resident_id, facility_id, building_id, booking_time):
         try:
             # 1. search resident by id
@@ -394,13 +404,15 @@ class Dorm:
                         return self.show_error({"error": "this share facility already booking"})
 
             # 5. create booking
-            booking = share_facility.create_booking(resident_id, facility_id, building_id, booking_time)
+            booking = share_facility.create_booking(
+                resident_id, facility_id, building_id, booking_time)
 
             # 6. add booking to resident
             resident.add_booking_share_facility(booking)
 
             # 7. create invoice (fix cost)
-            invoice = share_facility.create_share_facility_invoice(resident_id, booking)
+            invoice = share_facility.create_share_facility_invoice(
+                resident_id, booking)
 
             # 8. add invoice to resident
             resident.add_invoice(invoice)
@@ -413,21 +425,21 @@ class Dorm:
                 "invoice_id": invoice.id,
                 "cost": invoice.amount
             })
-        
+
         except (PermissionError, ValueError) as e:
             return self.show_error({"error": str(e)})
         except Exception as e:
             return self.show_error({"error": str(e)})
-        
+
     def request_maintenance(self, resident_id, room_id, issue_category):
         resident = self.search_resident_by_id(resident_id)
 
         room = self.search_room_by_id(room_id)
 
         employee = self.search_available_employee()
-        
+
         return employee.start_maintenance(
-            resident, 
+            resident,
             self.__technicians,
             room,
             issue_category
@@ -468,7 +480,8 @@ class Dorm:
 
         # Technician case — result is a MaintenanceTicket
         ticket = result
-        invoice = Invoice(InvoiceType.MAINTENANCE, ticket.room_id, ticket.cost, InvoiceStatus.UNPAID)
+        invoice = Invoice(InvoiceType.MAINTENANCE,
+                          ticket.room_id, ticket.cost, InvoiceStatus.UNPAID)
         resident = self.search_resident_by_room_id(ticket.room_id)
         resident.add_invoice(invoice)
 
@@ -497,7 +510,8 @@ class Dorm:
             for contract in resident.contracts:
                 monthly_rent = contract.room.monthly_rent
                 room_id = contract.room.id
-                invoice = employee.create_contract_invoice(monthly_rent, room_id)
+                invoice = employee.create_contract_invoice(
+                    monthly_rent, room_id)
                 resident.add_invoice(invoice)
         res = {"system_contract_invoice": "success"}
         return self.show_success(res)
@@ -519,17 +533,18 @@ class Dorm:
         self.show_success(s)
         return s
 
-    def change_contract(self, 
-                            residentId,
-                            currentLeaseContractId,
-                            targetRoomId,
-                            moveDate
-                            ):
+    def change_contract(self,
+                        residentId,
+                        currentLeaseContractId,
+                        targetRoomId,
+                        moveDate
+                        ):
         resident = self.search_resident_by_id(residentId)
         if resident is None:
             return {"response": "resident not found"}
 
-        current_contract = resident.search_contract_by_id(currentLeaseContractId)
+        current_contract = resident.search_contract_by_id(
+            currentLeaseContractId)
         if current_contract is None:
             return {"response": "current contract not found"}
 
@@ -545,7 +560,8 @@ class Dorm:
         if len(resident.invoices) > 0:
             return {"response": "please settle existing invoices before changing contract"}
 
-        invoice = current_contract.calculate_upgrade_amount(target_room.monthly_rent, moveDate)
+        invoice = current_contract.calculate_upgrade_amount(
+            target_room.monthly_rent, moveDate)
         old_room = current_contract.room
         old_room.status = RoomStatus.AVAILABLE
         current_contract.room = target_room
@@ -566,10 +582,10 @@ class Dorm:
                 "status": old_room.status.value,
             }
         }
-    
+
     def display_invoice(self, resident_id_input):
         resident = self.search_resident_by_id(resident_id_input)
-        for invoice in resident.invoices :
+        for invoice in resident.invoices:
             print(invoice.id)
         s = f'display_invoice : success'
         self.show_success(s)
@@ -584,7 +600,7 @@ class Dorm:
         self.show_success(s)
         return s
 
-    #type member expect : STANDARD_MEMBER, PLUS, PLATINUM พิมพ์ใหญ่พิมเล็กได้ทั้งหมด
+    # type member expect : STANDARD_MEMBER, PLUS, PLATINUM พิมพ์ใหญ่พิมเล็กได้ทั้งหมด
     def create_member(self, resident_id_input, type_member):
         resident = self.search_resident_by_id(resident_id_input)
         employee = self.search_available_employee()
@@ -593,79 +609,78 @@ class Dorm:
         s = f"create_member: success, ID: {invoice.id}, amount: {invoice.amount}"
         self.show_success(s)
         return s
-    
+
     def add_strike(self, employee_ID_input):
-            employee = self.search_employee_by_id(employee_ID_input)
-            now = datetime.datetime.now()
-            residents_to_blacklist = []
+        employee = self.search_employee_by_id(employee_ID_input)
+        now = datetime.datetime.now()
+        residents_to_blacklist = []
 
-            for resident in self.__residents:
-                max_strike = 0
+        for resident in self.__residents:
+            max_strike = 0
 
-                for invoice in resident.invoices:  
-                    if invoice.status == InvoiceStatus.PAID:
-                        continue
+            for invoice in resident.invoices:
+                if invoice.status == InvoiceStatus.PAID:
+                    continue
 
-                    age = now - invoice.date_create
-                    months_old = age.days // 30  
+                age = now - invoice.date_create
+                months_old = age.days // 30
 
-                    if months_old >= 3:
-                        strike = 3
-                    elif months_old >= 2:
-                        strike = 2
-                    elif months_old >= 1:
-                        strike = 1
-                    else:
-                        strike = 0
+                if months_old >= 3:
+                    strike = 3
+                elif months_old >= 2:
+                    strike = 2
+                elif months_old >= 1:
+                    strike = 1
+                else:
+                    strike = 0
 
-                    if strike > max_strike:        
-                        max_strike = strike
+                if strike > max_strike:
+                    max_strike = strike
 
-                if max_strike > 0:
-                    resident.add_strike(max_strike)
+            if max_strike > 0:
+                resident.add_strike(max_strike)
 
-                if resident.strike >= 3:      
-                    residents_to_blacklist.append(resident)
+            if resident.strike >= 3:
+                residents_to_blacklist.append(resident)
 
-            for resident in residents_to_blacklist:
-                self.__residents.remove(resident)
-                self.__blacklist.append(resident)
+        for resident in residents_to_blacklist:
+            self.__residents.remove(resident)
+            self.__blacklist.append(resident)
 
-            s = 'add_strike : success'
-            self.show_success(s)
-            return s
-    
+        s = 'add_strike : success'
+        self.show_success(s)
+        return s
+
     def sign_in(self, name, email, phone_number):
         # validate name
         if not name.replace(" ", "").isalpha():
-            e = "sign_in : error, name must be letters only"
+            e = {"sign_in": "error, name must be letters only"}
             self.show_error(e)
             raise ValueError(e)
 
         # validate email
         if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
-            e = "sign_in : error, invalid email format"
+            e = {"sign_in": "error, invalid email format"}
             self.show_error(e)
             raise ValueError(e)
 
         # validate phone
-        print(phone_number.replace("-", ""))
         if not phone_number.replace("-", "").isdigit() or len(phone_number.replace("-", "").strip()) != 10:
-            e = "sign_in : error, phone number must be 10 digits"
+            e = {"sign_in": "error, phone number must be 10 digits"}
             self.show_error(e)
             raise ValueError(e)
 
         # check blacklist
         for blacklisted in self.__blacklist:
             if blacklisted.email == email or blacklisted.phone_number == phone_number:
-                e = "sign_in : error, email or phone number is blacklisted"
+                e = {"sign_in": "error, email or phone number is blacklisted"}
                 self.show_error(e)
                 raise ValueError(e)
 
         resident = Resident(name, email, phone_number)
         self.add_resident(resident)
         s = {
-            "sign_in": "success", 
+            "sign_in": "success",
             "your_id_is": resident.id
-            }
+        }
         return self.show_success(s)
