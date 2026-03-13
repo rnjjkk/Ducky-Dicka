@@ -1,7 +1,9 @@
 from .enum import *
 
+
 class BookingShareFacility:
     ID = 1
+
     def __init__(self, resident_id, facility_id, building_id, booking_time):
         self.__id = f"BOOKING-{BookingShareFacility.ID:04d}"
         self.__resident_id = resident_id

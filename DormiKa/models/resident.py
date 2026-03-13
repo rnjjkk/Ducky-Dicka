@@ -9,8 +9,8 @@ from .enum import AccountStatus, CleaningStatus, InvoiceStatus
 
 class Resident:
     ID = 1
-    
-    def __init__(self, name: str, email: str=None, phone_number: str=None,
+
+    def __init__(self, name: str, email: str = None, phone_number: str = None,
                  status: AccountStatus = AccountStatus.ACTIVE):
         self.__id = f"RS-{Resident.ID:04d}"
         self.__name = name
@@ -30,9 +30,9 @@ class Resident:
         Resident.ID += 1
 
     @property
-    def name(self): 
+    def name(self):
         return self.__name
-    
+
     @property
     def email(self):
         return self.__email
@@ -44,15 +44,15 @@ class Resident:
     @property
     def id(self):
         return self.__id
-    
+
     @property
-    def strike(self):              
+    def strike(self):
         return self.__strike
 
-    def add_strike(self, amount: int):   
+    def add_strike(self, amount: int):
         self.__strike += amount
 
-    def reset_strike(self):             
+    def reset_strike(self):
         self.__strike = 0
 
     @property
@@ -74,11 +74,11 @@ class Resident:
     @property
     def receipts(self):
         return self.__receipts
-    
+
     @property
     def booking_share_facility_list(self):
         return self.__booking_share_facility_list
-			
+
     def set_member(self, member):
         self.__member = member
 
@@ -97,8 +97,10 @@ class Resident:
         return amount
 
     def set_payment(self, payment_method_input, invoice_ids):
-        payment_method = Payment_Method.format_payment_method(payment_method_input)
-        list_invoice_id = [i.strip().upper() for i in invoice_ids.split(',') if i.strip()]
+        payment_method = Payment_Method.format_payment_method(
+            payment_method_input)
+        list_invoice_id = [i.strip().upper()
+                           for i in invoice_ids.split(',') if i.strip()]
         if not list_invoice_id:
             raise ValueError("Invoice : format error")
         if len(list_invoice_id) != len(set(list_invoice_id)):
@@ -109,9 +111,11 @@ class Resident:
         existing_ids = set()
         if self.__payment is not None:
             if type(self.__payment.payment_method) != type(payment_method):
-                raise ValueError("Payment method already selected; complete payment first")
+                raise ValueError(
+                    "Payment method already selected; complete payment first")
             list_selected_invoice.extend(self.__payment.invoice_list)
-            existing_ids = {invoice.id for invoice in self.__payment.invoice_list}
+            existing_ids = {
+                invoice.id for invoice in self.__payment.invoice_list}
 
         count = 0
         for invoice_id in list_invoice_id:
@@ -132,10 +136,11 @@ class Resident:
         if self.__member is not None:
             discount = self.__member.discount
         net_amount = self.calculate_net_amount(total_amount, discount)
-        payment = Payment(payment_method, list_selected_invoice, discount, net_amount)
+        payment = Payment(
+            payment_method, list_selected_invoice, discount, net_amount)
         self.__payment = payment
         return payment
-    
+
     def payment(self, raw_payment):
         if self.__payment == None:
             raise ValueError('Payment : None')
@@ -149,39 +154,40 @@ class Resident:
         self.__receipts.append(receipt)
         self.__payment = None
         return receipt
-			
+
     def search_contract_by_id(self, contractId):
         for contract in self.__contracts:
             if contract.id == contractId:
                 return contract
         return None
-    
+
     def check_status_cleaning_ticket(self, cleaning_ticket_list):
         # FIX: Was comparing ticket.status (a CleaningStatus enum) against raw strings.
         #      Now compares against CleaningStatus enum values.
         for ticket in cleaning_ticket_list:
             if ticket.status == CleaningStatus.REQUESTED or ticket.status == CleaningStatus.CLEANING:
-                raise ValueError("this room already has cleaning ticket with status Requested or Cleaning")    
+                raise ValueError(
+                    "this room already has cleaning ticket with status Requested or Cleaning")
         return True
-        
+
     def create_cleaning_ticket(self, resident_id, room_id):
         cleaning_ticket = CleaningTicket(resident_id, room_id)
         return cleaning_ticket
-    
+
     def add_cleaning_ticket(self, room, cleaning_ticket):
         room.cleaning_tickets.append(cleaning_ticket)
         return f"add to room success"
-    
+
     def add_facility_booking(self, facility_booking):
         """Add a facility booking to the resident's booking list"""
         self.__booking_share_facility_list.append(facility_booking)
         return facility_booking
-    
+
     def add_booking_share_facility(self, booking):
         """Add a booking to the resident's booking list"""
         self.__booking_share_facility_list.append(booking)
         return booking
-    
+
     def get_facility_bookings(self):
         """Get all facility bookings for this resident"""
         return self.__booking_share_facility_list

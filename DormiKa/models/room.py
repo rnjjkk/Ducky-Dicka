@@ -2,9 +2,10 @@ from enum import Enum
 from datetime import datetime, timedelta
 from .enum import RoomStatus, RoomPrice, RoomType
 
+
 class Room:
     ID = 1
-    
+
     def __init__(
         self,
         building: object,
@@ -21,7 +22,7 @@ class Room:
         self.__maintenance_tickets: list = []
         self.__cleaning_tickets: list = []
         self.__hold_expiry = None
-        
+
         Room.ID += 1
 
     def define_monthly_rent(self, room_type):
@@ -68,12 +69,11 @@ class Room:
     @property
     def monthly_rent(self):
         return self.__monthly_rent
-    
+
     @property
     def cleaning_tickets(self):
         return self.__cleaning_tickets
 
-    
     def add_maintenance_ticket(self, ticket):
         self.__maintenance_tickets.append(ticket)
 

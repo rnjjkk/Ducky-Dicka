@@ -27,11 +27,13 @@ from models.resident import *
 
 dorm: Dorm = None
 
+
 def init_mock_data():
     global dorm
     dorm = tester_data.init_mock_data()
 
 # ==================== FastMCP ====================
+
 
 mcp = FastMCP("DormiKa")
 init_mock_data()
@@ -39,6 +41,7 @@ init_mock_data()
 # ==================================================
 # SYSTEM
 # ==================================================
+
 
 @mcp.tool()
 def reset() -> dict:
@@ -58,7 +61,9 @@ def reset() -> dict:
 
 
 class SystemContractInvoiceRequest(BaseModel):
-    employeeId: str = Field(..., description="Employee ID who triggers billing, e.g. EM-0001")
+    employeeId: str = Field(...,
+                            description="Employee ID who triggers billing, e.g. EM-0001")
+
 
 @mcp.tool()
 def system_contract_invoice(request: SystemContractInvoiceRequest) -> dict:
@@ -82,7 +87,9 @@ def system_contract_invoice(request: SystemContractInvoiceRequest) -> dict:
 
 
 class AddStrikeRequest(BaseModel):
-    employeeId: str = Field(..., description="Employee ID who runs the strike check, e.g. EM-0001")
+    employeeId: str = Field(...,
+                            description="Employee ID who runs the strike check, e.g. EM-0001")
+
 
 @mcp.tool()
 def add_strike(request: AddStrikeRequest) -> dict:
@@ -113,10 +120,15 @@ def add_strike(request: AddStrikeRequest) -> dict:
 # RESIDENT
 # ==================================================
 
+
 class SignInRequest(BaseModel):
-    name:        str = Field(..., description="Full name (letters only), e.g. Kenny")
-    email:       str = Field(..., description="Valid email address, e.g. kenny@example.com")
-    phoneNumber: str = Field(..., description="10-digit phone number, e.g. 0812345678")
+    name:        str = Field(...,
+                             description="Full name (letters only), e.g. Kenny")
+    email:       str = Field(...,
+                             description="Valid email address, e.g. kenny@example.com")
+    phoneNumber: str = Field(...,
+                             description="10-digit phone number, e.g. 0812345678")
+
 
 @mcp.tool()
 def sign_in(request: SignInRequest) -> dict:
@@ -143,10 +155,13 @@ def sign_in(request: SignInRequest) -> dict:
 # CONTRACT
 # ==================================================
 
+
 class RequestBookingRequest(BaseModel):
-    residentId: str      = Field(..., description="Resident ID, e.g. RS-0001")
-    buildingId: str      = Field(..., description="Building ID, e.g. A01")
-    roomType:   RoomType = Field(..., description="Room type: StudioRoom, StandardRoom, or OneBedRoomRoom")
+    residentId: str = Field(..., description="Resident ID, e.g. RS-0001")
+    buildingId: str = Field(..., description="Building ID, e.g. A01")
+    roomType:   RoomType = Field(
+        ..., description="Room type: StudioRoom, StandardRoom, or OneBedRoomRoom")
+
 
 @mcp.tool()
 def request_booking(request: RequestBookingRequest) -> dict:
@@ -166,7 +181,8 @@ def request_booking(request: RequestBookingRequest) -> dict:
         "Book a One Bedroom room in building A01 for resident RS-0002."
     """
     try:
-        result = dorm.request_booking(request.residentId, request.buildingId, request.roomType)
+        result = dorm.request_booking(
+            request.residentId, request.buildingId, request.roomType)
     except (LookupError, ValueError) as e:
         return {"error": str(e)}
     except PermissionError as e:
@@ -175,7 +191,9 @@ def request_booking(request: RequestBookingRequest) -> dict:
 
 
 class SignContractRequest(BaseModel):
-    contractId: str = Field(..., description="Contract ID to sign, e.g. LC-0001")
+    contractId: str = Field(...,
+                            description="Contract ID to sign, e.g. LC-0001")
+
 
 @mcp.tool()
 def sign_contract(request: SignContractRequest) -> dict:
@@ -201,6 +219,7 @@ def sign_contract(request: SignContractRequest) -> dict:
 class HandoverRequest(BaseModel):
     contractId: str = Field(..., description="Contract ID, e.g. LC-0001")
 
+
 @mcp.tool()
 def complete_handover(request: HandoverRequest) -> dict:
     """
@@ -224,6 +243,7 @@ def complete_handover(request: HandoverRequest) -> dict:
 class PayContractInvoiceRequest(BaseModel):
     invoiceId: str = Field(..., description="Invoice ID to pay, e.g. INV-0001")
 
+
 @mcp.tool()
 def pay_contract_invoice(request: PayContractInvoiceRequest) -> dict:
     """
@@ -246,10 +266,15 @@ def pay_contract_invoice(request: PayContractInvoiceRequest) -> dict:
 
 
 class ChangeContractRequest(BaseModel):
-    residentId:             str = Field(..., description="Resident ID, e.g. RS-0001")
-    currentLeaseContractId: str = Field(..., description="Current lease contract ID, e.g. LC-0001")
-    targetRoomId:           str = Field(..., description="Target room ID to move into, e.g. RM-0003")
-    moveDate:               str = Field(..., description="Move-in date in YYYY-MM-DD format, e.g. 2026-03-15")
+    residentId:             str = Field(...,
+                                        description="Resident ID, e.g. RS-0001")
+    currentLeaseContractId: str = Field(
+        ..., description="Current lease contract ID, e.g. LC-0001")
+    targetRoomId:           str = Field(
+        ..., description="Target room ID to move into, e.g. RM-0003")
+    moveDate:               str = Field(
+        ..., description="Move-in date in YYYY-MM-DD format, e.g. 2026-03-15")
+
 
 @mcp.tool()
 def change_contract(request: ChangeContractRequest) -> dict:
@@ -281,10 +306,13 @@ def change_contract(request: ChangeContractRequest) -> dict:
 # MAINTENANCE
 # ==================================================
 
+
 class RequestMaintenanceRequest(BaseModel):
-    residentId:    str           = Field(..., description="Resident ID, e.g. RS-0001")
-    roomId:        str           = Field(..., description="Room ID, e.g. RM-0001")
-    issueCategory: IssueCategory = Field(..., description="Issue type: PLUMBING, ELECTRICAL, or AC")
+    residentId:    str = Field(..., description="Resident ID, e.g. RS-0001")
+    roomId:        str = Field(..., description="Room ID, e.g. RM-0001")
+    issueCategory: IssueCategory = Field(
+        ..., description="Issue type: PLUMBING, ELECTRICAL, or AC")
+
 
 @mcp.tool()
 def request_maintenance(request: RequestMaintenanceRequest) -> dict:
@@ -317,8 +345,10 @@ def request_maintenance(request: RequestMaintenanceRequest) -> dict:
 
 
 class StartMaintenanceRequest(BaseModel):
-    technicianId: str            = Field(..., description="Technician ID, e.g. TC-0001")
-    notes:        Optional[str]  = Field(None, description="Optional description of the problem, e.g. 'Pipe leaking under the sink'")
+    technicianId: str = Field(..., description="Technician ID, e.g. TC-0001")
+    notes:        Optional[str] = Field(
+        None, description="Optional description of the problem, e.g. 'Pipe leaking under the sink'")
+
 
 @mcp.tool()
 def start_maintenance(request: StartMaintenanceRequest) -> dict:
@@ -336,7 +366,8 @@ def start_maintenance(request: StartMaintenanceRequest) -> dict:
         "Technician TC-0003 begins AC repair. Notes: refrigerant seems low."
     """
     try:
-        result = dorm.start_maintenance_workflow(request.technicianId, request.notes)
+        result = dorm.start_maintenance_workflow(
+            request.technicianId, request.notes)
     except Exception as e:
         return {"error": str(e)}
     return result
@@ -344,6 +375,7 @@ def start_maintenance(request: StartMaintenanceRequest) -> dict:
 
 class FinishMaintenanceRequest(BaseModel):
     technicianId: str = Field(..., description="Technician ID, e.g. TC-0001")
+
 
 @mcp.tool()
 def finish_maintenance(request: FinishMaintenanceRequest) -> dict:
@@ -374,9 +406,12 @@ def finish_maintenance(request: FinishMaintenanceRequest) -> dict:
 # CLEANING
 # ==================================================
 
+
 class RequestCleaningRequest(BaseModel):
     residentId: str = Field(..., description="Resident ID, e.g. RS-0001")
-    roomId:     str = Field(..., description="Room ID to be cleaned, e.g. RM-0001")
+    roomId:     str = Field(...,
+                            description="Room ID to be cleaned, e.g. RM-0001")
+
 
 @mcp.tool()
 def request_cleaning(request: RequestCleaningRequest) -> dict:
@@ -404,6 +439,7 @@ class StartCleaningRequest(BaseModel):
     cleanerId: str = Field(..., description="Cleaner ID, e.g. CL-0001")
     roomId: str = Field(..., description="Room ID to clean, e.g. RM-0001")
 
+
 @mcp.tool()
 def start_cleaning(request: StartCleaningRequest) -> dict:
     """
@@ -419,7 +455,8 @@ def start_cleaning(request: StartCleaningRequest) -> dict:
         "CL-0002 begins cleaning now."
     """
     try:
-        result = dorm.start_cleaning_workflow(request.cleanerId, room_id=request.roomId)
+        result = dorm.start_cleaning_workflow(
+            request.cleanerId, room_id=request.roomId)
     except Exception as e:
         return {"error": str(e)}
     return result
@@ -427,7 +464,9 @@ def start_cleaning(request: StartCleaningRequest) -> dict:
 
 class FinishCleaningRequest(BaseModel):
     cleanerId: str = Field(..., description="Cleaner ID, e.g. CL-0001")
-    roomId: str = Field(..., description="Room ID to finish cleaning, e.g. RM-0001")
+    roomId: str = Field(...,
+                        description="Room ID to finish cleaning, e.g. RM-0001")
+
 
 @mcp.tool()
 def finish_cleaning(request: FinishCleaningRequest) -> dict:
@@ -444,7 +483,8 @@ def finish_cleaning(request: FinishCleaningRequest) -> dict:
         "CL-0002 is done — complete the task and issue the invoice."
     """
     try:
-        result = dorm.finish_cleaning_workflow(request.cleanerId, request.roomId)
+        result = dorm.finish_cleaning_workflow(
+            request.cleanerId, request.roomId)
     except Exception as e:
         return {"error": str(e)}
     return result
@@ -453,9 +493,12 @@ def finish_cleaning(request: FinishCleaningRequest) -> dict:
 # MEMBER
 # ==================================================
 
+
 class CreateMemberRequest(BaseModel):
     residentId: str = Field(..., description="Resident ID, e.g. RS-0001")
-    memberType: str = Field(..., description="Membership tier: STANDARD, PLUS, or PLATINUM")
+    memberType: str = Field(...,
+                            description="Membership tier: STANDARD, PLUS, or PLATINUM")
+
 
 @mcp.tool()
 def create_member(request: CreateMemberRequest) -> dict:
@@ -486,10 +529,14 @@ def create_member(request: CreateMemberRequest) -> dict:
 # PAYMENT
 # ==================================================
 
+
 class SelectPaymentRequest(BaseModel):
     residentId:    str = Field(..., description="Resident ID, e.g. RS-0001")
-    paymentMethod: str = Field(..., description="Payment method: 'bank_account' or 'card'")
-    invoiceIds:    str = Field(..., description="Comma-separated invoice IDs, e.g. 'INV-0001, INV-0002'")
+    paymentMethod: str = Field(...,
+                               description="Payment method: 'bank_account' or 'card'")
+    invoiceIds:    str = Field(
+        ..., description="Comma-separated invoice IDs, e.g. 'INV-0001, INV-0002'")
+
 
 @mcp.tool()
 def select_payment(request: SelectPaymentRequest) -> dict:
@@ -530,6 +577,7 @@ class PayRequest(BaseModel):
         )
     )
 
+
 @mcp.tool()
 def pay(request: PayRequest) -> dict:
     """
@@ -556,8 +604,10 @@ def pay(request: PayRequest) -> dict:
 # INVOICE
 # ==================================================
 
+
 class DisplayInvoiceRequest(BaseModel):
     residentId: str = Field(..., description="Resident ID, e.g. RS-0001")
+
 
 @mcp.tool()
 def display_invoice(request: DisplayInvoiceRequest) -> dict:
@@ -583,8 +633,10 @@ def display_invoice(request: DisplayInvoiceRequest) -> dict:
 # RECEIPT
 # ==================================================
 
+
 class DisplayReceiptRequest(BaseModel):
     residentId: str = Field(..., description="Resident ID, e.g. RS-0001")
+
 
 @mcp.tool()
 def display_receipt(request: DisplayReceiptRequest) -> dict:
@@ -610,11 +662,15 @@ def display_receipt(request: DisplayReceiptRequest) -> dict:
 # FACILITY
 # ==================================================
 
+
 class BookFacilityRequest(BaseModel):
     residentId:  str = Field(..., description="Resident ID, e.g. RS-0001")
-    buildingId:  str = Field(..., description="Building ID where facility is located, e.g. A01")
+    buildingId:  str = Field(...,
+                             description="Building ID where facility is located, e.g. A01")
     facilityId:  str = Field(..., description="Facility ID, e.g. SHARE-0001")
-    bookingTime: str = Field(..., description="Booking time in 'YYYY-MM-DD HH:MM:SS' format, e.g. '2026-03-15 14:00:00'")
+    bookingTime: str = Field(
+        ..., description="Booking time in 'YYYY-MM-DD HH:MM:SS' format, e.g. '2026-03-15 14:00:00'")
+
 
 @mcp.tool()
 def book_share_facility(request: BookFacilityRequest) -> dict:
@@ -648,6 +704,7 @@ def book_share_facility(request: BookFacilityRequest) -> dict:
     return result
 
 # ==================== Entrypoint ====================
+
 
 if __name__ == "__main__":
     mcp.run()

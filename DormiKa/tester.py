@@ -39,7 +39,7 @@ def init_mock_data():
     # Add shared facilities
     building.add_meeting_room(MeetingRoom())
     building.add_washing_machine(WashingMachine())
-    
+
     # Add residents
     names = ["Alice", "Bob", "Charlie", "David", "Eve", "Kenny"]
     for i in range(len(names)):
@@ -52,7 +52,7 @@ def init_mock_data():
         print(f"Added Resident: {resident.name}".ljust(25), end="")
         print(f"{resident.id}")
 
-    # Add contract for the first resident 
+    # Add contract for the first resident
     resident = dorm.residents[0]
     room = dorm.buildings[0].rooms[0]
     contract = Contract(resident, room)
@@ -152,10 +152,11 @@ def print_all_data():
 
     print("\n=== All Shared Facilities ===")
     for building in dorm.buildings:
-            for facility in building.washing_machines:
-                print(f"  - ID: {facility.id}")
-            for facility in building.meeting_rooms:
-                print(f"  - ID: {facility.id}")
+        for facility in building.washing_machines:
+            print(f"  - ID: {facility.id}")
+        for facility in building.meeting_rooms:
+            print(f"  - ID: {facility.id}")
+
 
 def run_tests():
     print("\n=== System Contract Invoice ===")
@@ -228,7 +229,6 @@ def run_tests():
         "TC-0001",
     )
     pprint(res)
-
 
     print("\n=== Request Cleaning ===")
     res = dorm.request_cleaning_room(
@@ -308,6 +308,7 @@ def run_tests():
     print("\n=== Add Strike ===")
     res = dorm.add_strike("EM-0001")
     pprint(res)
+
 
 """======================================="""
 if __name__ == "__main__":
