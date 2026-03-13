@@ -385,17 +385,16 @@ class Dorm:
             "resident_id": resident.id,
         }
 
-    def system_contract_invoice(self, employee_ID_input):
-        employee = self.search_employee_by_id(employee_ID_input)
+    def system_contract_invoice(self, employeeId):
+        employee = self.search_employee_by_id(employeeId)
         for resident in self.__residents:
             for contract in resident.contracts:
                 monthly_rent = contract.room.monthly_rent
                 room_id = contract.room.id
                 invoice = employee.create_contract_invoice(monthly_rent, room_id)
                 resident.add_invoice(invoice)
-        s = 'system_contract_invoice : success'
-        self.show_success(s)
-        return s
+        res = {"system_contract_invoice": "success"}
+        return self.show_success(res)
 
     def select_payment_method_and_invoices(self, Resident_ID_input, payment_method_input, invoice_ids):
         resident = self.search_resident_by_id(Resident_ID_input)
@@ -544,7 +543,8 @@ class Dorm:
             raise ValueError(e)
 
         # validate phone
-        if not phone_number.isdigit() or len(phone_number) != 10:
+        print(phone_number.replace("-", ""))
+        if not phone_number.replace("-", "").isdigit() or len(phone_number.replace("-", "").strip()) != 10:
             e = "sign_in : error, phone number must be 10 digits"
             self.show_error(e)
             raise ValueError(e)
@@ -558,6 +558,8 @@ class Dorm:
 
         resident = Resident(name, email, phone_number)
         self.add_resident(resident)
-        s = f'sign_in : success, your id is: {resident.id}'
-        self.show_success(s)
-        return s
+        s = {
+            "sign_in": "success", 
+            "your_id_is": resident.id
+            }
+        return self.show_success(s)
