@@ -68,7 +68,7 @@ class Employee:
             room_id
             )
 
-    def asign_member(self, resident, type):
+    def assign_member(self, resident, type):
         member_type = MemberType(type.strip().upper())
         match member_type:
             case MemberType.STANDARD:
