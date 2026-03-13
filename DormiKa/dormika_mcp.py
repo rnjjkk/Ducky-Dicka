@@ -68,7 +68,7 @@ class SystemContractInvoiceRequest(BaseModel):
 @mcp.tool()
 def system_contract_invoice(request: SystemContractInvoiceRequest) -> dict:
     """
-    Generate monthly rent invoices for ALL active residents automatically.
+    Generate monthly rent invoices for residents that currently have contracts.
     An employee must authorize this batch billing process.
 
     Use when:
@@ -166,11 +166,11 @@ class RequestBookingRequest(BaseModel):
 @mcp.tool()
 def request_booking(request: RequestBookingRequest) -> dict:
     """
-    !!ignore time closed for testing
-
     Request to book an available room for a resident.
-    Holds the room for 48 hours and creates a DRAFT contract.
-    Only works during business hours (08:00–17:00).
+    Creates a DRAFT contract and marks the selected room as held.
+
+    Note:
+    - Business-hour validation is currently disabled in the Dorm workflow (testing mode).
 
     Use when:
     - A resident wants to book a room
@@ -472,7 +472,7 @@ class FinishCleaningRequest(BaseModel):
 def finish_cleaning(request: FinishCleaningRequest) -> dict:
     """
     Mark a cleaning job as complete and free the cleaner.
-    Generates a cleaning invoice (100 THB) for the resident.
+    Generates a cleaning invoice for the resident using the ticket cost.
 
     Use when:
     - A cleaner has finished cleaning the room
@@ -545,6 +545,10 @@ def select_payment(request: SelectPaymentRequest) -> dict:
     Must be called before the actual pay step.
     If the resident has a membership, a discount is automatically applied.
 
+    Basket behavior:
+    - Repeated select_payment calls add invoices to the same pending basket.
+    - All select calls in the same basket must use the same payment method.
+
     Payment methods:
     - 'bank_account' → transfer to dorm bank account, submit reference number
     - 'card'         → fill card number (6 digits), name, expiry (MM/YY), CVV (3 digits)
@@ -583,7 +587,7 @@ def pay(request: PayRequest) -> dict:
     """
     Submit payment data to confirm and settle the selected invoices.
     Must call select_payment first to choose method and invoices.
-    On success, generates a receipt and marks invoices as PAID.
+    On success, marks all invoices in the basket as PAID and creates one receipt.
 
     Use when:
     - Completing the payment after select_payment
