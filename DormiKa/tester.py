@@ -77,10 +77,11 @@ def init_mock_data():
         ElectricalTech(
             name=names[i],
             phone_number=f"555-987-654{i}",
-            capabilities=["Electrical", "Plumbing"],
+            capabilities=["Electrical"],
             schedule=None,
             current_task=None,
-            status=AvailabilityStatus.AVAILABLE
+            status=AvailabilityStatus.AVAILABLE,
+            certification_no=["Electrical License"],
         ),
         PlumbingTech(
             name=names[i],
@@ -104,13 +105,15 @@ def init_mock_data():
         print(f"Added Technician: {t.name}".ljust(25), end="")
         print(f"{t.id}")
 
+
 def print_all_data():
     print("\n=== All Residents ===")
     for resident in dorm.residents:
         print(f"{resident.id}: {resident.name}")
         if (resident.contracts):
             for contract in resident.contracts:
-                print(f"  - Contract ID: {contract.id}, Room: {contract.room.id}, Status: {contract.status.value}")
+                print(
+                    f"  - Contract ID: {contract.id}, Room: {contract.room.id}, Status: {contract.status.value}")
 
     print("\n=== All Employees ===")
     for employee in dorm.employees:
@@ -123,6 +126,7 @@ def print_all_data():
     print("\n=== All Technicians ===")
     for tech in dorm.technicians:
         print(f"{tech.id}: {tech.name} - {tech.phone_number} - Capabilities: {', '.join(tech.capabilities)}")
+
 
 def run_tests():
     print("\n=== System Contract Invoice ===")
@@ -162,10 +166,38 @@ def run_tests():
     )
     pprint(res)
 
+    print("\n=== Create Member ===")
+    res = dorm.create_member(
+        "RS-0001",
+        "PLUS"
+    )
+    pprint(res)
+
+    print("\n=== Request Maintenance ===")
+    res = dorm.request_maintenance(
+        "RS-0001",
+        "RM-0001",
+        "Electrical",
+    )
+    pprint(res)
+
+    print("\n=== Start Maintenance ===")
+    res = dorm.start_maintenance_workflow(
+        "TC-0001",
+        "Fix wiring",
+    )
+    pprint(res)
+
+    print("\n=== Finish Maintenance ===")
+    res = dorm.finish_maintenance_workflow(
+        "TC-0001",
+    )
+    pprint(res)
+
 """======================================="""
 
 init_mock_data()
 
 run_tests()
 
-print_all_data()
+# print_all_data()
