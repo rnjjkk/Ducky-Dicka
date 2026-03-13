@@ -1,0 +1,133 @@
+sequenceDiagram
+actor User
+participant Dorm
+participant Resident
+participant Payment_Method
+participant Bank_Account
+participant Card
+participant Invoice
+participant Standard_Member
+participant Plus_Member
+participant Platinum_Member
+participant Payment
+
+User->>Dorm: select_payment_method_and_invoices(Resident_ID_input, payment_method_input, invoice_ids)
+activate Dorm
+
+loop for Resident in Resident_list
+    Dorm->>Resident : getter : ID
+    activate Resident
+    Resident-->>Dorm : return Resident_ID
+
+    alt Resident_ID_input = Resident_ID
+        Note over Dorm, Resident : return Resident(Instance)
+    else Resident_ID_input != Resident_ID
+        Note over Dorm, Resident : วนลูปต่อไปจนกว่าจะครบทุกตัว แล้ว return None 
+    end
+    deactivate Resident
+end
+
+opt Resident = None
+    Dorm-->>User : show_login_error()
+end
+
+
+Dorm->>Resident: resident_set_payment(payment_method_input, invoice_ids)
+activate Resident
+
+%% Payment_Method
+Resident->>Payment_Method : staticmethod : format_payment_method(payment_method_input)
+activate Payment_Method
+Note over Payment_Method : ทำการ strip และ lower ตัว payment_method_input
+alt payment_method_input = Bank_Account
+    Payment_Method->>Bank_Account : create_Bank_Account_instance()
+    activate Bank_Account
+    Bank_Account-->>Payment_Method : return Bank_Account(instance)
+    deactivate Bank_Account
+    Payment_Method-->>Resident : return Bank_Account(instance)
+else payment_method_input = Card
+    Payment_Method->>Card : create_Card_instance()
+    activate Card
+    Card-->>Payment_Method : return Card(instance)
+    deactivate Card
+    Payment_Method-->>Resident : return Card(instance)
+else payment_method_input = Error
+    Payment_Method-->>Resident : return format_payment_method_error
+deactivate Payment_Method
+    Resident-->>Dorm : return format_payment_method_error
+    Dorm-->User : show_format_payment_method_error()
+end
+
+%% Invoice
+Note over Resident: ทำการ split, strip และ upper ตัว invoice_ids
+loop invoice_id in formatted_invoice_ids
+    loop for invoice in invoice_list
+        Resident->>Invoice : getter : ID , amount
+        activate Invoice
+        Invoice-->>Resident : return Invoice_ID
+        alt invoice_id_input = invoice_id_from_list
+            Note over Resident, Invoice: return Invoice(instance) แล้วเก็บค่าไว้ใน list และ update_strike แล้วบวกค่า amount ไว้ที่ตัวแปร total_amount
+        else invoice_id_input != invoice_id_from_list
+            Note over Resident, Invoice : วนลูปต่อไปจนกว่าจะครบทุกตัว
+        end
+        deactivate Invoice
+    end
+end
+
+opt invoice_list_for_payment = error
+    Resident-->>Dorm: return format_invoice_ids_error
+    Dorm-->>User: return format_invoice_ids_error
+end
+
+%% Member
+alt Member = Standard_Member
+Resident->>Standard_Member : Getter : discount
+activate Standard_Member
+Standard_Member -->>Resident : return Standard_Member_discount
+deactivate Standard_Member
+    
+else Member = Plus_Member
+Resident->>Plus_Member : Getter : discount
+activate Plus_Member
+Plus_Member-->>Resident : return Plus_Member_discount
+deactivate Plus_Member
+    
+else Member = Platinum_Member
+Resident->>Platinum_Member : Getter : discount
+activate Platinum_Member
+Platinum_Member-->>Resident : return Platinum_Member_discount
+deactivate Platinum_Member
+
+else Member = None
+Note over Resident : ไม่ได้สมัครสมาชิก ไม่มี discount 
+    
+end
+
+Note over Resident: คำนวณ net_amount ที่ต้องชำระ จาก total_amount และ discount
+
+%% Payment
+Resident->>Payment:create_Payment_instance(payment_method, invoices, discount, net_amount)
+activate Payment
+Payment-->>Resident: return Payment(instance)
+deactivate Payment
+Note over Resident : กำหนดตัวแปร Payment ที่ Resident 
+
+alt Payment_Method = Bank_Account
+Resident-->>Dorm : return net_amount, Bank_Account(instance)
+Dorm-->>Bank_Account : override : payment_format()
+activate Bank_Account
+Bank_Account-->>Dorm : return dorm_bank_account_number
+deactivate Bank_Account
+Dorm-->>User : show_select_payment_method_and_invoices_success(net_amount, dorm_bank_account_number)
+
+else Payment_Method = Card
+Resident-->>Dorm : return net_amount, Card(instance)
+deactivate Resident
+Dorm-->>Card : override : payment_format()
+activate Card
+Card-->>Dorm : return card_payment_details_format
+deactivate Card
+Dorm-->>User : show_select_payment_method_and_invoices_success(net_amount, card_payment_details_format)
+deactivate Dorm
+
+end
