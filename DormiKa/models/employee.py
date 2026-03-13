@@ -61,7 +61,12 @@ class Employee:
     
 
     def create_contract_invoice(self, monthly_rent, room_id):
-        return Invoice(InvoiceType.CONTRACT, monthly_rent, InvoiceStatus.UNPAID, room_id)
+        return Invoice(
+            InvoiceType.CONTRACT, 
+            monthly_rent, 
+            InvoiceStatus.UNPAID, 
+            room_id
+            )
 
     def asign_member(self, resident, type):
         member_type = MemberType(type.strip().upper())
