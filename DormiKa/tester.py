@@ -113,4 +113,16 @@ dorm.sign_in(
     "Fill", 
     "fill@gmail.com", 
     "123-456-7890"
-    ) 
+    )
+
+res = dorm.request_booking(
+    "RS-0001",
+    "A01",
+    RoomType.STUDIO_ROOM,
+)
+print(res, end="\n\n")
+
+res = dorm.sign_contract(
+    "LC-0002"
+)
+print(res, end="\n\n")
