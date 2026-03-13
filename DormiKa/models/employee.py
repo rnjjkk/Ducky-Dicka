@@ -16,8 +16,8 @@ class Employee:
         Employee.ID += 1
 
     @property
-    def fid(self):
-        return f"EM-{self.__date_create.year}-{self.__id[-4:]}"
+    def name(self):
+        return self.__name
 
     @property
     def id(self):
