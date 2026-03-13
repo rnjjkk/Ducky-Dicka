@@ -7,6 +7,8 @@ from models.employee import Employee
 from models.staff import Cleaner, PlumbingTech, ElectricalTech, ACTech
 
 from models.enum import *
+from pprint import pprint
+
 
 def init_mock_data():
     global dorm
@@ -28,7 +30,8 @@ def init_mock_data():
     ]
     for room in rooms:
         building.add_room(room)
-        print(f"Added Room ID: {room.id}, Type: {room.type.value}, Rent: {room.monthly_rent}\n")
+        print(
+            f"Added Room ID: {room.id}, Type: {room.type.value}, Rent: {room.monthly_rent}\n")
 
     names = ["Alice", "Bob", "Charlie", "David", "Eve", "Kenny"]
     for i in range(len(names)):
@@ -38,7 +41,7 @@ def init_mock_data():
             phone_number=f"123-456-789{i}"
         )
         dorm.add_resident(resident)
-        print(f"Added Resident: {resident.name}".ljust(25   ), end="")
+        print(f"Added Resident: {resident.name}".ljust(25), end="")
         print(f"{resident.id}")
 
     resident = dorm.residents[0]
@@ -72,57 +75,66 @@ def init_mock_data():
     names = ["Mike", "Sara", "Leo"]
     technicians = [
         ElectricalTech(
-        name=names[i],
-        phone_number=f"555-987-654{i}",
-        capabilities=["Electrical", "Plumbing"],
-        schedule=None,
-        current_task=None,
-        status=AvailabilityStatus.AVAILABLE
-    ),
+            name=names[i],
+            phone_number=f"555-987-654{i}",
+            capabilities=["Electrical", "Plumbing"],
+            schedule=None,
+            current_task=None,
+            status=AvailabilityStatus.AVAILABLE
+        ),
         PlumbingTech(
-        name=names[i],
-        phone_number=f"555-987-654{i}",
-        capabilities=["Plumbing"],
-        schedule=None,
-        current_task=None,
-        status=AvailabilityStatus.AVAILABLE
-    ),
+            name=names[i],
+            phone_number=f"555-987-654{i}",
+            capabilities=["Plumbing"],
+            schedule=None,
+            current_task=None,
+            status=AvailabilityStatus.AVAILABLE
+        ),
         ACTech(
-        name=names[i],
-        phone_number=f"555-987-654{i}",
-        capabilities=["AC Maintenance"],
-        schedule=None,
-        current_task=None,
-        status=AvailabilityStatus.AVAILABLE
-    )
+            name=names[i],
+            phone_number=f"555-987-654{i}",
+            capabilities=["AC Maintenance"],
+            schedule=None,
+            current_task=None,
+            status=AvailabilityStatus.AVAILABLE
+        )
     ]
     for t in technicians:
         dorm.add_technician(t)
         print(f"Added Technician: {t.name}".ljust(25), end="")
         print(f"{t.id}")
 
+
 """======================================="""
 
 init_mock_data()
 
-print("")
-
+print("\n=== System Contract Invoice ===")
 dorm.system_contract_invoice("EM-0001")
 
+print("\n=== Sign Contract ===")
 dorm.sign_in(
-    "Fill", 
-    "fill@gmail.com", 
+    "Fill",
+    "fill@gmail.com",
     "123-456-7890"
-    )
+)
 
+print("\n=== Request Booking ===")
 res = dorm.request_booking(
     "RS-0001",
     "A01",
     RoomType.STUDIO_ROOM,
 )
-print(res, end="\n\n")
+pprint(res)
 
 res = dorm.sign_contract(
     "LC-0002"
 )
-print(res, end="\n\n")
+pprint(res)
+pprint(dorm.search_resident_by_id("RS-0001").invoices[0])
+pprint(dorm.search_resident_by_id("RS-0001").contracts[0].invoice_id)
+
+res = dorm.pay_contract_invoice(
+    "INV-0002",
+)
+pprint(res)
