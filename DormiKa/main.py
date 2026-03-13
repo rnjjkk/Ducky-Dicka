@@ -60,19 +60,19 @@ def create_technician_mock_data():
 def create_employee_mock_data():
     employees = [Employee(name) for name in ["Alice", "Bob", "Charlie", "Diana", "Eve"]]
     for e in employees:
-        print(f"Created Employee: {e.fid} ({e.id})")
+        print(f"Created Employee: ({e.id})")
     return employees
 
 def create_room_mock_data(building):
     rooms = [
         # STUDIO_ROOM — 2 ห้อง (ห้องแรกจะถูก Kenny occupy, ห้องที่ 2 ว่างสำหรับจอง)
-        Room(building=building, floor=1, room_type=RoomType.STUDIO_ROOM,   status=RoomStatus.AVAILABLE, rental=6500),
-        Room(building=building, floor=1, room_type=RoomType.STUDIO_ROOM,   status=RoomStatus.AVAILABLE, rental=6500),
+        Room(building=building, floor=1, room_type=RoomType.STUDIO_ROOM,   status=RoomStatus.AVAILABLE),
+        Room(building=building, floor=1, room_type=RoomType.STUDIO_ROOM,   status=RoomStatus.AVAILABLE),
         # STANDARD_ROOM — 2 ห้อง (ห้องแรกจะถูก Bob reserve สำหรับ handover)
-        Room(building=building, floor=2, room_type=RoomType.STANDARD_ROOM, status=RoomStatus.AVAILABLE, rental=8200),
-        Room(building=building, floor=2, room_type=RoomType.STANDARD_ROOM, status=RoomStatus.AVAILABLE, rental=8200),
+        Room(building=building, floor=2, room_type=RoomType.STANDARD_ROOM, status=RoomStatus.AVAILABLE),
+        Room(building=building, floor=2, room_type=RoomType.STANDARD_ROOM, status=RoomStatus.AVAILABLE),
         # ONE_BED_ROOM — 1 ห้อง
-        Room(building=building, floor=3, room_type=RoomType.ONE_BED_ROOM,  status=RoomStatus.AVAILABLE, rental=10500),
+        Room(building=building, floor=3, room_type=RoomType.ONE_BED_ROOM,  status=RoomStatus.AVAILABLE),
     ]
     for r in rooms:
         print(f"Created Room: {r.id} ({r.type.value}) {r.status.value}")
