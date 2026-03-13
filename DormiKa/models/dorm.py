@@ -151,17 +151,14 @@ class Dorm:
             return self.show_error({"error": str(e)})
 
     def start_cleaning_workflow(self, cleaner_id, room_id):
-        """Start cleaning process for a specific room."""
         try:
             from .enum import CleaningStatus
             cleaner = self.search_cleaner_by_id(cleaner_id)
             room = self.search_room_by_id(room_id)
 
-            # Add room to assigned rooms if not already there
             if room not in cleaner.assigned_rooms:
                 cleaner.assigned_rooms.append(room)
 
-            # Find the cleaning ticket for this room
             ticket = None
             for t in room.cleaning_tickets:
                 if t.room_id == room_id and t.status != CleaningStatus.FINISHED:
@@ -172,13 +169,11 @@ class Dorm:
                 raise ValueError(
                     f"No active cleaning ticket found for room {room_id}")
 
-            # Update status to CLEANING
             ticket.status = CleaningStatus.CLEANING
             cleaner.status = "WORKING"
 
             return {
                 "cleaner_id": cleaner.id,
-                "cleaner_name": cleaner.name,
                 "ticket_id": ticket.id,
                 "room_id": ticket.room_id,
                 "status": ticket.status.value,
@@ -187,13 +182,11 @@ class Dorm:
             return self.show_error({"error": str(e)})
 
     def finish_cleaning_workflow(self, cleaner_id, room_id):
-        """Mark cleaning as finished for a specific room."""
         try:
             from .enum import CleaningStatus
             cleaner = self.search_cleaner_by_id(cleaner_id)
             room = self.search_room_by_id(room_id)
 
-            # Find the cleaning ticket for this room
             ticket = None
             for t in room.cleaning_tickets:
                 if t.room_id == room_id and t.status != CleaningStatus.FINISHED:
@@ -204,13 +197,11 @@ class Dorm:
                 raise ValueError(
                     f"No active cleaning ticket found for room {room_id}")
 
-            # Update status to FINISHED
             ticket.status = CleaningStatus.FINISHED
             if room in cleaner.assigned_rooms:
                 cleaner.assigned_rooms.remove(room)
             cleaner.status = "AVAILABLE"
 
-            # Find resident for this room and create cleaning invoice
             resident = self.search_resident_by_room_id(room_id)
             if resident:
                 cleaning_invoice = Invoice(
@@ -223,7 +214,7 @@ class Dorm:
 
             return {
                 "cleaner_id": cleaner.id,
-                "cleaner_name": cleaner.name,
+                "cleaner_status": cleaner.status,
                 "ticket_id": ticket.id,
                 "room_id": ticket.room_id,
                 "status": ticket.status.value,
@@ -465,44 +456,20 @@ class Dorm:
         return technician.start_maintenance(notes)
 
     def finish_maintenance_workflow(self, technician_id):
-        return self.complete_task_workflow(technician_id)
+        # Find and complete maintenance for technician
+        technician = self.search_technician_by_id(technician_id)
+        ticket = technician.complete_task()
 
-    def complete_task_workflow(self, staff_id):
-        # search cleaners first, then technicians
-        staff = None
-        for c in self.__cleaners:
-            if c.id == staff_id:
-                staff = c
-                break
-        if staff is None:
-            for t in self.__technicians:
-                if t.id == staff_id:
-                    staff = t
-                    break
-        if staff is None:
-            raise ValueError(f"Staff '{staff_id}' not found")
-
-        result = staff.complete_task()
-
-        # Technician case — result is a MaintenanceTicket
-        if isinstance(result, dict):
-            return {
-                "staff_id": staff.id,
-                "staff_name": staff.name,
-                "room_id": result["room_id"],
-                "staff_status": result["cleaner_status"],
-            }
-
-        # Technician case — result is a MaintenanceTicket
-        ticket = result
-        invoice = Invoice(InvoiceType.MAINTENANCE,
-                          ticket.room_id, ticket.cost, InvoiceStatus.UNPAID)
+        # Create invoice for maintenance work
+        invoice = Invoice(
+            InvoiceType.MAINTENANCE,
+            ticket.room_id, ticket.cost, InvoiceStatus.UNPAID
+        )
         resident = self.search_resident_by_room_id(ticket.room_id)
         resident.add_invoice(invoice)
 
         return {
-            "staff_id": staff.id,
-            "staff_name": staff.name,
+            "staff_id": technician.id,
             "ticket_id": ticket.id,
             "room_id": ticket.room_id,
             "issue_category": ticket.issue_category,
@@ -548,11 +515,31 @@ class Dorm:
     def select_payment_method_and_invoices(self, Resident_ID_input, payment_method_input, invoice_ids):
         resident = self.search_resident_by_id(Resident_ID_input)
         payment = resident.set_payment(payment_method_input, invoice_ids)
-        format = payment.payment_method.payment_format()
+        payment_format = payment.payment_method.payment_format()
+        selected_invoices = [
+            {
+                "invoice_id": invoice.id,
+                "amount": invoice.amount,
+                "status": invoice.status.value,
+            }
+            for invoice in payment.invoice_list
+        ]
+        gross_amount = sum(invoice["amount"] for invoice in selected_invoices)
         net_amount = payment.net_amount
-        s = f'select_payment_method_and_invoices : success\nAmount to be paid : {net_amount}\n{format}'
-        self.show_success(s)
-        return s
+
+        result = {
+            "select_payment_method_and_invoices": "success",
+            "resident_id": resident.id,
+            "payment_method": payment_method_input,
+            "selected_invoices": selected_invoices,
+            "summary": {
+                "gross_amount": gross_amount,
+                "net_amount": net_amount,
+                "discount_amount": gross_amount - net_amount,
+            },
+            "payment_format": payment_format,
+        }
+        return self.show_success(result)
 
     def payment_system(self, Resident_ID_input, paymentdata):
         resident = self.search_resident_by_id(Resident_ID_input)
@@ -586,7 +573,11 @@ class Dorm:
             print(target_room.status, RoomStatus.AVAILABLE)
             return {"response": "target room not available"}
 
-        if len(resident.invoices) > 0:
+        unpaid_invoices = [
+            invoice for invoice in resident.invoices
+            if invoice.status == InvoiceStatus.UNPAID
+        ]
+        if len(unpaid_invoices) > 0:
             return {"response": "please settle existing invoices before changing contract"}
 
         invoice = current_contract.calculate_upgrade_amount(
@@ -614,20 +605,38 @@ class Dorm:
 
     def display_invoice(self, resident_id_input):
         resident = self.search_resident_by_id(resident_id_input)
-        for invoice in resident.invoices:
-            print(invoice.id)
-        s = f'display_invoice : success'
-        self.show_success(s)
-        return s
+        invoices = [
+            {
+                "invoice_id": invoice.id,
+                "amount": invoice.amount,
+                "status": invoice.status.value,
+            }
+            for invoice in resident.invoices
+            if invoice.status == InvoiceStatus.UNPAID
+        ]
+
+        result = {
+            "resident_id": resident.id,
+            "invoices": invoices,
+        }
+        return self.show_success(result)
 
     def display_receipt(self, resident_id_input):
         resident = self.search_resident_by_id(resident_id_input)
-        print(f"strike : {resident.strike}")
-        for receipt in resident.receipts:
-            print(receipt.id)
-        s = f'display_receipt : success'
-        self.show_success(s)
-        return s
+        receipts = [
+            {
+                "receipt_id": receipt.id,
+            }
+            for receipt in resident.receipts
+        ]
+
+        result = {
+            "resident_id": resident.id,
+            "strike": resident.strike,
+            "receipt_count": len(receipts),
+            "receipts": receipts,
+        }
+        return self.show_success(result)
 
     def create_member(self, resident_id_input, type_member):
         resident = self.search_resident_by_id(resident_id_input)
