@@ -108,3 +108,9 @@ init_mock_data()
 print("")
 
 dorm.system_contract_invoice("EM-0001")
+
+dorm.sign_in(
+    "Fill", 
+    "fill@gmail.com", 
+    "123-456-7890"
+    ) 
