@@ -518,6 +518,7 @@ class Dorm:
 
     def system_contract_invoice(self, employeeId):
         employee = self.search_employee_by_id(employeeId)
+        residents = []
         for resident in self.__residents:
             for contract in resident.contracts:
                 monthly_rent = contract.room.monthly_rent
@@ -527,8 +528,19 @@ class Dorm:
                     room_id,
                 )
                 resident.add_invoice(invoice)
+                residents.append(resident)
         res = {"system_contract_invoice": "success"}
-        return self.show_success(res)
+        self.show_success(res)
+        return {
+            "system_contract_invoice": "success",
+            "employee_id": employeeId,
+            "residents": [
+                {
+                    "id": resident.id,
+                    "invoice": [invoice.id for invoice in resident.invoices]
+                } for resident in residents
+            ]
+        }
 
     def select_payment_method_and_invoices(self, Resident_ID_input, payment_method_input, invoice_ids):
         resident = self.search_resident_by_id(Resident_ID_input)
