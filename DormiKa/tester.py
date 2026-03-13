@@ -117,6 +117,8 @@ def init_mock_data():
         print(f"Added Technician: {t.name}".ljust(25), end="")
         print(f"{t.id}")
 
+    return dorm
+
 
 def print_all_data():
     print("\n=== All Residents ===")
@@ -308,9 +310,9 @@ def run_tests():
     pprint(res)
 
 """======================================="""
-
-init_mock_data()
-print("#####################################################")
-print_all_data()
-print("#####################################################")
-run_tests()
+if __name__ == "__main__":
+    init_mock_data()
+    print("#####################################################")
+    print_all_data()
+    print("#####################################################")
+    run_tests()
