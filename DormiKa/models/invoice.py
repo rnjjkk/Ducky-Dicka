@@ -1,6 +1,7 @@
 from datetime import datetime
 from .enum import InvoiceStatus, InvoiceType
 
+
 class Invoice:
     _running_number = 1
 

@@ -1,6 +1,6 @@
 class Building:
     ID = 1
-    
+
     def __init__(self, floor_count, zone):
         self.__id = f"{zone}{Building.ID:02d}"
         self.__floor_count = floor_count
@@ -18,11 +18,11 @@ class Building:
     @property
     def rooms(self):
         return self.__rooms
-    
+
     @property
     def washing_machines(self):
         return self.__washing_machines
-    
+
     @washing_machines.setter
     def washing_machines(self, new_washing_machines):
         self.__washing_machines.append(new_washing_machines)
@@ -30,7 +30,7 @@ class Building:
     @property
     def meeting_rooms(self):
         return self.__meeting_rooms
-    
+
     @meeting_rooms.setter
     def meeting_rooms(self, new_meeting_room):
         self.__meeting_rooms.append(new_meeting_room)
@@ -44,10 +44,8 @@ class Building:
             if room.type == room_type and room.status == RoomStatus.AVAILABLE:
                 room.hold(48)
                 return room
-        raise LookupError(f"No available room of type '{room_type.value}' in building {self.__id}")
-
-    def __iter__(self):
-        return iter(self.__rooms)
+        raise LookupError(
+            f"No available room of type '{room_type.value}' in building {self.__id}")
 
     def get_share_facility_by_id(self, facility_id):
         all_facilities = self.__washing_machines + self.__meeting_rooms
@@ -61,3 +59,6 @@ class Building:
 
     def add_meeting_room(self, mr):
         self.__meeting_rooms.append(mr)
+
+    def __iter__(self):
+        return iter(self.__rooms)

@@ -18,7 +18,7 @@ class Dorm:
         self.__residents: list = []
         self.__employees: list = []
         self.__technicians: list = []
-        self.__cleaner: list = []
+        self.__cleaners: list = []
         self.__blacklist: list = []
 
     @property
@@ -26,12 +26,24 @@ class Dorm:
         return self.__name
 
     @property
+    def buildings(self):
+        return self.__buildings
+
+    @property
     def residents(self):
         return self.__residents
 
     @property
-    def buildings(self):
-        return self.__buildings
+    def employees(self):
+        return self.__employees
+
+    @property
+    def technicians(self):
+        return self.__technicians
+
+    @property
+    def cleaners(self):
+        return self.__cleaners
 
     def show_success(self, success):
         pprint(success)
@@ -54,7 +66,7 @@ class Dorm:
         self.__technicians.append(technician)
 
     def add_cleaner(self, cleaner):
-        self.__cleaner.append(cleaner)
+        self.__cleaners.append(cleaner)
 
     def add_building(self, building):
         self.__buildings.append(building)
@@ -97,59 +109,20 @@ class Dorm:
         raise ValueError(f"Technician '{technician_id}' not found")
 
     def search_cleaner_by_id(self, cleaner_id):
-        for cleaner in self.__cleaner:
+        for cleaner in self.__cleaners:
             if cleaner.id == cleaner_id:
                 return cleaner
         raise ValueError(f"Cleaner '{cleaner_id}' not found")
 
-    def clean_room_workflow(self, cleaner_id, room_id):
-        try:
-            from .enum import CleaningStatus
-            cleaner = self.search_cleaner_by_id(cleaner_id)
-            # search cleaning ticket by room id and check status
-            room = self.search_room_by_id(room_id)
-
-            # find the cleaning ticket for this room
-            ticket = None
-            for t in room.cleaning_tickets:
-                if t.room_id == room_id and t.status != CleaningStatus.FINISHED:
-                    ticket = t
-                    break
-
-            if ticket is None:
-                raise ValueError(
-                    f"No active cleaning ticket found for room {room_id}")
-
-            # Add room to assigned rooms
-            if room not in cleaner.assigned_rooms:
-                cleaner.assigned_rooms.append(room)
-
-            # Clean the room
-            cleaner.clean_room(room, ticket)
-            cleaner.finished_cleaning(room)
-
-            return {
-                "cleaner_id": cleaner.id,
-                "cleaner_name": cleaner.name,
-                "ticket_id": ticket.id,
-                "room_id": ticket.room_id,
-                "status": "Finished",
-            }
-        except ValueError as e:
-            return self.show_error({"error": str(e)})
-
     def start_cleaning_workflow(self, cleaner_id, room_id):
-        """Start cleaning process for a specific room."""
         try:
             from .enum import CleaningStatus
             cleaner = self.search_cleaner_by_id(cleaner_id)
             room = self.search_room_by_id(room_id)
 
-            # Add room to assigned rooms if not already there
             if room not in cleaner.assigned_rooms:
                 cleaner.assigned_rooms.append(room)
 
-            # Find the cleaning ticket for this room
             ticket = None
             for t in room.cleaning_tickets:
                 if t.room_id == room_id and t.status != CleaningStatus.FINISHED:
@@ -160,13 +133,11 @@ class Dorm:
                 raise ValueError(
                     f"No active cleaning ticket found for room {room_id}")
 
-            # Update status to CLEANING
             ticket.status = CleaningStatus.CLEANING
             cleaner.status = "WORKING"
 
             return {
                 "cleaner_id": cleaner.id,
-                "cleaner_name": cleaner.name,
                 "ticket_id": ticket.id,
                 "room_id": ticket.room_id,
                 "status": ticket.status.value,
@@ -175,13 +146,11 @@ class Dorm:
             return self.show_error({"error": str(e)})
 
     def finish_cleaning_workflow(self, cleaner_id, room_id):
-        """Mark cleaning as finished for a specific room."""
         try:
             from .enum import CleaningStatus
             cleaner = self.search_cleaner_by_id(cleaner_id)
             room = self.search_room_by_id(room_id)
 
-            # Find the cleaning ticket for this room
             ticket = None
             for t in room.cleaning_tickets:
                 if t.room_id == room_id and t.status != CleaningStatus.FINISHED:
@@ -192,13 +161,11 @@ class Dorm:
                 raise ValueError(
                     f"No active cleaning ticket found for room {room_id}")
 
-            # Update status to FINISHED
             ticket.status = CleaningStatus.FINISHED
             if room in cleaner.assigned_rooms:
                 cleaner.assigned_rooms.remove(room)
             cleaner.status = "AVAILABLE"
 
-            # Find resident for this room and create cleaning invoice
             resident = self.search_resident_by_room_id(room_id)
             if resident:
                 cleaning_invoice = Invoice(
@@ -211,7 +178,7 @@ class Dorm:
 
             return {
                 "cleaner_id": cleaner.id,
-                "cleaner_name": cleaner.name,
+                "cleaner_status": cleaner.status,
                 "ticket_id": ticket.id,
                 "room_id": ticket.room_id,
                 "status": ticket.status.value,
@@ -246,8 +213,8 @@ class Dorm:
             raise PermissionError("Account is closed")
 
         # 3. check business hours
-        if not (8 <= datetime.datetime.now().hour <= 17):
-            raise ValueError("Outside business hours (08:00–17:00)")
+        # if not (8 <= datetime.datetime.now().hour <= 17):
+        #     raise ValueError("Outside business hours (08:00–17:00)")
 
         # 3. find building and hold an available room
         building = self.search_building_by_id(building_id)
@@ -261,8 +228,8 @@ class Dorm:
             "contract_id": contract.id,
             "resident_id": resident.id,
             "room_id": room.id,
-            "room_type": room.type.value,
             "room_status": room.status.value,
+            "room_type": room.type.value,
             "contract_status": contract.status.value,
         }
 
@@ -274,8 +241,11 @@ class Dorm:
         contract.validate_for_signing()
 
         # 3. create contract invoice from room price
-        invoice = Invoice(InvoiceType.CONTRACT, contract.room.id,
-                          contract.room.monthly_rent, InvoiceStatus.UNPAID)
+        invoice = Invoice(
+            InvoiceType.CONTRACT,
+            contract.room.id,
+            contract.room.monthly_rent, InvoiceStatus.UNPAID
+        )
         resident.add_invoice(invoice)
 
         # 4. link invoice to contract and advance status
@@ -328,10 +298,10 @@ class Dorm:
         room.status = RoomStatus.OCCUPIED
 
         return {
-            "contract_id":     contract.id,
-            "resident_id":     resident.id,
-            "room_id":         room.id,
-            "room_status":     room.status.value,
+            "contract_id": contract.id,
+            "resident_id": resident.id,
+            "room_id": room.id,
+            "room_status": room.status.value,
             "contract_status": contract.status.value,
         }
 
@@ -442,7 +412,7 @@ class Dorm:
             resident,
             self.__technicians,
             room,
-            issue_category
+            issue_category.upper()
         )
 
     def start_maintenance_workflow(self, technician_id, notes=None):
@@ -450,44 +420,20 @@ class Dorm:
         return technician.start_maintenance(notes)
 
     def finish_maintenance_workflow(self, technician_id):
-        return self.complete_task_workflow(technician_id)
+        # Find and complete maintenance for technician
+        technician = self.search_technician_by_id(technician_id)
+        ticket = technician.complete_task()
 
-    def complete_task_workflow(self, staff_id):
-        # search cleaners first, then technicians
-        staff = None
-        for c in self.__cleaner:
-            if c.id == staff_id:
-                staff = c
-                break
-        if staff is None:
-            for t in self.__technicians:
-                if t.id == staff_id:
-                    staff = t
-                    break
-        if staff is None:
-            raise ValueError(f"Staff '{staff_id}' not found")
-
-        result = staff.complete_task()
-
-        # Technician case — result is a MaintenanceTicket
-        if isinstance(result, dict):
-            return {
-                "staff_id": staff.id,
-                "staff_name": staff.name,
-                "room_id": result["room_id"],
-                "staff_status": result["cleaner_status"],
-            }
-
-        # Technician case — result is a MaintenanceTicket
-        ticket = result
-        invoice = Invoice(InvoiceType.MAINTENANCE,
-                          ticket.room_id, ticket.cost, InvoiceStatus.UNPAID)
+        # Create invoice for maintenance work
+        invoice = Invoice(
+            InvoiceType.MAINTENANCE,
+            ticket.room_id, ticket.cost, InvoiceStatus.UNPAID
+        )
         resident = self.search_resident_by_room_id(ticket.room_id)
         resident.add_invoice(invoice)
 
         return {
-            "staff_id": staff.id,
-            "staff_name": staff.name,
+            "staff_id": technician.id,
             "ticket_id": ticket.id,
             "room_id": ticket.room_id,
             "issue_category": ticket.issue_category,
@@ -506,24 +452,58 @@ class Dorm:
 
     def system_contract_invoice(self, employeeId):
         employee = self.search_employee_by_id(employeeId)
+        residents = []
         for resident in self.__residents:
             for contract in resident.contracts:
                 monthly_rent = contract.room.monthly_rent
                 room_id = contract.room.id
                 invoice = employee.create_contract_invoice(
-                    monthly_rent, room_id)
+                    monthly_rent,
+                    room_id,
+                )
                 resident.add_invoice(invoice)
+                residents.append(resident)
         res = {"system_contract_invoice": "success"}
-        return self.show_success(res)
+        self.show_success(res)
+        return {
+            "system_contract_invoice": "success",
+            "employee_id": employeeId,
+            "residents": [
+                {
+                    "id": resident.id,
+                    "invoice": [invoice.id for invoice in resident.invoices]
+                } for resident in residents
+            ]
+        }
 
     def select_payment_method_and_invoices(self, Resident_ID_input, payment_method_input, invoice_ids):
         resident = self.search_resident_by_id(Resident_ID_input)
         payment = resident.set_payment(payment_method_input, invoice_ids)
-        format = payment.payment_method.payment_format()
+        payment_format = payment.payment_method.payment_format()
+        selected_invoices = [
+            {
+                "invoice_id": invoice.id,
+                "amount": invoice.amount,
+                "status": invoice.status.value,
+            }
+            for invoice in payment.invoice_list
+        ]
+        gross_amount = sum(invoice["amount"] for invoice in selected_invoices)
         net_amount = payment.net_amount
-        s = f'select_payment_method_and_invoices : success\nAmount to be paid : {net_amount}\n{format}'
-        self.show_success(s)
-        return s
+
+        result = {
+            "select_payment_method_and_invoices": "success",
+            "resident_id": resident.id,
+            "payment_method": payment_method_input,
+            "selected_invoices": selected_invoices,
+            "summary": {
+                "gross_amount": gross_amount,
+                "net_amount": net_amount,
+                "discount_amount": gross_amount - net_amount,
+            },
+            "payment_format": payment_format,
+        }
+        return self.show_success(result)
 
     def payment_system(self, Resident_ID_input, paymentdata):
         resident = self.search_resident_by_id(Resident_ID_input)
@@ -557,7 +537,11 @@ class Dorm:
             print(target_room.status, RoomStatus.AVAILABLE)
             return {"response": "target room not available"}
 
-        if len(resident.invoices) > 0:
+        unpaid_invoices = [
+            invoice for invoice in resident.invoices
+            if invoice.status == InvoiceStatus.UNPAID
+        ]
+        if len(unpaid_invoices) > 0:
             return {"response": "please settle existing invoices before changing contract"}
 
         invoice = current_contract.calculate_upgrade_amount(
@@ -585,22 +569,39 @@ class Dorm:
 
     def display_invoice(self, resident_id_input):
         resident = self.search_resident_by_id(resident_id_input)
-        for invoice in resident.invoices:
-            print(invoice.id)
-        s = f'display_invoice : success'
-        self.show_success(s)
-        return s
+        invoices = [
+            {
+                "invoice_id": invoice.id,
+                "amount": invoice.amount,
+                "status": invoice.status.value,
+            }
+            for invoice in resident.invoices
+            if invoice.status == InvoiceStatus.UNPAID
+        ]
+
+        result = {
+            "resident_id": resident.id,
+            "invoices": invoices,
+        }
+        return self.show_success(result)
 
     def display_receipt(self, resident_id_input):
         resident = self.search_resident_by_id(resident_id_input)
-        print(f"strike : {resident.strike}")
-        for receipt in resident.receipts:
-            print(receipt.id)
-        s = f'display_receipt : success'
-        self.show_success(s)
-        return s
+        receipts = [
+            {
+                "receipt_id": receipt.id,
+            }
+            for receipt in resident.receipts
+        ]
 
-    # type member expect : STANDARD_MEMBER, PLUS, PLATINUM พิมพ์ใหญ่พิมเล็กได้ทั้งหมด
+        result = {
+            "resident_id": resident.id,
+            "strike": resident.strike,
+            "receipt_count": len(receipts),
+            "receipts": receipts,
+        }
+        return self.show_success(result)
+
     def create_member(self, resident_id_input, type_member):
         resident = self.search_resident_by_id(resident_id_input)
         employee = self.search_available_employee()
@@ -608,7 +609,11 @@ class Dorm:
         resident.add_invoice(invoice)
         s = f"create_member: success, ID: {invoice.id}, amount: {invoice.amount}"
         self.show_success(s)
-        return s
+        return {
+            "response": "success",
+            "invoice_id": invoice.id,
+            "amount": invoice.amount,
+        }
 
     def add_strike(self, employee_ID_input):
         employee = self.search_employee_by_id(employee_ID_input)

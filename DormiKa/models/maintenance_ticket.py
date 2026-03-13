@@ -1,6 +1,7 @@
 from datetime import datetime
 from .enum import MaintenanceStatus
 
+
 class MaintenanceTicket:
     ID = 1
 
@@ -82,11 +83,8 @@ class MaintenanceTicket:
 
     def finish_work(self, cost: float):
         if self.__status != MaintenanceStatus.IN_PROGRESS:
-            raise ValueError(f"Ticket {self.__id} is not in progress, cannot finish")
+            raise ValueError(
+                f"Ticket {self.__id} is not in progress, cannot finish")
         self.__end_time = datetime.now()
         self.__cost = cost
         self.__status = MaintenanceStatus.RESOLVED
-
-    def approve_maintenance(self, employee, status):
-        self.__approve_employee = employee.id
-        self.__status = status

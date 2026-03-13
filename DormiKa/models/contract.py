@@ -3,6 +3,7 @@ from .enum import ContractStatus, InvoiceType, InvoiceStatus
 from .invoice import Invoice
 import calendar
 
+
 class Contract:
     ID = 1
 
@@ -74,7 +75,7 @@ class Contract:
         days_left = days_in_month - move_date.day + 1
         avg_new_room_cost = target_room_cost / days_in_month
         new_room_cost = avg_new_room_cost * days_left
-        
+
         old_room_cost = (self.__room.monthly_rent / days_in_month) * days_left
         cost_diff = new_room_cost - old_room_cost
 

@@ -4,6 +4,7 @@ from .maintenance_ticket import *
 from .invoice import Invoice
 from .member import Standard_Member, Plus_Member, Platinum_Member
 
+
 class Employee:
     ID = 1
 
@@ -22,7 +23,7 @@ class Employee:
     @property
     def id(self):
         return self.__id
-    
+
     @property
     def status(self):
         return self.__status
@@ -31,8 +32,12 @@ class Employee:
         self.__status = AvailabilityStatus.UNAVAILABLE
 
         technician = self.find_available_technician(technicians)
-        
-        ticket = self.create_maintenance_ticket(reporter, room.id, issue_category, technician.id)
+
+        ticket = self.create_maintenance_ticket(
+            reporter,
+            room.id,
+            issue_category,
+            technician.id)
         technician.assign_ticket(ticket)
         room.add_maintenance_ticket(ticket)
         ticket.status = MaintenanceStatus.REPORTED
@@ -52,21 +57,25 @@ class Employee:
         raise Exception("no available technician")
 
     def create_maintenance_ticket(self, reporter, room_id, issue_category, technician):
-        ticket = MaintenanceTicket(reporter.id, 
-                                    room_id, 
-                                    issue_category, 
-                                    responsible_technician=technician
+        ticket = MaintenanceTicket(
+            reporter.id,
+            room_id,
+            issue_category,
+            responsible_technician=technician
         )
         return ticket
-    
 
-    def create_contract_invoice(self, monthly_rent, room_id):
-        return Invoice(
-            InvoiceType.CONTRACT, 
-            monthly_rent, 
-            InvoiceStatus.UNPAID, 
+    def create_contract_invoice(
+            self,
+            monthly_rent,
             room_id
-            )
+    ):
+        return Invoice(
+            InvoiceType.CONTRACT,
+            monthly_rent,
+            InvoiceStatus.UNPAID,
+            room_id
+        )
 
     def assign_member(self, resident, type):
         member_type = MemberType(type.strip().upper())
@@ -81,4 +90,8 @@ class Employee:
                 raise ValueError("type_member : format error")
         resident.set_member(member)
         price = MemberPrice[member_type.name].value
-        return Invoice(InvoiceType.MEMBER, price, InvoiceStatus.UNPAID)
+        return Invoice(
+            InvoiceType.MEMBER,
+            price,
+            InvoiceStatus.UNPAID,
+        )

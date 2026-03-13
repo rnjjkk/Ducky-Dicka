@@ -2,9 +2,10 @@ from enum import Enum
 from datetime import datetime, timedelta
 from .enum import RoomStatus, RoomPrice, RoomType
 
+
 class Room:
     ID = 1
-    
+
     def __init__(
         self,
         building: object,
@@ -21,7 +22,7 @@ class Room:
         self.__maintenance_tickets: list = []
         self.__cleaning_tickets: list = []
         self.__hold_expiry = None
-        
+
         Room.ID += 1
 
     def define_monthly_rent(self, room_type):
@@ -68,18 +69,15 @@ class Room:
     @property
     def monthly_rent(self):
         return self.__monthly_rent
-    
+
     @property
     def cleaning_tickets(self):
         return self.__cleaning_tickets
 
-    
     def add_maintenance_ticket(self, ticket):
-        """Attach a maintenance ticket to this room."""
         self.__maintenance_tickets.append(ticket)
 
     def update_meter(self, meter_elect: float, meter_water: float):
-        """Update meter readings and record the values in room log."""
         self.__electric_cost = meter_elect
         self.__water_cost = meter_water
         self.__room_log.append({
@@ -90,7 +88,6 @@ class Room:
         return {"electric": meter_elect, "water": meter_water}
 
     def record_handover(self, meter_elect: float, meter_water: float):
-        """Log handover meter readings in the room log."""
         self.__room_log.append({
             "timestamp": datetime.now(),
             "handover_electric": meter_elect,
@@ -99,10 +96,6 @@ class Room:
         return {"handover_electric": meter_elect, "handover_water": meter_water}
 
     def hold(self, hours: int = 48) -> bool:
-        """Temporarily reserve the room for a short time.
-
-        This is used during a booking workflow before a contract is confirmed.
-        """
         if self.__status != RoomStatus.AVAILABLE:
             return False
 

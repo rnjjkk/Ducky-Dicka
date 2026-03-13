@@ -2,6 +2,7 @@ from datetime import datetime
 from .enum import *
 from .maintenance_ticket import MaintenanceTicket
 
+
 class Staff:
     def __init__(self, id: str, name: str, phone_number: str, status: str = "ACTIVE"):
         self.__id = id
@@ -64,9 +65,9 @@ class Cleaner(Staff):
     def __init__(self, name: str, phone_number: str, cleaning_supplies_list=None, assigned_rooms=None, status: str = "ACTIVE"):
         cl_id = f"CL-{Cleaner.ID:04d}"
         super().__init__(id=cl_id,
-                        name=name,
-                        phone_number=phone_number,
-                        status=status)
+                         name=name,
+                         phone_number=phone_number,
+                         status=status)
         self.__cleaning_supplies_list = cleaning_supplies_list or []
         self.__assigned_rooms = assigned_rooms or []
 
@@ -79,7 +80,7 @@ class Cleaner(Staff):
     @property
     def assigned_rooms(self):
         return self.__assigned_rooms
-    
+
     def search_cleaning_ticket_by_room_id(self, room_id):
         from .enum import CleaningStatus
         for room in self.__assigned_rooms:
@@ -95,7 +96,7 @@ class Cleaner(Staff):
             ticket = self.search_cleaning_ticket_by_room_id(room.id)
         ticket.status = CleaningStatus.CLEANING
         return {"room_id": ticket.room_id, "status": "cleaning"}
-    
+
     def finished_cleaning(self, room):
         from .enum import CleaningStatus
         self.status = "AVAILABLE"
@@ -103,7 +104,6 @@ class Cleaner(Staff):
         ticket.status = CleaningStatus.FINISHED
         self.__assigned_rooms.remove(room)
         return {"room_id": room.id, "status": "available"}
-
 
     def complete_task(self):
         completed_room = self.current_task
@@ -123,7 +123,7 @@ class Technician(Staff):
         capabilities: list = None,
         schedule=None,
         current_task=None,
-        status = AvailabilityStatus.AVAILABLE,
+        status=AvailabilityStatus.AVAILABLE,
     ):
         tech_id = f"TC-{Technician.ID:04d}"
         super().__init__(tech_id, name, phone_number, status=status)
@@ -142,7 +142,6 @@ class Technician(Staff):
         return self.__schedule
 
     def show_all_mt(self, building_id):
-        # Placeholder: return maintenance tasks for a building
         return []
 
     def start_maintenance(self, notes: str = None):
@@ -162,7 +161,6 @@ class Technician(Staff):
 
         return {
             "technician_id": self.id,
-            "technician_name": self.name,
             "ticket_id": ticket.id,
             "room_id": ticket.room_id,
             "issue_category": ticket.issue_category,
@@ -178,7 +176,8 @@ class Technician(Staff):
         ticket = self._current_task
 
         if ticket.status != MaintenanceStatus.IN_PROGRESS:
-            raise ValueError(f"Ticket {ticket.id} is not in progress, cannot complete")
+            raise ValueError(
+                f"Ticket {ticket.id} is not in progress, cannot complete")
 
         cost = MaintenanceCost[ticket.issue_category].value
         ticket.finish_work(cost)
@@ -252,5 +251,6 @@ class ACTech(Technician):
         return super().start_maintenance(notes)
 
     def complete_task(self):
-        self.__gas_level_refrigerant = max(0.0, self.__gas_level_refrigerant - 10.0)
+        self.__gas_level_refrigerant = max(
+            0.0, self.__gas_level_refrigerant - 10.0)
         return super().complete_task()

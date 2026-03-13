@@ -1,6 +1,8 @@
 from datetime import datetime
 
 # ================== Receipt
+
+
 class Receipt:
     __running_number = 1
 
