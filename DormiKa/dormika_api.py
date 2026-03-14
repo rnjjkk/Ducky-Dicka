@@ -20,118 +20,9 @@ from models.payment import *
 from models.receipt import *
 from models.share_facility import *
 
-# ==================== Mock Data ====================
-
-
-def create_resident_mock_data(count: int = 3):
-    names = ["Kenny", "John",  "Alice",  "Mary",  "Bob"]
-    emails = ["kenny", "john",  "alice",  "mary",  "bob"]
-    residents = []
-    for i in range(min(count, len(names))):
-        # BUG FIX: old code passed (name, 18+i, phone) — age was treated as email
-        resident = Resident(
-            name=names[i],
-            email=f"{emails[i]}@example.com",
-            phone_number=f"080000000{i}",
-        )
-        print(f"Created Resident: {resident.id}")
-        residents.append(resident)
-    return residents
-
-
-def create_cleaner_mock_data():
-    # BUG FIX: Cleaner auto-generates its own id via CL-{ID:04d},
-    # do NOT pass id= as kwarg — it is ignored and creates confusion.
-    cleaners = [
-        Cleaner(name="Cleaner A", phone_number="0900000001"),
-        Cleaner(name="Cleaner B", phone_number="0900000002"),
-    ]
-    for c in cleaners:
-        print(f"Created Cleaner: {c.id} ({c.name})")
-    return cleaners
-
-
-def create_technician_mock_data():
-    technicians = [
-        PlumbingTech(name="Tech A", phone_number="0800000001",
-                     water_meter_tool="WM-001"),
-        ElectricalTech(name="Tech B", phone_number="0800000002",
-                       certification_no="CERT-ELEC-001"),
-        ACTech(name="Tech C", phone_number="0800000003",
-               gas_level_refrigerant=100.0),
-    ]
-    for t in technicians:
-        print(f"Created Technician: {t.id} ({t.name}) caps={t.capabilities}")
-    return technicians
-
-
-def create_employee_mock_data():
-    employees = [Employee(name)
-                 for name in ["Alice", "Bob", "Charlie", "Diana", "Eve"]]
-    for e in employees:
-        print(f"Created Employee: ({e.id})")
-    return employees
-
-
-def create_room_mock_data(building):
-    rooms = [
-        # STUDIO_ROOM — 2 ห้อง (ห้องแรกจะถูก Kenny occupy, ห้องที่ 2 ว่างสำหรับจอง)
-        Room(building=building, floor=1, room_type=RoomType.STUDIO_ROOM,
-             status=RoomStatus.AVAILABLE),
-        Room(building=building, floor=1, room_type=RoomType.STUDIO_ROOM,
-             status=RoomStatus.AVAILABLE),
-        # STANDARD_ROOM — 2 ห้อง (ห้องแรกจะถูก Bob reserve สำหรับ handover)
-        Room(building=building, floor=2, room_type=RoomType.STANDARD_ROOM,
-             status=RoomStatus.AVAILABLE),
-        Room(building=building, floor=2, room_type=RoomType.STANDARD_ROOM,
-             status=RoomStatus.AVAILABLE),
-        # ONE_BED_ROOM — 1 ห้อง
-        Room(building=building, floor=3, room_type=RoomType.ONE_BED_ROOM,
-             status=RoomStatus.AVAILABLE),
-    ]
-    for r in rooms:
-        print(f"Created Room: {r.id} ({r.type.value}) {r.status.value}")
-    return rooms
-
-
-def create_building_mock_data():
-    building = Building(floor_count=5, zone="A")
-    print(f"Created Building: {building.id}")
-    for room in create_room_mock_data(building):
-        building.add_room(room)
-
-    # Add share facilities
-    from models.share_facility import MeetingRoom, WashingMachine
-    meeting_rooms = [
-        MeetingRoom(),
-        MeetingRoom(),
-    ]
-    washing_machines = [
-        WashingMachine(),
-        WashingMachine(),
-    ]
-    for mr in meeting_rooms:
-        building.add_meeting_room(mr)
-        print(f"Created Meeting Room: {mr.id}")
-    for wm in washing_machines:
-        building.add_washing_machine(wm)
-        print(f"Created Washing Machine: {wm.id}")
-
-    return building
-
-
-def create_contract_mock_data(resident, room, status: ContractStatus = ContractStatus.ACTIVE):
-    contract = Contract(resident, room, status=status)
-    room.status = RoomStatus.OCCUPIED
-    resident.add_contract(contract)
-    print(f"Created Contract: {contract.id} -> Room {room.id}")
-    return contract
-
 # ==================== App Init ====================
 
-
 dorm = None
-
 
 def init_mock_data():
     global dorm
@@ -166,13 +57,6 @@ facility_router = APIRouter(prefix="/facility",    tags=["Facility"])
 # ==================================================
 # SYSTEM
 # ==================================================
-
-@system_router.post("/reset")
-async def reset_mock_data():
-    """Reset all mock data to initial state."""
-    init_mock_data()
-    return {"message": "Mock data has been reset successfully"}
-
 
 class SystemContractInvoiceBody(BaseModel):
     employeeId: str = Field(..., example="EM-0001")
