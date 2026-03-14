@@ -605,7 +605,7 @@ class Dorm:
     def create_member(self, resident_id_input, type_member):
         resident = self.search_resident_by_id(resident_id_input)
         employee = self.search_available_employee()
-        invoice = employee.asign_member(resident, type_member)
+        invoice = employee.assign_member(resident, type_member)
         resident.add_invoice(invoice)
         s = f"create_member: success, ID: {invoice.id}, amount: {invoice.amount}"
         self.show_success(s)
