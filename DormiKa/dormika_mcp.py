@@ -42,24 +42,6 @@ init_mock_data()
 # SYSTEM
 # ==================================================
 
-
-@mcp.tool()
-def reset() -> dict:
-    """
-    Reset all mock data back to the initial state.
-
-    Use when:
-    - You want to start over with fresh data
-    - Something went wrong and you need to restore defaults
-
-    Example prompt:
-        "Reset the system to its initial state."
-        "Start over with fresh data."
-    """
-    init_mock_data()
-    return {"message": "Mock data has been reset successfully"}
-
-
 class SystemContractInvoiceRequest(BaseModel):
     employeeId: str = Field(...,
                             description="Employee ID who triggers billing, e.g. EM-0001")
@@ -76,8 +58,8 @@ def system_contract_invoice(request: SystemContractInvoiceRequest) -> dict:
     - You need to issue rent invoices to all residents at once
 
     Example prompt:
-        "Generate this month's rent invoices for all residents. Employee ID is EM-0001."
-        "Run the monthly billing cycle authorized by EM-0002."
+        "Generate this month's rent invoices for all active contracts. Employee ID is EM-0001."
+        "Run the monthly billing cycle authorized by EM-0002 for DormiKa mock data."
     """
     try:
         result = dorm.system_contract_invoice(request.employeeId)
@@ -108,7 +90,7 @@ def add_strike(request: AddStrikeRequest) -> dict:
 
     Example prompt:
         "Run the overdue invoice check. Employee EM-0001 is authorizing."
-        "Add strikes to residents who have unpaid invoices. Use employee EM-0002."
+        "Add strikes for unpaid invoices in the current mock dataset. Use employee EM-0002."
     """
     try:
         result = dorm.add_strike(request.employeeId)
@@ -142,8 +124,8 @@ def sign_in(request: SignInRequest) -> dict:
     - Someone asks to create a new account
 
     Example prompt:
-        "Register a new resident named Kenny, email kenny@example.com, phone 0812345678."
-        "Sign up a new tenant: name Alice, email alice@mail.com, phone 0899999999."
+        "Register a new resident named Fill, email fill@gmail.com, phone 123-456-7890."
+        "Sign up a new tenant: name Nara, email nara@example.com, phone 123-456-7800."
     """
     try:
         result = dorm.sign_in(request.name, request.email, request.phoneNumber)
@@ -177,8 +159,8 @@ def request_booking(request: RequestBookingRequest) -> dict:
     - Starting the contract process
 
     Example prompt:
-        "Resident RS-0001 wants to book a Studio Room in building A01."
-        "Book a One Bedroom room in building A01 for resident RS-0002."
+        "Resident RS-0002 wants to book a Standard Room in building A01."
+        "Book a One Bedroom room in building A01 for resident RS-0003."
     """
     try:
         result = dorm.request_booking(
@@ -206,8 +188,8 @@ def sign_contract(request: SignContractRequest) -> dict:
     - After request_booking, the next step is to sign
 
     Example prompt:
-        "Sign contract LC-0001."
-        "The resident has agreed — please sign contract LC-0002 and generate the invoice."
+        "After RS-0002 books a room, sign contract LC-0002."
+        "The resident has agreed — sign contract LC-0003 and generate the invoice."
     """
     try:
         result = dorm.sign_contract(request.contractId)
@@ -230,8 +212,8 @@ def complete_handover(request: HandoverRequest) -> dict:
     - The resident is physically moving in and receiving the room
 
     Example prompt:
-        "Complete handover for contract LC-0001."
-        "Mark handover complete for contract LC-0002."
+        "Complete handover for contract LC-0002."
+        "Mark handover complete for contract LC-0003."
     """
     try:
         result = dorm.complete_handover(request.contractId)
@@ -255,8 +237,8 @@ def pay_contract_invoice(request: PayContractInvoiceRequest) -> dict:
     - Activating a PENDING_SIGN contract
 
     Example prompt:
-        "Pay contract invoice INV-0001."
-        "The resident wants to activate their contract — pay invoice INV-0002."
+        "Pay contract invoice INV-0002."
+        "The resident wants to activate their contract — pay invoice INV-0003."
     """
     try:
         result = dorm.pay_contract_invoice(request.invoiceId)
@@ -288,8 +270,8 @@ def change_contract(request: ChangeContractRequest) -> dict:
     - A room swap is needed
 
     Example prompt:
-        "Resident RS-0001 wants to move from their current room (contract LC-0001) to room RM-0003 on 2026-03-15."
-        "Change contract LC-0001 for resident RS-0001 to room RM-0002, moving on 2026-04-01."
+        "Resident RS-0001 wants to move from contract LC-0001 to room RM-0005 on 2024-10-01."
+        "Change contract LC-0001 for resident RS-0001 to room RM-0003, moving on 2024-10-15."
     """
     try:
         result = dorm.change_contract(
@@ -332,8 +314,8 @@ def request_maintenance(request: RequestMaintenanceRequest) -> dict:
 
     Example prompt:
         "Resident RS-0001 reports a plumbing issue in room RM-0001."
-        "Room RM-0002 has an electrical problem reported by resident RS-0002."
-        "There's an AC issue in room RM-0003, reported by RS-0001."
+        "Resident RS-0001 reports an electrical issue in room RM-0001."
+        "Resident RS-0001 reports an AC issue in room RM-0001."
     """
     try:
         result = dorm.request_maintenance(
@@ -362,8 +344,8 @@ def start_maintenance(request: StartMaintenanceRequest) -> dict:
 
     Example prompt:
         "Technician TC-0001 is starting work on their assigned ticket."
-        "TC-0002 starts maintenance. Notes: the circuit breaker keeps tripping."
-        "Technician TC-0003 begins AC repair. Notes: refrigerant seems low."
+        "TC-0002 starts maintenance. Notes: the sink pipe is leaking."
+        "Technician TC-0003 begins AC repair. Notes: AC is not cooling."
     """
     try:
         result = dorm.start_maintenance_workflow(
@@ -394,7 +376,7 @@ def finish_maintenance(request: FinishMaintenanceRequest) -> dict:
 
     Example prompt:
         "Technician TC-0001 has finished the repair."
-        "Mark TC-0002's job as complete and generate the invoice."
+        "Mark TC-0002's job as complete and generate the maintenance invoice."
     """
     try:
         result = dorm.finish_maintenance_workflow(request.technicianId)
@@ -426,7 +408,7 @@ def request_cleaning(request: RequestCleaningRequest) -> dict:
 
     Example prompt:
         "Resident RS-0001 wants room RM-0001 cleaned."
-        "Request a cleaning service for room RM-0002 from resident RS-0002."
+        "Request a cleaning service for room RM-0001 from resident RS-0001."
     """
     try:
         result = dorm.request_cleaning_room(request.residentId, request.roomId)
@@ -451,8 +433,8 @@ def start_cleaning(request: StartCleaningRequest) -> dict:
     - After request_cleaning, the cleaner starts the job
 
     Example prompt:
-        "Cleaner CL-0001 is starting to clean their assigned room."
-        "CL-0002 begins cleaning now."
+        "Cleaner CL-0001 starts cleaning room RM-0001."
+        "Cleaner CL-0002 starts cleaning room RM-0002."
     """
     try:
         result = dorm.start_cleaning_workflow(
@@ -479,8 +461,8 @@ def finish_cleaning(request: FinishCleaningRequest) -> dict:
     - Ready to bill the resident for the cleaning service
 
     Example prompt:
-        "Cleaner CL-0001 has finished cleaning the room."
-        "CL-0002 is done — complete the task and issue the invoice."
+        "Cleaner CL-0001 has finished cleaning room RM-0001."
+        "Cleaner CL-0002 is done with room RM-0002 — complete the task and issue the invoice."
     """
     try:
         result = dorm.finish_cleaning_workflow(
@@ -517,7 +499,7 @@ def create_member(request: CreateMemberRequest) -> dict:
     Example prompt:
         "Upgrade resident RS-0001 to PLUS membership."
         "Assign PLATINUM membership to resident RS-0002."
-        "Resident RS-0003 wants to subscribe to the STANDARD plan."
+        "Resident RS-0003 wants to subscribe to the STANDARD plan in the mock dataset."
     """
     try:
         result = dorm.create_member(request.residentId, request.memberType)
@@ -558,8 +540,8 @@ def select_payment(request: SelectPaymentRequest) -> dict:
     - Step 1 of the 2-step payment process
 
     Example prompt:
-        "Resident RS-0001 wants to pay INV-0001 and INV-0002 via bank transfer."
-        "Set up card payment for resident RS-0002 for invoice INV-0003."
+        "Resident RS-0001 wants to pay INV-0001 and INV-0004 via card."
+        "Set up bank transfer payment for resident RS-0001 for invoice INV-0002."
     """
     try:
         result = dorm.select_payment_method_and_invoices(
@@ -596,7 +578,7 @@ def pay(request: PayRequest) -> dict:
     Example prompt (bank):
         "Resident RS-0001 submits bank transfer reference REF-XYZ9876543."
     Example prompt (card):
-        "Resident RS-0001 pays by card: number 123456, name Kenny, expiry 12/27, CVV 123."
+        "Resident RS-0001 pays by card: number 666777, name Kenny, expiry 12/27, CVV 123."
     """
     try:
         result = dorm.payment_system(request.residentId, request.paymentData)
@@ -625,7 +607,7 @@ def display_invoice(request: DisplayInvoiceRequest) -> dict:
     Example prompt:
         "Show all invoices for resident RS-0001."
         "What does RS-0002 owe?"
-        "List unpaid bills for RS-0003."
+        "List unpaid bills for RS-0001 after service bookings."
     """
     try:
         result = dorm.display_invoice(request.residentId)
@@ -654,7 +636,7 @@ def display_receipt(request: DisplayReceiptRequest) -> dict:
     Example prompt:
         "Show all receipts for resident RS-0001."
         "What payments has RS-0002 made?"
-        "Get payment history for resident RS-0003."
+        "Get payment history for resident RS-0001 after paying by card."
     """
     try:
         result = dorm.display_receipt(request.residentId)
@@ -692,9 +674,9 @@ def book_share_facility(request: BookFacilityRequest) -> dict:
     - Booking a washing machine or meeting room slot
 
     Example prompt:
-        "Resident RS-0001 wants to book facility SHARE-0001 in building A01 at 2026-03-15 14:00:00."
-        "Book the washing machine (SHARE-0002) for RS-0002 in building A01 at 2026-04-01 09:00:00."
-        "Reserve meeting room SHARE-0003 in building A01 for resident RS-0001 at 2026-03-20 10:00:00."
+        "Resident RS-0001 wants to book facility SHARE-0001 in building A01 at 2024-10-01 19:00:00."
+        "Book the washing machine (SHARE-0002) for RS-0002 in building A01 at 2024-10-02 09:00:00."
+        "Reserve meeting room SHARE-0001 in building A01 for resident RS-0003 at 2024-10-03 10:00:00."
     """
     try:
         result = dorm.booking_share_facility(
