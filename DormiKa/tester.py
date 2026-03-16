@@ -163,7 +163,7 @@ def run_tests():
     res = dorm.system_contract_invoice("EM-0001")
     pprint(res)
 
-    print("\n=== Sign Contract ===")
+    print("\n=== Sign In ===")
     dorm.sign_in(
         "Fill",
         "fill@gmail.com",
